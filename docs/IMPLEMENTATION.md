@@ -2,7 +2,7 @@
 
 작성일: 2026-10-04 · 앱 버전: 0.1.0
 
-이 문서는 현재 소스 코드에 구현된 P0 Mock 기능을 설명합니다. 프로젝트 루트는 `Boeing_RADAR/`이며 별도의 `RADAR/` 하위 폴더는 없습니다.
+이 문서는 현재 소스 코드에 구현된 P0 Mock 기능을 설명합니다. 저장소 루트는 `Boeing_RADAR/`이며 Python 서버와 해당 테스트는 `backend/`에 있습니다. 다른 파트는 디렉터리 골격만 준비되어 있습니다.
 
 ## 1. 목적과 구현 범위
 
@@ -38,18 +38,18 @@ flowchart LR
 
 | 경로 | 역할 |
 |---|---|
-| `app/main.py` | 앱 생성, 라우터 등록, 앱 시작 시 테이블 생성, Swagger 설명 |
-| `app/db.py` | DB 연결, 세션 관리, 외래 키 활성화, UTC 시각 생성 |
-| `app/core/enums.py` | Flight·Clearance 상태, Source, 이벤트 유형 |
-| `app/models/` | SQLAlchemy 저장 모델 |
-| `app/schemas/` | 요청 검증 및 응답 명세 |
-| `app/api/flights.py` | Flight, 지시 생성·목록, Safety Trace API |
-| `app/api/clearances.py` | 지시 상세, Readback·Cockpit 입력 및 재검증 API |
-| `app/services/flight_service.py` | 비행 수명주기 처리 |
-| `app/services/clearance_service.py` | Observation 연결, 입력 순서, 상태 전이, 이벤트 기록 |
-| `app/services/validation_service.py` | ALT/HDG 비교 함수 |
-| `app/services/safety_trace_service.py` | 이벤트 저장 및 시간순 조회 |
-| `tests/` | 비교 및 API 흐름 테스트 |
+| `backend/app/main.py` | 앱 생성, 라우터 등록, 앱 시작 시 테이블 생성, Swagger 설명 |
+| `backend/app/db.py` | DB 연결, 세션 관리, 외래 키 활성화, UTC 시각 생성 |
+| `backend/app/core/enums.py` | Flight·Clearance 상태, Source, 이벤트 유형 |
+| `backend/app/models/` | SQLAlchemy 저장 모델 |
+| `backend/app/schemas/` | 요청 검증 및 응답 명세 |
+| `backend/app/api/flights.py` | Flight, 지시 생성·목록, Safety Trace API |
+| `backend/app/api/clearances.py` | 지시 상세, Readback·Cockpit 입력 및 재검증 API |
+| `backend/app/services/flight_service.py` | 비행 수명주기 처리 |
+| `backend/app/services/clearance_service.py` | Observation 연결, 입력 순서, 상태 전이, 이벤트 기록 |
+| `backend/app/services/validation_service.py` | ALT/HDG 비교 함수 |
+| `backend/app/services/safety_trace_service.py` | 이벤트 저장 및 시간순 조회 |
+| `backend/tests/` | 비교 및 API 흐름 테스트 |
 
 ## 3. 저장 데이터
 
@@ -223,16 +223,17 @@ FLIGHT_ENDED
 
 ## 7. 실행과 데모
 
-프로젝트 루트에서 실행합니다.
+저장소 루트에서 `backend/`로 이동해 실행합니다.
 
 ```sh
+cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-기본 DB는 `./radar.db`이며 앱 시작 시 테이블을 생성합니다. 다른 경로를 쓰려면 실행 전에 `RADAR_DATABASE_URL`을 지정합니다.
+`backend/`에서 실행할 때 기본 DB는 `backend/radar.db`이며 앱 시작 시 테이블을 생성합니다. 다른 경로를 쓰려면 실행 전에 `RADAR_DATABASE_URL`을 지정합니다.
 
 ```sh
 export RADAR_DATABASE_URL=sqlite:///./demo.db
@@ -250,6 +251,8 @@ Swagger: http://localhost:8000/docs · OpenAPI JSON: http://localhost:8000/opena
 Swagger에서 Flight 시작 → ATC 생성 → 반환된 clearance_id로 Readback/Cockpit 입력 → 오류 시 reverify → Safety Trace 조회 → Flight 종료 순서로 실행합니다. 세 시나리오를 자동 호출하는 HTTP 데모 스크립트는 [README](../README.md#mock-demo--api-테스트)에 있습니다.
 
 ## 8. 검증 현황
+
+아래 명령은 `backend/`에서 실행합니다.
 
 ```sh
 .venv/bin/python -m pytest -q
