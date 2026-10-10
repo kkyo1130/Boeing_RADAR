@@ -10,7 +10,7 @@ MCP 사진·인식 결과·결과 JSON과 실행 방법은 [Vision PoC 문서](d
 
 ## 설치 및 실행
 
-저장소 루트에서 `backend/`로 이동해 Python 3.11 이상으로 실행합니다. 프론트엔드·통신은 골격이며 Vision 정지 이미지 PoC는 [별도 실행 안내](vision/README.md)를 따릅니다.
+저장소 루트에서 `backend/`로 이동해 Python 3.11 이상으로 실행합니다. 통신은 골격입니다. 태블릿 MCP 화면은 [frontend 안내](frontend/README.md), Vision 촬영/ROI·스트림은 [태블릿 데모 안내](vision/docs/tablet-demo.md)를 따릅니다.
 
 ```sh
 cd backend
@@ -28,7 +28,7 @@ SQLite는 `backend/`에서 실행할 경우 최초 앱 시작 시 `backend/radar
 
 ```text
 Boeing_RADAR/
-├── frontend/src/             # React 화면 골격 (pages, components, api)
+├── frontend/src/             # React 태블릿 MCP 화면 + 운영 화면 골격
 ├── backend/
 │   ├── app/                  # 기존 FastAPI 서버
 │   │   ├── main.py
@@ -40,7 +40,7 @@ Boeing_RADAR/
 │   │   └── api/
 │   ├── tests/                # 기존 Python 테스트
 │   └── requirements.txt
-├── vision/                   # MCP 정지 이미지 OCR PoC
+├── vision/                   # 정지 이미지·영상/웹캠 OCR·상태 감시
 ├── communication/            # 통신 파트 골격
 ├── contracts/                # 관측 결과 계약 초안·예제
 ├── tests/integration/        # 파트 간 통합 테스트 골격
@@ -145,4 +145,4 @@ python -m pytest -q
 
 ## TODO / 범위
 
-향후 STT·Vision·통신 어댑터, 판단 보류·입력 건전성·근거 제공·재검증 및 리포트를 구현합니다. 상세 범위는 [스펙](spec.md)을 따릅니다. 자문 반영으로 QNH/Baro와 기압 센서 Sensor Cross-Check는 이번 범위에서 제외합니다. 백엔드는 P0 Mock 흐름이며 Vision은 별도 정지 이미지 PoC까지 구현했습니다. 운영 도입에는 인증, 마이그레이션, 병렬 변경의 충돌 제어가 추가로 필요합니다. 항공 운용 판정용으로 검증된 시스템은 아닙니다.
+향후 STT·Vision·통신 어댑터, 판단 보류·입력 건전성·근거 제공·재검증 및 리포트를 구현합니다. 상세 범위는 [스펙](spec.md)을 따릅니다. 자문 반영으로 QNH/Baro와 기압 센서 Sensor Cross-Check는 이번 범위에서 제외합니다. 백엔드는 P0 Mock 흐름이며 Vision은 정지 이미지·영상/웹캠 OCR·상태 감시·안정화, frontend는 태블릿 MCP 수동 화면까지 구현했습니다. 서버 통합과 실제 태블릿 촬영 검증은 남아 있습니다. 운영 도입에는 인증, 마이그레이션, 병렬 변경의 충돌 제어가 추가로 필요합니다. 항공 운용 판정용으로 검증된 시스템은 아닙니다.

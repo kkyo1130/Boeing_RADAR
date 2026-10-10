@@ -1,0 +1,70 @@
+:root { font-family: system-ui, -apple-system, sans-serif; color: #dde3e6; background: #171c20; font-synthesis: none; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+button, input { font: inherit; }
+button { cursor: pointer; touch-action: manipulation; color: inherit; border: 1px solid #46515a; border-radius: 8px; background: #293138; min-height: 44px; padding: 10px 16px; }
+button:hover { background: #354149; }
+button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid #9ddbd1; outline-offset: 4px; }
+button[aria-pressed="true"] { border-color: #9ddbd1; color: #b5ece3; }
+main { max-width: 1320px; margin: auto; padding: 30px 48px; }
+header { display: flex; align-items: center; gap: 24px; padding-bottom: 26px; border-bottom: 1px solid #343d43; }
+.brand { color: #f0f5f6; font-weight: 800; letter-spacing: 3px; text-decoration: none; font-size: 20px; }
+.brand span { font-size: 12px; font-weight: 400; color: #96a3ac; letter-spacing: 1px; }
+.simulation { font-size: 12px; color: #adbbb6; border: 1px solid #53635d; border-radius: 20px; padding: 6px 12px; }
+.header-actions { margin-left: auto; display: flex; gap: 8px; }
+.primary { background: #a8dacf; color: #152723; border-color: #a8dacf; font-weight: 650; }
+.primary:hover { background: #c1eee4; }
+.primary[aria-pressed="true"] { color: #152723; }
+.intro { padding: 40px 0 30px; }
+.eyebrow { color: #9badaf; letter-spacing: 2px; font-size: 11px; font-weight: 600; }
+h1 { font-size: clamp(26px, 3vw, 40px); line-height: 1.3; letter-spacing: -1px; margin: 12px 0; font-weight: 500; }
+.intro > p:last-child, .controls p, footer { color: #9fadb5; font-size: 13px; }
+.view-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 12px; }
+.view-toolbar > span { color: #9da9ad; font-size: 10px; letter-spacing: 2px; }
+.view-toolbar button { background: transparent; font-size: 12px; }
+.cockpit-scene { position: relative; width: 100%; aspect-ratio: 1672 / 941; overflow: hidden; background: #070a0c; border-radius: 8px; box-shadow: 0 12px 40px #0007; }
+.cockpit-photo { width: 100%; height: 100%; position: relative; transform-origin: 50% 32%; }
+.mcp-closeup .cockpit-photo { transform: scale(2.1); }
+.cockpit-photo > img { display: block; width: 100%; height: 100%; user-select: none; }
+.photo-readout { position: absolute; min-height: 0; min-width: 0; padding: 1px 3px; border: 0; border-radius: 1px; background: linear-gradient(#101417, #06090c); box-shadow: inset 0 1px 3px #000b; }
+.photo-readout:hover { background: linear-gradient(#101417, #06090c); }
+.digital-numbers { width: 100%; height: 100%; display: block; fill: #ffba72; filter: drop-shadow(0 0 0.7px #ffad5590); }
+.photo-readout.covered, .photo-readout.covered:hover { background: #090c0f; }
+.scene-label { position: absolute; bottom: 12px; left: 16px; color: #dedcceaa; font-size: 8px; letter-spacing: 2px; pointer-events: none; text-shadow: 0 1px 3px #000; }
+.instrument-controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 18px; }
+.instrument { min-width: 0; border: 1px solid #252c32; background: #383f45; padding: 20px 18px 16px; border-radius: 10px; box-shadow: inset 0 1px 0 #ffffff12; }
+.instrument-controls .instrument { padding: 16px; background: #222a30; border-color: #3c464d; }
+.control-value { width: 100%; color: #e3ccac; background: #11171a; font: 24px monospace; letter-spacing: 3px; }
+.instrument-label { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; gap: 6px; }
+.instrument-label h2 { margin: 0; font-size: 13px; letter-spacing: 2px; font-weight: 600; }
+.instrument-label span { font-size: 8px; color: #adb8be; letter-spacing: 1px; }
+.dial { display: flex; align-items: center; justify-content: center; gap: 22px; padding: 20px 0 12px; }
+.dial button { width: 46px; padding: 0; font-size: 24px; background: #30373d; }
+.knob { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%; border: 5px solid #1f252a; background: repeating-conic-gradient(#57616a 0deg 8deg, #40484f 8deg 16deg); box-shadow: 0 4px 6px #0006; }
+.knob i { width: 28px; height: 28px; border-radius: 50%; background: #414a52; border: 1px solid #6b767e; position: relative; }
+.knob i::after { content: ''; width: 3px; height: 9px; background: #c3cbd0; position: absolute; left: 12px; top: 2px; }
+.cover-button { width: 100%; color: #b5c1c7; background: transparent; font-size: 11px; border-color: #56616a; }
+.controls { margin-top: 32px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.controls h2 { font-size: 18px; margin: 8px 0; font-weight: 500; }
+.controls p { margin: 8px 0; }
+.presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.presets button { text-align: left; padding: 14px 16px; }
+.presets strong { display: block; font-size: 12px; font-weight: 500; }
+.presets span { display: block; margin-top: 8px; font: 11px monospace; color: #9fadb5; }
+footer { margin-top: 32px; padding-top: 20px; border-top: 1px solid #343d43; font-size: 11px; }
+.capture-mode .intro, .capture-mode .controls, .capture-mode footer, .capture-mode .instrument-controls, .capture-mode .view-toolbar, .capture-mode .brand, .capture-mode .simulation, .capture-mode header button:first-child { display: none; }
+.capture-mode { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0; max-width: none; background: #050709; }
+.capture-mode .cockpit-scene { width: min(100%, calc(100dvh * 1672 / 941)); flex-shrink: 0; border-radius: 0; box-shadow: none; }
+.capture-mode header { position: fixed; bottom: 12px; right: 12px; z-index: 5; padding: 0; border: 0; opacity: 0.45; }
+.capture-mode header:hover, .capture-mode header:focus-within { opacity: 1; }
+.capture-mode header button { min-height: 36px; padding: 8px 12px; font-size: 11px; }
+.capture-mode .notice { position: fixed; top: 12px; z-index: 5; }
+.modal-backdrop { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; background: #0009; }
+.editor { width: min(400px, 100%); padding: 28px; border: 1px solid #5c6a73; border-radius: 14px; background: #232b31; }
+.editor h2 { margin-top: 0; font-size: 20px; }
+.editor label { display: block; color: #afbcc5; font-size: 13px; margin-bottom: 10px; }
+.editor input { width: 100%; padding: 14px; border: 1px solid #5c6a73; border-radius: 6px; background: #12191e; color: #fff0ce; font: 32px monospace; }
+.editor > div { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px; }
+.editor p, .notice { color: #f4c39a; font-size: 13px; }
+@media (max-width: 1000px) { main { padding: 24px; } .controls { align-items: start; flex-direction: column; } .presets { width: 100%; } .instrument { padding: 18px 12px 12px; } .dial { gap: 12px; } }
+@media (max-width: 620px) { header { flex-wrap: wrap; gap: 12px; } .header-actions { width: 100%; margin-left: 0; } .intro { padding-top: 24px; } .instrument-controls { grid-template-columns: 1fr; } .presets { grid-template-columns: repeat(2, 1fr); } .view-toolbar { flex-wrap: wrap; } .scene-label { font-size: 6px; bottom: 8px; left: 8px; } }
