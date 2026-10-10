@@ -6,9 +6,10 @@
 
 ## 설치 및 실행
 
-현재 `Boeing_RADAR` 폴더가 프로젝트 루트입니다. 별도의 RADAR 하위 폴더는 만들지 않습니다.
+저장소 루트에서 `backend/`로 이동해 Python 3.11 이상으로 실행합니다. 프론트엔드·Vision·통신 파트는 디렉터리 골격만 준비되어 있습니다.
 
 ```sh
+cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -17,38 +18,30 @@ uvicorn app.main:app --reload
 
 Swagger: http://localhost:8000/docs
 
-SQLite는 최초 앱 시작 시 `radar.db`에 생성됩니다. `RADAR_DATABASE_URL=sqlite:///./other.db`로 경로를 변경할 수 있습니다. 모든 시간은 UTC ISO 8601로 저장합니다. 입력한 `observed_at`에 시간대가 없으면 UTC로 해석합니다. 생략하면 서버 시각을 사용합니다. 이벤트 timestamp는 서버 기록 시각이며, 과거 Observation 입력도 이벤트 순서를 바꾸지 않습니다.
+SQLite는 `backend/`에서 실행할 경우 최초 앱 시작 시 `backend/radar.db`에 생성됩니다. `RADAR_DATABASE_URL=sqlite:///./other.db`로 경로를 변경할 수 있습니다. 모든 시간은 UTC ISO 8601로 저장합니다. 입력한 `observed_at`에 시간대가 없으면 UTC로 해석합니다. 생략하면 서버 시각을 사용합니다. 이벤트 timestamp는 서버 기록 시각이며, 과거 Observation 입력도 이벤트 순서를 바꾸지 않습니다.
 
 ## 디렉터리 구조
 
 ```text
 Boeing_RADAR/
-├── app/
-│   ├── main.py                 # 앱, DB 초기화, 라우터
-│   ├── db.py                   # SQLite 연결, 세션, UTC 시각
-│   ├── core/enums.py           # 상태, Source, 이벤트 유형
-│   ├── models/
-│   │   ├── flight.py
-│   │   ├── clearance.py
-│   │   └── safety_event.py
-│   ├── schemas/
-│   │   ├── flight.py
-│   │   ├── observation.py
-│   │   ├── clearance.py
-│   │   └── safety_event.py
-│   ├── services/
-│   │   ├── flight_service.py
-│   │   ├── clearance_service.py
-│   │   ├── validation_service.py
-│   │   └── safety_trace_service.py
-│   └── api/
-│       ├── flights.py
-│       └── clearances.py
-├── tests/
-│   ├── conftest.py
-│   ├── test_validation.py
-│   └── test_flow.py
-├── requirements.txt
+├── frontend/src/             # React 화면 골격 (pages, components, api)
+├── backend/
+│   ├── app/                  # 기존 FastAPI 서버
+│   │   ├── main.py
+│   │   ├── db.py
+│   │   ├── core/
+│   │   ├── models/
+│   │   ├── schemas/
+│   │   ├── services/         # 기존 서비스 및 확장용 빈 디렉터리
+│   │   └── api/
+│   ├── tests/                # 기존 Python 테스트
+│   └── requirements.txt
+├── vision/                   # 영상 인식 파트 골격
+├── communication/            # 통신 파트 골격
+├── contracts/                # 공통 데이터 규격 골격
+├── tests/integration/        # 파트 간 통합 테스트 골격
+├── scripts/                  # 실행·평가 스크립트 골격
+├── docs/IMPLEMENTATION.md
 ├── README.md
 └── .gitignore
 ```
@@ -137,6 +130,8 @@ PY
 ```
 
 ## pytest
+
+설치 및 실행과 마찬가지로 `backend/`에서 실행합니다.
 
 ```sh
 python -m pytest -q
