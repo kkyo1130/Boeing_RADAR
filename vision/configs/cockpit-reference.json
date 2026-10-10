@@ -1,0 +1,25 @@
+{
+  "image_size": [
+    1448,
+    1086
+  ],
+  "minimum_model_score": 0.5,
+  "altitude": {
+    "roi": [
+      749,
+      272,
+      818,
+      291
+    ],
+    "unit": "feet"
+  },
+  "heading": {
+    "roi": [
+      678,
+      272,
+      720,
+      291
+    ],
+    "unit": "degrees"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "schema_version": "vision-poc/2",
+  "source": "cockpit_image",
+  "frame_id": "cdbbb304-4da7-4bf1-af3e-f2b28e315711",
+  "captured_at": null,
+  "processed_at": "2026-10-10T06:56:01.500290+00:00",
+  "capture_time_known": false,
+  "input_mode": "still_image",
+  "score_calibrated": false,
+  "fields": {
+    "altitude": {
+      "value": 10000,
+      "raw_text": "10000",
+      "model_score": 1.0,
+      "reason": null,
+      "unit": "feet",
+      "roi": [
+        864,
+        282,
+        968,
+        314
+      ],
+      "contrast_stddev": 67.054,
+      "evidence": "docs/vision/assets/altitude.png"
+    },
+    "heading": {
+      "value": 270,
+      "raw_text": "270",
+      "model_score": 1.0,
+      "reason": null,
+      "unit": "degrees",
+      "roi": [
+        692,
+        282,
+        786,
+        314
+      ],
+      "contrast_stddev": 53.428,
+      "evidence": "docs/vision/assets/heading.png",
+      "ocr_evidence": "docs/vision/assets/heading-ocr.png",
+      "ocr_preprocessing": {
+        "grayscale": true,
+        "scale": 4
+      }
+    },
+    "speed": {
+      "value": 250,
+      "raw_text": "250",
+      "model_score": 1.0,
+      "reason": null,
+      "unit": "knots",
+      "roi": [
+        509,
+        282,
+        601,
+        313
+      ],
+      "contrast_stddev": 59.007,
+      "evidence": "docs/vision/assets/speed.png"
+    }
+  },
+  "evidence": "docs/vision/assets/mcp-reference.png"
+}

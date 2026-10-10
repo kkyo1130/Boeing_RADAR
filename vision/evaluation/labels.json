@@ -1,0 +1,33 @@
+[
+  {
+    "image": "normal.png",
+    "altitude": 3000,
+    "heading": 270
+  },
+  {
+    "image": "occluded.png",
+    "altitude": null,
+    "heading": 270
+  },
+  {
+    "image": "blurred.png",
+    "altitude": null,
+    "heading": null,
+    "evaluate": "exploratory; no fixed expectation"
+  },
+  {
+    "image": "changed.png",
+    "altitude": 3500,
+    "heading": 290
+  },
+  {
+    "image": "north.png",
+    "altitude": 16000,
+    "heading": 0
+  },
+  {
+    "image": "invalid_heading.png",
+    "altitude": 3000,
+    "heading": null
+  }
+]
