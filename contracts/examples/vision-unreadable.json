@@ -1,0 +1,43 @@
+{
+  "schema_version": "vision-poc/1",
+  "source": "cockpit_image",
+  "frame_id": "f5298ca4-df1f-4678-99b9-cb6095f7e369",
+  "captured_at": null,
+  "processed_at": "2026-10-10T06:19:22.653038+00:00",
+  "capture_time_known": false,
+  "input_mode": "still_image",
+  "score_calibrated": false,
+  "fields": {
+    "altitude": {
+      "value": null,
+      "raw_text": "",
+      "model_score": null,
+      "reason": "blank_roi",
+      "unit": "feet",
+      "roi": [
+        30,
+        100,
+        380,
+        210
+      ],
+      "contrast_stddev": 0.0,
+      "evidence": "evidence/example/altitude.png"
+    },
+    "heading": {
+      "value": 270,
+      "raw_text": "270",
+      "model_score": 1.0,
+      "reason": null,
+      "unit": "degrees",
+      "roi": [
+        440,
+        100,
+        770,
+        210
+      ],
+      "contrast_stddev": 48.766,
+      "evidence": "evidence/example/heading.png"
+    }
+  },
+  "evidence": "evidence/example/frame.png"
+}

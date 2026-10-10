@@ -1,0 +1,3 @@
+.build/
+output/
+*.egg-info/

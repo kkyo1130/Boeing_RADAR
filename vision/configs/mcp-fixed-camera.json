@@ -1,0 +1,38 @@
+{
+  "image_size": [
+    1672,
+    941
+  ],
+  "minimum_model_score": 0.5,
+  "altitude": {
+    "roi": [
+      864,
+      282,
+      968,
+      314
+    ],
+    "unit": "feet"
+  },
+  "heading": {
+    "roi": [
+      692,
+      282,
+      786,
+      314
+    ],
+    "unit": "degrees",
+    "ocr_preprocessing": {
+      "grayscale": true,
+      "scale": 4
+    }
+  },
+  "speed": {
+    "roi": [
+      509,
+      282,
+      601,
+      313
+    ],
+    "unit": "knots"
+  }
+}

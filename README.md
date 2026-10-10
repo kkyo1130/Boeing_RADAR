@@ -1,12 +1,16 @@
 # RADAR
 
+개발 계획은 [spec.md](spec.md), 작업 상태는 [전체 TODO](docs/spec/todo.md), Claude/Codex 설정은 [에이전트 안내](docs/agent/README.md)에서 확인합니다.
+
+MCP 사진·인식 결과·결과 JSON과 실행 방법은 [Vision PoC 문서](docs/vision/README.md)에서 확인합니다.
+
 현재 구현 기능과 세부 동작은 [구현 기능 문서](docs/IMPLEMENTATION.md)에 정리되어 있습니다.
 
 관제 지시(ATC), 조종사 복명복창(Readback), Cockpit 설정값을 하나의 Clearance로 연결하는 Python 3.11+ PoC입니다. FastAPI 앱 하나에서 ALT/HDG 정확 일치 비교와 Flight Session, Safety Trace 저장을 처리합니다. 실제 STT·Vision AI·SDR 대신 JSON Mock Observation을 입력합니다.
 
 ## 설치 및 실행
 
-저장소 루트에서 `backend/`로 이동해 Python 3.11 이상으로 실행합니다. 프론트엔드·Vision·통신 파트는 디렉터리 골격만 준비되어 있습니다.
+저장소 루트에서 `backend/`로 이동해 Python 3.11 이상으로 실행합니다. 프론트엔드·통신은 골격이며 Vision 정지 이미지 PoC는 [별도 실행 안내](vision/README.md)를 따릅니다.
 
 ```sh
 cd backend
@@ -36,9 +40,9 @@ Boeing_RADAR/
 │   │   └── api/
 │   ├── tests/                # 기존 Python 테스트
 │   └── requirements.txt
-├── vision/                   # 영상 인식 파트 골격
+├── vision/                   # MCP 정지 이미지 OCR PoC
 ├── communication/            # 통신 파트 골격
-├── contracts/                # 공통 데이터 규격 골격
+├── contracts/                # 관측 결과 계약 초안·예제
 ├── tests/integration/        # 파트 간 통합 테스트 골격
 ├── scripts/                  # 실행·평가 스크립트 골격
 ├── docs/IMPLEMENTATION.md
@@ -141,4 +145,4 @@ python -m pytest -q
 
 ## TODO / 범위
 
-향후 STT·Vision AI·SDR 어댑터, 오차 크기별 경보, Communication Uncertainty, Sensor Cross-Check가 필요합니다. 현재는 P0 Mock 흐름만 구현합니다. 운영 도입에는 인증, 마이그레이션, 병렬 변경의 충돌 제어가 추가로 필요합니다. 항공 운용 판정용으로 검증된 시스템은 아닙니다.
+향후 STT·Vision·통신 어댑터, 판단 보류·입력 건전성·근거 제공·재검증 및 리포트를 구현합니다. 상세 범위는 [스펙](spec.md)을 따릅니다. 자문 반영으로 QNH/Baro와 기압 센서 Sensor Cross-Check는 이번 범위에서 제외합니다. 백엔드는 P0 Mock 흐름이며 Vision은 별도 정지 이미지 PoC까지 구현했습니다. 운영 도입에는 인증, 마이그레이션, 병렬 변경의 충돌 제어가 추가로 필요합니다. 항공 운용 판정용으로 검증된 시스템은 아닙니다.
