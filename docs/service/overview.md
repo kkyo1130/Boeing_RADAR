@@ -26,7 +26,9 @@ TODO의 담당 표시는 이 역할에 따른 제안이며 작업 예약이나 �
 2026-10-10 재확인: 구조 변경은 PR #2로 dev(`436c90c`)에 병합됐으며 현재 코드 tree와 동일하다. main은 기존 PoC다. 상세 기능별 확인과 실패 경계 실행 결과는 [구현 현황](../IMPLEMENTATION_STATUS.md)을 참조한다.
 
 `8a05c1c`에서 기존 Python Mock PoC를 backend로 이동했다. 26개 기존 파일은 원본과 동일하며 테스트 17개 통과. 실제 로컬 HTTP 서버에서 정상·복명복창 오류·설정 오류 수정·종료·Safety Trace 조회를 확인했다.
-현재 Observation은 ALT·HDG·confidence가 필수이고 confidence는 판정에 반영되지 않는다. `UNVERIFIED`, 실제 STT·Vision·SDR, 근거 파일, 사용자 확인, 경고 정책, 완성 리포트는 미구현이다. frontend/communication은 골격이며 이후 Vision 합성 정지 이미지 PoC와 로컬 계약 초안이 추가됐다. 실제 카메라와 서버 연동은 미완료다. 과거 별도 로컬 브라우저 시연 앱은 현재 브랜치의 구현으로 계산하지 않는다.
+현재 Observation은 ALT·HDG·confidence가 필수이고 confidence는 판정에 반영되지 않는다. `UNVERIFIED`, 실제 STT·Vision·SDR, 근거 파일, 사용자 확인, 경고 정책, 완성 리포트는 미구현이다. frontend의 서버 운영 UI와 communication은 골격이며 이후 Vision 합성 정지 이미지 PoC와 로컬 계약 초안이 추가됐다. 현재 태블릿 MCP 화면·Vision 카메라/영상 입력·상태 감시·안정화도 구현했으며 실카메라 검증과 서버 연동은 미완료다. 과거 별도 로컬 브라우저 시연 앱은 현재 브랜치의 구현으로 계산하지 않는다.
+
+사용자 지정 데모 환경은 실제 Cockpit 대신 태블릿의 모의 MCP를 카메라로 촬영하는 방식이다. frontend가 수동 선택값 화면을 제공하고 Vision은 카메라 영상만 읽는다. [태블릿 안내](../../vision/docs/tablet-demo.md)를 따르며 실제 항공 계기 검증으로 보고하지 않는다. 현재 dev `9d1d561`에 기존 PoC가 병합됐고 이번 태블릿 작업은 `codex/tablet-mcp-stream`의 미커밋 변경이다.
 
 ## 일정
 

@@ -10,9 +10,12 @@ dependencies = ["Pillow>=10,<13"]
 
 [project.optional-dependencies]
 test = ["pytest>=8,<10"]
+capture = ["opencv-python>=4.10,<5"]
 
 [project.scripts]
 radar-vision = "radar_vision.cli:main"
+radar-vision-stream = "radar_vision.stream:main"
+radar-vision-setup = "radar_vision.setup:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

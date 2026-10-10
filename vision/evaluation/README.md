@@ -46,3 +46,20 @@
 ## output 정리 이후 확인 위치
 
 2026-10-10 문서 보관 요청으로 중복 실행 output을 삭제했다. 위의 output 경로는 당시 실행 기록이며 현재 보관 위치가 아니다. 최신 사진·최종 JSON·ROI와 전처리 근거는 [팀 공유 문서](../../docs/vision/README.md)에 보존했다. 첫 번째 참고 사진과 중간 실험 원본은 포함하지 않고 최종 MCP 사진 1개만 공유한다.
+
+## 태블릿 화면·스트림 후속 검증 (2026-10-10)
+
+- Vision 테스트 45개 통과. 스트림 테스트는 mock 카메라·결정론적 OCR로 freshness/장애 안전 경계를 검사하며 실제 모델 정확도 검사와 구분한다.
+- frontend 빌드와 브라우저 값 변경·입력 범위·가림·촬영 모드 확인. 구현 화면 캡처에서 실제 OCR 3000/270/250 확인.
+- 기존 합성 PNG 4개를 각각 3프레임씩 FFV1 무손실 AVI로 임시 생성해 stream 명령으로 실제 OCR 처리. 3000/270→3500/290→ALT 가림→16000/0: 처음 2회 및 변경 직후 null, 3회째 새 값, ALT 가림 null, HDG 0 보존, EOF health 확인. 파일 촬영 UTC는 null이다.
+- 같은 MJPG 압축 영상은 ALT 3500이 low_model_score로 보류되어 해당 숫자 판독 기대를 충족하지 못했다. 임계값을 낮춰 통과시키지 않았다.
+- 임시 출력은 저장소에 추가하지 않았다. 실제 태블릿 촬영·ROI GUI·웹캠 분리/재연결·품질/지연 평가는 미실행. [재현 안내](../docs/tablet-demo.md).
+
+무손실 합성 영상 재현 (저장소 루트):
+
+```sh
+vision/.venv/bin/python vision/evaluation/generate_video.py --output vision/output/evaluation-stream.avi
+vision/.venv/bin/python -m radar_vision.stream --video vision/output/evaluation-stream.avi --config vision/configs/synthetic.json --ocr-binary vision/.build/radar-ocr --sample-seconds 0.333333 --stable-frames 3 --output-dir vision/output/evaluation-stream
+```
+
+MJPG 비교는 생성 명령에 `--codec MJPG`를 추가한다. 이 영상은 기존 조정용 합성 fixture의 재생 회귀용이며 독립 평가 세트가 아니다.

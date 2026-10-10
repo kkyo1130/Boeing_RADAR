@@ -1,6 +1,8 @@
-# Vision 1주차 PoC
+# Vision: 정지 이미지와 태블릿 촬영 스트림
 
-정지 이미지에서 **선택 ALT·HDG**를 읽고 설정에 따라 MCP 속도를 추가로 관측한다. 촬영 배치는 사용자 지정 기준을 기록했으며 실제 카메라·촬영 조건은 아직 미정이다. 포함한 화면은 직접 생성한 합성 fixture로 실제 계기 판독 성능을 대표하지 않는다.
+정지 이미지에서 **선택 ALT·HDG**를 읽고 설정에 따라 MCP 속도를 추가로 관측한다. 태블릿용 화면은 frontend에 있다. 웹캠·영상 파일 입력, 연결/지연 감시와 연속 판독 안정화를 추가했으며 실제 태블릿/카메라의 ROI·촬영 조건 검증은 남아 있다. 포함한 화면은 직접 생성한 합성 fixture로 실제 계기 판독 성능을 대표하지 않는다.
+
+태블릿 화면 → 촬영 프레임 저장 → ROI 설정 → 스트림 실행은 [태블릿 데모 안내](docs/tablet-demo.md)를 따른다.
 
 ## 실행 (저장소 루트)
 
@@ -16,7 +18,7 @@ vision/.venv/bin/python -m pytest vision/tests -q
 vision/.venv/bin/python vision/evaluation/run.py --ocr-binary vision/.build/radar-ocr
 ```
 
-OCR에 macOS 실행 권한이 필요할 수 있다. OCR 실행 실패는 `ocr_unavailable`로 기록한다. 테스트는 일부러 OCR을 가짜 응답으로 대체하지 않으며, 실제 엔진 검증은 별도 evaluation 명령으로 수행한다.
+OCR에 macOS 실행 권한이 필요할 수 있다. OCR 실행 실패는 `ocr_unavailable`로 기록한다. 실제 엔진 검증은 별도 evaluation 명령으로 수행한다. 스트림 안전 경계 테스트는 결정론적 OCR 실행 파일과 가짜 카메라를 사용하므로 실제 모델/장비 검증과 구분한다.
 
 ## 실제 화면으로 전환
 
@@ -25,7 +27,7 @@ OCR에 macOS 실행 권한이 필요할 수 있다. OCR 실행 실패는 `ocr_un
 3. `image_size`를 실제 픽셀 크기로, 각 `roi`를 `[left, top, right, bottom]`으로 지정한다. 원점은 좌상단, 오른쪽/아래 경계는 제외한다. 자동 크기 변경은 하지 않는다.
 4. ALT 표기가 feet 숫자면 `feet`, FL 숫자면 `FL`로 지정한다. 단위 글자는 ROI에서 제외한다. HDG는 `degrees`이며 360을 임의로 0으로 바꾸지 않는다.
 5. 정상·설정 변경·가림·흐림·반사 샘플과 수동 정답을 따로 수집한다. 실제 영상은 사용 권한을 확인하고 무조건 Git에 추가하지 않는다.
-6. CLI로 실제 이미지 검증 후 카메라·연속 프레임 작업으로 진행한다.
+6. CLI로 실제 촬영 이미지를 검증한 뒤 스트림을 실행한다. [태블릿 데모 안내](docs/tablet-demo.md)를 참고한다.
 
 결과와 전체 이미지·ROI 근거는 출력 폴더의 프레임별 하위 폴더에 저장한다. 라벨은 evaluation에서만 사용한다. 모델 점수는 정확도/확률이 아니며 `minimum_model_score=0.5`는 실험 설정이다. 빈 영역·문자 혼입·낮은 점수·OCR 장애는 숫자 대신 null과 사유를 반환한다. 흐림/반사 일반 탐지는 아직 없으며, 읽힌 오답을 모두 걸러낸다는 보장은 없다.
 
@@ -37,8 +39,8 @@ OCR에 macOS 실행 권한이 필요할 수 있다. OCR 실행 실패는 `ocr_un
 
 ## 현재 범위
 
-- 구현: 이미지 파일·설정 입력, ROI 근거, OCR, FL→feet, 0도, 실패/범위 검사, JSON 결과.
-- 미구현: 영상/웹캠, 입력 끊김·지연 감시, 연속 프레임 안정화, 서버 전송, 실제 화면 검증.
+- 구현: 이미지·영상·웹캠 입력, 수동 ROI 설정, ROI 근거, OCR, FL→feet, 0도, 실패/범위 검사, 끊김·지연 감시, 연속 판독 안정화, 로컬 JSON 결과.
+- 미완료: 흐림/반사 일반 탐지, 서버 전송·지시 연결, 실제 태블릿 카메라 검증. 실제 Cockpit 검증은 이번 데모 범위 밖이다.
 - 결과 형식과 현재 서버의 차이: [계약 초안](../contracts/vision-poc.md).
 - 현재 검증 근거: [평가 기록](evaluation/README.md).
 
@@ -69,3 +71,19 @@ MCP 설정의 `heading.ocr_preprocessing`으로 방위 ROI만 흑백·4배 확�
 ## 팀 공유 결과
 
 사진·실제 결과 JSON·ROI/OCR 근거 및 재현 명령은 [MCP Vision PoC 문서](../docs/vision/README.md)에 모았다. 중간 output은 정리했고 필요하면 재실행한다.
+
+## 스트림 결과
+
+`vision-stream/1`은 로컬 이벤트 형식이다. `observation` 이벤트는 vision-stream-observation/1 결과를 담고, `health` 이벤트는 `observation=null`로 이전 숫자를 제거한다. 현재 서버의 공통 계약이나 최종 판정이 아니다.
+
+- `event_type`: observation 또는 health.
+- `input_mode`: camera 또는 video_file. `live_input`은 카메라 경로 여부이며 정상/신선함을 보증하지 않는다.
+- `health`: 입력 상태 available/degraded/unavailable와 reason. OCR 실패는 필드 reason으로 따로 남긴다.
+- `emitted_at`: UTC 이벤트 생성 시각. 카메라 `frame_age_seconds`는 호스트 수신부터 OCR 완료까지의 시간이다. 파일에서는 null.
+- `observation`: schema_version=vision-stream-observation/1. ocr_schema_version은 원래 정지 이미지 OCR 버전(/1 또는 /2)을 기록한다. frame_sequence, capture_time_basis(host_receive/unknown), media_time_ms와 기존 값·시각·근거. 카메라의 captured_at은 호스트 수신 시각이며 센서 노출 시각이 아니다. 파일의 captured_at은 null.
+- `stable_count`: 연속 같은 값 판독 횟수. `candidate_value`는 진단용으로, 안정화 전에도 존재할 수 있다. 소비자는 value와 reason을 사용해야 한다.
+- `latest.json`: 마지막 이벤트를 원자적으로 교체한다. health일 때 지난 observation을 재사용하지 않는다. 오래된 파일 자체를 새 입력으로 해석하지 않는다.
+
+상태 사유: camera_starting/camera_unavailable/camera_disconnected/camera_error/frame_timeout/stale_frame/stale_observation/camera_reconnected/capture_stopped/input_error/video_ended/video_no_frames/playback_stopped. 필드 reason은 기존 OCR 사유와 unstable_reading 또는 입력 장애 사유다. 별도 감시 스레드가 OCR 처리 중에도 이전 관측 만료/프레임 중단을 감시한다.
+
+입력/설정 오류는 종료 코드 2, 정상 종료 및 Ctrl-C는 0이다. 종료 코드 0은 숫자 판독 성공을 뜻하지 않는다. Ctrl-C는 진행 중인 네이티브 OCR 호출 종료까지 지연될 수 있으며, 그동안 상태 감시는 계속된다. 카메라 장애 시 수신을 재시도하므로 카메라 모드는 duration 또는 Ctrl-C까지 실행된다.
