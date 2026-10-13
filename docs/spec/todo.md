@@ -18,7 +18,7 @@
 | [SPEC-001-WI-03](001-development.md#wi-03) | 자동 검증 기반과 공유 개발 안내 | P0 | 공통 | SPEC-001-WI-02 | pending |
 | [SPEC-002-WI-01](002-observation-contracts.md#wi-01) | 공통 관측·품질·근거 계약 정의 | P0 | 공통 | SPEC-001-WI-01 | done |
 | [SPEC-002-WI-02](002-observation-contracts.md#wi-02) | 백엔드 수신·지시 연결과 중복/지연 처리 | P0 | 노남경 | SPEC-002-WI-01 | done |
-| [SPEC-002-WI-03](002-observation-contracts.md#wi-03) | 생산자·소비자 계약 통합 검증 | P0 | 공통 | SPEC-002-WI-02 | pending |
+| [SPEC-002-WI-03](002-observation-contracts.md#wi-03) | 생산자·소비자 계약 통합 검증 | P0 | 공통 | SPEC-002-WI-02 | done |
 | [SPEC-003-WI-01](003-cockpit-vision.md#wi-01) | 정답 영상과 촬영·ROI 설정 | P0 | 김세현 | SPEC-001-WI-01 | implementing |
 | [SPEC-003-WI-02](003-cockpit-vision.md#wi-02) | 카메라·파일 입력과 상태 감시 | P0 | 김세현 | SPEC-003-WI-01, SPEC-002-WI-01 | implementing |
 | [SPEC-003-WI-03](003-cockpit-vision.md#wi-03) | ALT/HDG 인식·품질·안정화 | P0 | 김세현 | SPEC-003-WI-02 | implementing |
@@ -55,7 +55,7 @@
 
 ## 다음 작업
 
-- 공통: SPEC-002-WI-01 공통 계약 정의 완료. WI-02 v1 수신·지시 연결·시각 검증 완료. 다음은 WI-03 mock 생산자 계약 통합 검증이며, 최종 3상태 판정은 SPEC-005에서 구현한다.
+- 공통: SPEC-002-WI-01 공통 계약 정의 완료. WI-02 v1 수신·지시 연결·시각 검증 완료. WI-03 mock 생산자 계약 통합 검증 완료. 다음은 SPEC-005-WI-01 규칙 재검증이며, 실제 생산자 연동은 SPEC-003/004에서 진행한다.
 - 세현님: 태블릿용 MCP 화면과 Vision 영상/웹캠·상태 감시·안정화 구현. 다음은 태블릿 실제 프레임 저장→ROI 설정→정답 데이터→가림/끊김/재연결 검증. SPEC-003-WI-01~03은 실제 촬영/공통 계약 AC 미충족으로 implementing 유지. 서버 전송 WI-04는 pending.
 - 다른 파트의 작업은 역할 담당과 실제 별도 저장소/미공유 코드 존재 여부를 확인한다.
 
@@ -84,3 +84,5 @@
 - 2026-10-13: 사용자 요청으로 SPEC-002-WI-01 공통 계약·6개 예제·호환성 및 실패 경계 검사 완료. AC-01 근거는 해당 workitem 참조. 새 API/실장비 연동 완료를 뜻하지 않음.
 
 - 2026-10-13: SPEC-002-WI-02 공통 계약 수신·추가 저장소·마이그레이션 완료. 기존 회귀 포함 70 passed. v1 판정은 UNVERIFIED/validation_pending이며 실제 생산자/실장비 연결과 SPEC-005 판정은 후속 범위. 근거는 해당 workitem 참조.
+
+- 2026-10-13: SPEC-002-WI-03 Mock 생산자/서버 계약 통합 14개 완료. 기존 회귀 포함 84 passed. SPEC-002의 Mock 계약 AC 완료이며 실제 장비/모델 어댑터 성공과 최종 3상태 판정은 후속 범위. 근거는 해당 workitem 참조.

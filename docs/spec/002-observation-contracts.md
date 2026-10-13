@@ -21,7 +21,7 @@
 
 ## 이미 구현된 기반
 
-기본 Observation DTO, endpoint별 source, clearance_id 연결, 입력 순서/중복 거부가 있다. null·부분 지시·quality/health/evidence·버전·freshness 확장은 없다. 상세 실행 근거는 [구현 현황](../IMPLEMENTATION_STATUS.md)을 참조한다. 아래 WI는 확장 요구까지 포함하므로 이 기반만으로 done 처리하지 않는다.
+기존 Mock 경로에는 기본 Observation DTO, endpoint별 source, clearance_id 연결, 입력 순서/중복 거부가 있다. WI-01/02로 별도 v1 경로에 null·부분 지시·quality/health/evidence·버전·시각 검사를 추가했다. 상세 실행 근거는 [구현 현황](../IMPLEMENTATION_STATUS.md)을 참조한다. 아래 WI는 확장 요구까지 포함하므로 이 기반만으로 done 처리하지 않는다.
 
 ## 완료 조건
 
@@ -70,10 +70,10 @@
 
 #### 결과·검증·리뷰·인수인계
 
-- 구현: 2026-10-13 사용자 후속 요청으로 WI-02 진행. `backend/app/api/contract_observations.py`, `services/contract_service.py`, `models/contract_observation.py`, `app/migrate_contract_storage.py`, `app/main.py`, `tests/test_contract_receiving.py` 및 [API 안내](../../contracts/observation-api-v1.md) 추가/갱신. `python` 브랜치 `6ca59c5` 기준 미커밋. `/api/v1` 지시 예약·관측/수정/health 수신·상태/이력 조회 구현. 기존 Mock DTO·테이블·API 보존. 최신 포인터와 입력 이력을 같은 트랜잭션으로 저장.
+- 구현: 2026-10-13 사용자 후속 요청으로 WI-02 진행. `backend/app/api/contract_observations.py`, `services/contract_service.py`, `models/contract_observation.py`, `app/migrate_contract_storage.py`, `app/main.py`, `tests/test_contract_receiving.py` 및 [API 안내](../../contracts/observation-api-v1.md) 추가/갱신. `python` 브랜치 `69f2f38`에 커밋된 선행 구현. `/api/v1` 지시 예약·관측/수정/health 수신·상태/이력 조회 구현. 기존 Mock DTO·테이블·API 보존. 최신 포인터와 입력 이력을 같은 트랜잭션으로 저장.
 - 검증: backend에서 `/private/tmp/radar-contract-venv/bin/python -m pytest -q`: **70 passed, 1 warning**(Starlette/httpx deprecation). 기존 54개+새 16개: 부분 지시/0도/null/수정·중복/동시 재시도·시각 미상/미래/stale 경계·역순·다른 비행/대체 지시/종료·health·마이그레이션 2회·실패 커밋 원자성 확인. OpenAPI의 신규 4개 경로·ObservationContract 요청 스키마 확인. TestClient·임시 SQLite 검증이며 실장비/실제 외부 HTTP·다른 DB는 미실행. `git diff --check`·문서 로컬 링크 검사 통과.
 - 리뷰: 단일 에이전트가 역할 지침 적용. 동일 sample 재사용·잘못된 이전 수정 참조 거부, ATC 수정 시 종속 관측 제거, 거부된 미래 입력의 watermark 오염 방지, 시각 미상 값의 정상 처리 방지 확인. 수신 accepted와 최종 판정 분리: 새 v1 경로는 UNVERIFIED/validation_pending을 유지하며 SPEC-005 이전에 VERIFIED/RESOLVED를 만들지 않음. 기존 legacy Mock 경로의 confidence/freshness 미지원은 그대로이며 실입력에는 사용하지 않음.
-- 인수인계: 다음 WI-03에서 mock 생산자·소비자 공통 예제를 통합 검증. SPEC-005에서 규칙·3상태 판정, SPEC-007에서 Incident/해결, SPEC-008에서 통합 Trace를 구현. 임시 30초 age 기본값은 설정 가능하며 Q-04 팀 확정·실장비 평가를 뜻하지 않음. 기존 사용자 `.gitignore` 변경 보존. 커밋/푸시 미실행.
+- 인수인계: 다음 WI-03에서 mock 생산자·소비자 공통 예제를 통합 검증. SPEC-005에서 규칙·3상태 판정, SPEC-007에서 Incident/해결, SPEC-008에서 통합 Trace를 구현. 임시 30초 age 기본값은 설정 가능하며 Q-04 팀 확정·실장비 평가를 뜻하지 않음. 기존 사용자 `.gitignore` 변경 보존. 후속 확인 시 WI-02 커밋 `69f2f38`이 현재 체크아웃에 존재함; 원격 푸시 여부는 이번 작업에서 검증하지 않음.
 
 <a id="wi-03"></a>
 
@@ -90,10 +90,10 @@
 
 #### 결과·검증·리뷰·인수인계
 
-- 구현: 미착수; 코드 기준·변경 파일은 수행 후 기록.
-- 검증: 미실행; 실제 명령·환경·기대/관찰 결과·통과/실패/차단을 수행 후 기록.
-- 리뷰: 미수행; 계약·범위·회귀·근거 검토와 지적 해결 여부를 수행 후 기록.
-- 인수인계: 담당 세션 미배정; 선행 결과와 해당 미정 사항 확인 후 이 WI를 지정해 착수.
+- 구현: 2026-10-13 후속 요청으로 `tests/integration/mock_contract_producer.py`, `conftest.py`, `test_contract_producer_integration.py`, [통합 검증 안내](../../tests/integration/README.md) 추가. 원본 계약 예제 6개 재사용. `python` 브랜치 `69f2f38` 기준 미커밋 변경이며 제품 코드·원본 예제는 수정하지 않음.
+- 검증: backend에서 `/private/tmp/radar-contract-venv/bin/python -m pytest tests ../tests/integration -q`: **84 passed, 1 warning**(Starlette/httpx deprecation), 기존 70개와 통합 14개 통과. Mock→JSON API→임시 SQLite→상태/이력 조회 경계에서 정상 3source·부분 지시/null/0도·미인식·시각 미상·health·새 지시·새 샘플 수정·버전/단위/사유 위반·UTC 재시도 의미 확인. 초기 테스트 이름 충돌은 통합 테스트 파일명 변경으로 해결했고 +00:00/Z 문자열 비교 실패는 같은 시각의 의미 비교로 수정함. `git diff --check` 및 로컬 문서 링크 검사 통과.
+- 리뷰: 단일 에이전트가 역할 지침 적용. Mock 생산자는 서버 스키마를 import하지 않고 독립 JSON을 전송함. 원본 예제의 값·품질·실패 사유·근거를 유지하고 새 합성 샘플에만 ID/시각을 부여함. health가 새 관측/해결을 만들지 않는지, 이전 지시 관측이 새 지시에 복사되지 않는지, 수정 전후 이력과 UTC 정규화 의미를 확인함. AC-01은 기존 스키마/예제 검사, AC-02는 기존 수신/마이그레이션 검사, AC-03은 새 통합 14개로 전체 대조.
+- 인수인계: SPEC-002의 Mock 계약 검증 완료. 실제 카메라·마이크·SDR·OCR/STT 어댑터, 실제 외부 HTTP 서버와 다른 DB 검증은 미실행. v1 상태는 SPEC-005 구현 전 UNVERIFIED/validation_pending 유지. 다음 구현은 SPEC-005-WI-01 규칙 재검증이며 실제 생산자 연동은 SPEC-003/004에서 진행. 커밋/푸시 미실행, 사용자 `.gitignore` 변경 보존.
 
 ## 변경 기록
 
@@ -102,3 +102,5 @@
 - 2026-10-13: SPEC-002-WI-01 공통 버전 계약·예제·호환성 검증 추가. 요구사항 변경 없이 AC-01 구현; 서버 수신은 WI-02 범위.
 
 - 2026-10-13: SPEC-002-WI-02 v1 수신·지시 예약·연결·중복/시각 경계·추가 DB 마이그레이션 구현. AC-02 완료, 최종 판정은 SPEC-005로 분리.
+
+- 2026-10-13: SPEC-002-WI-03 독립 Mock 생산자·JSON API 통합 검증 14개와 실행 안내 추가. AC-01~03 Mock 범위 완료, 실입력 성공으로 해석하지 않음.
