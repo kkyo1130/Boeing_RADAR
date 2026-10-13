@@ -78,3 +78,7 @@ JSON Mock Observation → Flight/Clearance 관리 → ATC와 Readback 비교 →
 SPEC-002-WI-01 계약은 `6ca59c5`로 origin/python에 공유했다. WI-02는 현재 체크아웃의 `69f2f38`에 구현되어 있으며 [v1 API](../contracts/observation-api-v1.md)에서 지시 예약·관측/수정/health 수신·시각/중복/연결 검사·상태/이력 조회를 제공한다. legacy Mock 경로·테이블은 보존하고 추가 저장소를 사용한다. 신규 v1 입력은 항상 UNVERIFIED/validation_pending으로 표시하며 최종 판정은 SPEC-005 범위다. 실제 생산자·장치 연결은 미검증이다. 실행 결과와 남은 결정은 [WI-02](spec/002-observation-contracts.md#wi-02)에 기록한다.
 
 2026-10-13 WI-03에서 독립 Mock 생산자의 JSON API 통합 검증을 추가했다. SPEC-002의 Mock 범위 AC-01~03을 대조했으며 실장비/모델 어댑터 검증과 최종 판정은 미완료다. 재현은 [통합 검증 안내](../tests/integration/README.md), 결과는 [WI-03](spec/002-observation-contracts.md#wi-03)에 기록한다.
+
+## 결정론적 구조화 검사 — 2026-10-13
+
+SPEC-005-WI-01에서 [검사 함수·정책](../contracts/extraction-rules.md)을 추가했다. HDG/FL/원문 값/확인 문맥/급변을 PASS·INVALID·NEEDS_REVIEW로 검사한다. 함수 구현만 완료했으며 API 상태는 아직 UNVERIFIED/validation_pending이다. 최종 3상태 판정 연결은 WI-02 범위다. 모의 정책은 실장비 운용 기준이 아니며 결과와 검증 범위는 [WI-01](spec/005-safe-validation.md#wi-01)에 기록한다.

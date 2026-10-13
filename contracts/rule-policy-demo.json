@@ -1,0 +1,7 @@
+{
+  "policy_id": "mock-demo/1",
+  "max_altitude_feet": 60000,
+  "max_altitude_change_feet": 6000,
+  "max_heading_change_degrees": 90,
+  "change_window_seconds": 10.0
+}

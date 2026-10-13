@@ -28,7 +28,7 @@
 | [SPEC-004-WI-02](004-speech-communication.md#wi-02) | ATC/Pilot STT와 문맥 구조화 | P0 | 노남경 | SPEC-004-WI-01, SPEC-002-WI-02 | pending |
 | [SPEC-004-WI-03](004-speech-communication.md#wi-03) | 음성 품질·입력 건전성과 불확실성 | P0/P1 | 이예찬·노남경 | SPEC-004-WI-01, SPEC-004-WI-02 | pending |
 | [SPEC-004-WI-04](004-speech-communication.md#wi-04) | 음성 경로 전체 통합 검증 | P0 | 이예찬·노남경 | SPEC-004-WI-02, SPEC-004-WI-03, SPEC-005-WI-02 | pending |
-| [SPEC-005-WI-01](005-safe-validation.md#wi-01) | 독립 결정론적 구조화 검사 | P0 | 노남경 | SPEC-002-WI-02 | pending |
+| [SPEC-005-WI-01](005-safe-validation.md#wi-01) | 독립 결정론적 구조화 검사 | P0 | 노남경 | SPEC-002-WI-02 | done |
 | [SPEC-005-WI-02](005-safe-validation.md#wi-02) | NORMAL/MISMATCH/UNVERIFIED와 오류 단계 | P0 | 노남경 | SPEC-005-WI-01 | pending |
 | [SPEC-005-WI-03](005-safe-validation.md#wi-03) | 판정 전체 회귀·거짓 정상 확인 | P0 | 노남경 | SPEC-005-WI-02 | pending |
 | [SPEC-006-WI-01](006-advisory-interface.md#wi-01) | React 비행 화면·운영 화면과 서버 연결 | P0 | 노남경 | SPEC-002-WI-02 | pending |
@@ -55,7 +55,7 @@
 
 ## 다음 작업
 
-- 공통: SPEC-002-WI-01 공통 계약 정의 완료. WI-02 v1 수신·지시 연결·시각 검증 완료. WI-03 mock 생산자 계약 통합 검증 완료. 다음은 SPEC-005-WI-01 규칙 재검증이며, 실제 생산자 연동은 SPEC-003/004에서 진행한다.
+- 공통: SPEC-002-WI-01 공통 계약 정의 완료. WI-02 v1 수신·지시 연결·시각 검증 완료. WI-03 mock 생산자 계약 통합 검증 완료. SPEC-005-WI-01 결정론적 검사 완료. 다음은 SPEC-005-WI-02 3상태 판정 연결이며, 실제 생산자 연동은 SPEC-003/004에서 진행한다.
 - 세현님: 태블릿용 MCP 화면과 Vision 영상/웹캠·상태 감시·안정화 구현. 다음은 태블릿 실제 프레임 저장→ROI 설정→정답 데이터→가림/끊김/재연결 검증. SPEC-003-WI-01~03은 실제 촬영/공통 계약 AC 미충족으로 implementing 유지. 서버 전송 WI-04는 pending.
 - 다른 파트의 작업은 역할 담당과 실제 별도 저장소/미공유 코드 존재 여부를 확인한다.
 
@@ -86,3 +86,5 @@
 - 2026-10-13: SPEC-002-WI-02 공통 계약 수신·추가 저장소·마이그레이션 완료. 기존 회귀 포함 70 passed. v1 판정은 UNVERIFIED/validation_pending이며 실제 생산자/실장비 연결과 SPEC-005 판정은 후속 범위. 근거는 해당 workitem 참조.
 
 - 2026-10-13: SPEC-002-WI-03 Mock 생산자/서버 계약 통합 14개 완료. 기존 회귀 포함 84 passed. SPEC-002의 Mock 계약 AC 완료이며 실제 장비/모델 어댑터 성공과 최종 3상태 판정은 후속 범위. 근거는 해당 workitem 참조.
+
+- 2026-10-13: SPEC-005-WI-01 PASS/INVALID/NEEDS_REVIEW 검사·모의 정책·31개 사례 완료. 기존 회귀/통합 포함 115 passed. v1 판정 연결·실장비 정책 검증은 후속 범위. 근거는 해당 workitem 참조.
