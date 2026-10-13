@@ -72,3 +72,7 @@ JSON Mock Observation → Flight/Clearance 관리 → ATC와 Readback 비교 →
 - 미실행: 실제 태블릿/웹캠, ROI GUI 수동 선택, 반사·흐림 평가 세트, 서버 통합. backend 제품 코드를 바꾸지 않아 기존 backend 회귀는 이번에 재실행하지 않음. WI-01~03 implementing, WI-04~05 pending 유지.
 
 재현과 다음 실장비 작업은 [태블릿 안내](../vision/docs/tablet-demo.md), 작업 기록은 [SPEC-003](spec/003-cockpit-vision.md)에 있다.
+
+## 공통 계약 수신 추가 — 2026-10-13
+
+SPEC-002-WI-01 계약은 `6ca59c5`로 origin/python에 공유했다. WI-02는 해당 기준의 미커밋 구현이며 [v1 API](../contracts/observation-api-v1.md)에서 지시 예약·관측/수정/health 수신·시각/중복/연결 검사·상태/이력 조회를 제공한다. legacy Mock 경로·테이블은 보존하고 추가 저장소를 사용한다. 신규 v1 입력은 항상 UNVERIFIED/validation_pending으로 표시하며 최종 판정은 SPEC-005 범위다. 실제 생산자·장치 연결은 미검증이다. 실행 결과와 남은 결정은 [WI-02](spec/002-observation-contracts.md#wi-02)에 기록한다.

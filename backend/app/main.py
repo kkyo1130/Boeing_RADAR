@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.db import Base, engine
 from app.models import flight, clearance, safety_event
-from app.api import flights, clearances
+from app.api import flights, clearances, contract_observations
 
 @asynccontextmanager
 async def lifespan(app):
@@ -37,3 +37,4 @@ Readback 비교가 우선이며, 복명복창 오류 수정은 Cockpit이 없어
 )
 app.include_router(flights.router)
 app.include_router(clearances.router)
+app.include_router(contract_observations.router)

@@ -1,6 +1,6 @@
 # RADAR 공통 관측 계약 — radar-observation/1
 
-SPEC-002-WI-01의 버전 계약이다. 서버·Vision·통신이 연결할 목표 형식이며 **현재 API가 이 형식을 수신한다는 뜻은 아니다**. Python 계약 원본은 [ObservationContract](../backend/app/schemas/observation_contract.py), 배포용 구조 스키마는 [JSON Schema](schemas/observation-v1.schema.json)다. Pydantic의 교차 필드 검사도 계약의 일부이므로 JSON Schema 검사만으로 유효성을 확정하지 않는다.
+SPEC-002-WI-01의 버전 계약이다. 서버·Vision·통신이 연결할 공통 형식이다. WI-02에서 [v1 수신 API](observation-api-v1.md)를 구현했으며 **기존 Mock API는 이 형식을 수신하지 않는다**. Python 계약 원본은 [ObservationContract](../backend/app/schemas/observation_contract.py), 배포용 구조 스키마는 [JSON Schema](schemas/observation-v1.schema.json)다. Pydantic의 교차 필드 검사도 계약의 일부이므로 JSON Schema 검사만으로 유효성을 확정하지 않는다.
 
 ## 이벤트와 연결
 
@@ -27,7 +27,7 @@ SPEC-002-WI-01의 버전 계약이다. 서버·Vision·통신이 연결할 목�
 | speech | ATC/READBACK 관측의 음성 문맥 객체. COCKPIT/health는 null |
 | evidence | 근거 객체 배열. 근거 없음은 빈 배열, health는 반드시 빈 배열 |
 
-최초 ATC도 지시 ID를 미리 할당받거나 서버가 예약한 ID를 사용한다. 기존 서버는 ATC 수신 시 지시를 생성하므로 이 연결 방식은 WI-02에서 구현한다. 역할 미확정 구간은 ATC/READBACK을 추정해서 전송하지 않고 해당 입력 채널의 degraded health와 사유로 전달한다.
+최초 ATC도 지시 ID를 미리 할당받거나 서버가 예약한 ID를 사용한다. 기존 서버는 ATC 수신 시 지시를 생성하므로 이 연결 방식은 [v1 지시 예약 API](observation-api-v1.md)에서 구현한다. 역할 미확정 구간은 ATC/READBACK을 추정해서 전송하지 않고 해당 입력 채널의 degraded health와 사유로 전달한다.
 
 관측 ID는 처리 결과, sample_id는 원본을 식별한다. 새로운 수정 관측에는 새 관측 ID뿐 아니라 **수정 이후의 새 원본**이 필요하다. 스키마만으로 원본 중복·지시 소유·freshness를 확인할 수 없으므로 WI-02/007에서 서버가 검사한다. 같은 입력의 재처리를 새 관측 근거로 사용하지 않는다.
 
