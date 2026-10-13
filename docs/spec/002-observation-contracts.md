@@ -12,7 +12,7 @@
 
 파트가 공통 단위·지시 ID·품질·근거로 데이터를 주고받는다.
 
-포함 범위는 아래 workitem의 산출물이다. 실제 항공기 제어·QNH/Baro와 다른 기능의 소유 계약은 제외한다. 새 제품 코드는 이번 문서 정리 요청에서 구현하지 않는다.
+포함 범위는 아래 workitem의 산출물이다. 실제 항공기 제어·QNH/Baro와 다른 기능의 소유 계약은 제외한다. 2026-10-13 사용자 요청으로 WI-01의 계약 코드·예제를 구현한다. 서버 수신·DB·판정 로직은 후속 WI 범위다.
 
 ## 동작·계약·미정 사항
 
@@ -50,10 +50,10 @@
 
 #### 결과·검증·리뷰·인수인계
 
-- 구현: Vision 로컬 결과 초안만 작성·미커밋. [Vision 계약](../../contracts/vision-poc.md), 실제 실행 기반 정상/판독 불가 예제 포함. 사용자 요청에 따라 JSON 필드 타입·의미·실패 사유·ROI·출력 위치·종료 코드와 서버 비호환을 상세 문서화. 공통 버전 스키마·지시 연결·팀 합의는 미완료.
-- 검증: 미실행; 실제 명령·환경·기대/관찰 결과·통과/실패/차단을 수행 후 기록.
-- 리뷰: 미수행; 계약·범위·회귀·근거 검토와 지적 해결 여부를 수행 후 기록.
-- 인수인계: 담당 세션 미배정; 선행 결과와 해당 미정 사항 확인 후 이 WI를 지정해 착수.
+- 구현: 2026-10-13 사용자 요청으로 공통 `radar-observation/1` 계약 작성. [계약 문서](../../contracts/observation-v1.md), [구조 스키마](../../contracts/schemas/observation-v1.schema.json), `backend/app/schemas/observation_contract.py`, `contracts/examples/observation-v1/`의 6개 예제와 `backend/tests/test_observation_contract.py` 추가. 기존 DTO·API·Vision 생산자는 변경하지 않음. 현재 `python` 브랜치 `2c23b69` 기준 미커밋 변경.
+- 검증: backend에서 임시 가상환경 Python 3.13 / Pydantic 2.14.1로 `python -m pytest -q` 실행. 최종 **54 passed, 1 warning**(Starlette/httpx deprecation). 마지막 타입 제약 수정 후 배포 스키마 불일치가 1회 탐지되어 재생성했고 최종 전체 검사를 통과함. `git diff --check` 및 변경 문서의 로컬 링크 검사 통과. 정상/부분 지시/판독 불가/시각 미상/수정/health 예제와 범위·UTC·근거·연결 실패, 배포 스키마 일치, 기존 ObservationInput 비호환 경계 확인.
+- 리뷰: 단일 에이전트가 역할 지침으로 검토. partial 필드 null과 판독 실패 value=null 구분, 0도 보존, unavailable 숫자 거부, 원본 sample ID와 관측 ID 분리, score를 확률로 표현하지 않는지 확인. JSON Schema만으로 교차 필드 검사를 대체할 수 없음을 문서화. 팀 합의·실제 생산자 호환성을 확인했다고 주장하지 않음.
+- 인수인계: WI-02에서 지시 ID 예약/생성·수신·DB·중복/역순/freshness 검사를 구현하고 WI-03에서 생산자 어댑터를 통합 검증. Q-04 임계값은 미정으로 유지하며 구조 계약 완료를 차단하지 않음. 실제 카메라/마이크/SDR, HTTP 새 계약 수신은 미실행. 사용자 `.gitignore` 변경 보존.
 
 <a id="wi-02"></a>
 
@@ -98,3 +98,5 @@
 ## 변경 기록
 
 - v1 · 2026-10-10: 사용자 제공 기획·Priority·자문과 현재 코드로 최초 작업 초안 작성. 문서 작성 권한과 기능 구현 권한은 구분한다.
+
+- 2026-10-13: SPEC-002-WI-01 공통 버전 계약·예제·호환성 검증 추가. 요구사항 변경 없이 AC-01 구현; 서버 수신은 WI-02 범위.

@@ -1,0 +1,24 @@
+{
+  "schema_version": "radar-observation/1",
+  "event_type": "health",
+  "event_id": "event-1",
+  "observation_id": null,
+  "flight_id": "FLT-demo",
+  "clearance_id": null,
+  "source": "COCKPIT",
+  "channel_id": "camera-1",
+  "input_mode": "fixture",
+  "sample_id": null,
+  "captured_at": null,
+  "capture_time_basis": "unknown",
+  "processed_at": "2026-10-13T00:00:01Z",
+  "health": {
+    "status": "unavailable",
+    "reason": "camera_disconnected"
+  },
+  "intent": null,
+  "supersedes_observation_id": null,
+  "fields": null,
+  "speech": null,
+  "evidence": []
+}
