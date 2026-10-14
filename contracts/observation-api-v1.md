@@ -5,7 +5,8 @@
 ## 호출 순서
 
 1. 기존 `POST /api/flights/start`로 비행을 시작한다.
-2. `POST /api/v1/flights/{flight_id}/clearances`로 지시 ID를 예약한다. body는 없다. 응답은 clearance_id, flight_id, created_at, active, status, reasons, observations다. 같은 비행의 이전 v1 지시는 즉시 비활성화된다. 기존 legacy 지시는 영향받지 않는다.
+2. `POST /api/v1/flights/{flight_id}/clearances`로 지시 ID를 예약한다. body는 없다. 응답은 clearance_id, flight_id, created_at, active, status, verdict, stages, errors, reasons, observations, resolutions, validation_context다. 같은 비행의 이전 v1 지시는 즉시 비활성화된다. 기존 legacy 지시는 영향받지 않는다.
+   판정 활성화에는 첫 관측 전 [정책·확인 문맥 등록](three-state-validation.md)이 필요하다. 설정 없이 수신/조회는 가능하지만 UNVERIFIED를 유지한다.
 3. 예약한 ID와 실제 비행 ID를 포함하여 `POST /api/v1/observations`에 ATC, READBACK, COCKPIT 순서로 보낸다. ATC 요청 필드가 null이면 그 필드는 비요청이며 객체 내 value=null이면 판독 실패다.
 4. 수정 시 새 event_id/observation_id/sample_id와 intent=correction, 해당 source의 최신 supersedes_observation_id를 보낸다. 수정 ATC가 수신되면 이전 Readback/Cockpit을 모두 무효화하므로 새 입력을 initial로 제출한다.
 5. `GET /api/v1/clearances/{clearance_id}`로 원본·사유·시각을 조회한다.
@@ -13,7 +14,7 @@
 
 ## 수신 응답과 실패
 
-관측 POST 응답은 event_id, accepted, replayed, received_at, reasons다. accepted는 **시간·순서·연결 검사를 통과해 저장된 관측**이라는 뜻이며 읽은 값의 정확성 또는 정상 판정이 아니다. null·낮은 품질도 정보를 잃지 않고 보존한다. 서버는 현재 모든 v1 지시를 UNVERIFIED와 validation_pending 사유로 반환하며 VERIFIED/RESOLVED를 생성하지 않는다. 3상태 비교와 규칙 검증은 SPEC-005에서 구현한다.
+관측 POST 응답은 event_id, accepted, replayed, received_at, reasons다. accepted는 **시간·순서·연결 검사를 통과해 저장된 관측**이라는 뜻이며 읽은 값의 정확성 또는 정상 판정이 아니다. null·낮은 품질도 정보를 잃지 않고 보존한다. SPEC-005-WI-02에서 [3상태 판정](three-state-validation.md)을 연결했다. 설정이나 확인 문맥이 없으면 UNVERIFIED이며, 새 유효 입력이 모두 검증된 경우에만 NORMAL/VERIFIED 또는 단계별 RESOLVED를 반환한다.
 
 | 조건 | 동작 |
 | --- | --- |
@@ -39,7 +40,7 @@ health는 sample/observation/fields 없이 전송하며 지시 미연결이면 c
 
 ## DB와 실행
 
-기존 테이블을 바꾸지 않고 `contract_clearances`와 `contract_events`를 추가한다. event에는 수신 시각·원본·accepted/reasons를 저장한다. 최신 포인터와 이력은 동일 트랜잭션이다. SQLite에서는 BEGIN IMMEDIATE로 수신·예약의 읽기/검사/쓰기를 직렬화하고 ID/sample DB 제약으로 중복을 막는다. 다른 DB에는 flight 행 잠금을 적용하지만 이번 검증은 SQLite만 수행한다. legacy API의 병렬 변경 정책까지 확장하지 않는다.
+기존 테이블을 바꾸지 않고 `contract_clearances`, `contract_events`, `contract_validation_settings`를 추가한다. event에는 수신 시각·원본·accepted/reasons를 저장한다. 최신 포인터와 이력은 동일 트랜잭션이다. SQLite에서는 BEGIN IMMEDIATE로 수신·예약의 읽기/검사/쓰기를 직렬화하고 ID/sample DB 제약으로 중복을 막는다. 다른 DB에는 flight 행 잠금을 적용하지만 이번 검증은 SQLite만 수행한다. legacy API의 병렬 변경 정책까지 확장하지 않는다.
 
 기존 DB에 대한 명시적·반복 실행 가능한 추가 마이그레이션은 backend에서 실행한다. 기본 DB는 기존 설정을 따른다. 앱 시작 시 create_all도 신규 테이블을 만든다.
 

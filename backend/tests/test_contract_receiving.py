@@ -188,14 +188,15 @@ def test_order_and_atc_correction_clear_dependent_inputs(client, clock):
 
 def test_additive_migration_preserves_legacy_data(tmp_path):
     engine = make_engine(f"sqlite:///{tmp_path / 'legacy.db'}")
-    tables = [t for t in Base.metadata.sorted_tables if t.name not in ("contract_clearances", "contract_events")]
+    tables = [t for t in Base.metadata.sorted_tables if t.name not in (
+        "contract_clearances", "contract_events", "contract_validation_settings")]
     Base.metadata.create_all(engine, tables=tables)
     with Session(engine) as db:
         db.add(Flight(flight_id="old", started_at="2026-10-13T00:00:00Z", status="ACTIVE"))
         db.commit()
     upgrade(engine)
     upgrade(engine)
-    assert {"contract_clearances", "contract_events"}.issubset(inspect(engine).get_table_names())
+    assert {"contract_clearances", "contract_events", "contract_validation_settings"}.issubset(inspect(engine).get_table_names())
     with Session(engine) as db:
         assert db.scalar(select(Flight)).flight_id == "old"
         assert db.scalar(select(ContractEvent)) is None

@@ -82,3 +82,7 @@ SPEC-002-WI-01 계약은 `6ca59c5`로 origin/python에 공유했다. WI-02는 �
 ## 결정론적 구조화 검사 — 2026-10-13
 
 SPEC-005-WI-01에서 [검사 함수·정책](../contracts/extraction-rules.md)을 추가했다. HDG/FL/원문 값/확인 문맥/급변을 PASS·INVALID·NEEDS_REVIEW로 검사한다. 함수 구현만 완료했으며 API 상태는 아직 UNVERIFIED/validation_pending이다. 최종 3상태 판정 연결은 WI-02 범위다. 모의 정책은 실장비 운용 기준이 아니며 결과와 검증 범위는 [WI-01](spec/005-safe-validation.md#wi-01)에 기록한다.
+
+## 3상태 판정 연결 — 2026-10-14
+
+SPEC-005-WI-02에서 [명시 설정·3상태 판정](../contracts/three-state-validation.md)을 v1 서버에 연결했다. 설정·확인 문맥·fresh/가용/검증된 입력이 있어야 NORMAL이며, 확인된 Readback/Setting 숫자 불일치는 MISMATCH, 불충분 근거는 UNVERIFIED다. 설정이 없는 기존 v1 입력은 계속 보류한다. 단계별 rules/비교·사유와 확인 주체/정책을 조회할 수 있다. Readback만 해결된 RESOLVED와 전체 NORMAL을 구분하고 장치 장애 후 새 관측을 요구한다. 이번 변경은 미커밋이며 실행 근거·미실행 범위는 [WI-02](spec/005-safe-validation.md#wi-02)에 기록한다. 전체 기능 검증 WI-03과 실장비 인수는 별도다.

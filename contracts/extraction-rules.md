@@ -1,6 +1,6 @@
 # 결정론적 구조화 검사 — SPEC-005-WI-01
 
-[check_observation](../backend/app/services/validation/rules.py)는 공통 관측 계약을 받아 `PASS / INVALID / NEEDS_REVIEW`, policy_id, issues를 반환한다. 모델 호출·값 보정·자동 Cockpit 설정 변경은 없다. 기존 validation_service.py와 API 판정은 변경하지 않으며 서버의 3상태 판정 연결은 WI-02에서 수행한다.
+[check_observation](../backend/app/services/validation/rules.py)는 공통 관측 계약을 받아 `PASS / INVALID / NEEDS_REVIEW`, policy_id, issues를 반환한다. 모델 호출·값 보정·자동 Cockpit 설정 변경은 없다. 기존 validation_service.py의 Mock 판정은 유지한다. WI-02에서 이 함수를 [v1 서버 3상태 판정](three-state-validation.md)에 연결했다.
 
 | 결과 | 의미 |
 | --- | --- |

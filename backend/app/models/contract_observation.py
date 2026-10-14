@@ -28,3 +28,10 @@ class ContractEvent(Base):
     accepted: Mapped[bool]
     reasons: Mapped[list] = mapped_column(JSON)
     payload: Mapped[dict] = mapped_column(JSON)
+
+
+class ContractValidationSettings(Base):
+    __tablename__ = "contract_validation_settings"
+    clearance_id: Mapped[str] = mapped_column(ForeignKey("contract_clearances.clearance_id"), primary_key=True)
+    confirmed_at: Mapped[str]
+    settings: Mapped[dict] = mapped_column(JSON)

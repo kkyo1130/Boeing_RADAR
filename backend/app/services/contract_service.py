@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from fastapi import HTTPException
 from sqlalchemy import select, text
-from app.models.contract_observation import ContractClearance, ContractEvent
+from app.models.contract_observation import ContractClearance, ContractEvent, ContractValidationSettings
 from app.models.flight import Flight
 from app.services.flight_service import get_flight
 
@@ -47,6 +47,27 @@ def reserve(db, flight_id):
     db.add(c)
     db.commit()
     return snapshot(db, c)
+
+
+def confirm_settings(db, clearance_id, payload):
+    # SQLite lock must precede reads, just like observation submissions.
+    if db.get_bind().dialect.name == "sqlite":
+        db.execute(text("BEGIN IMMEDIATE"))
+    c = clearance(db, clearance_id)
+    if db.get_bind().dialect.name != "sqlite":
+        db.scalar(select(Flight).where(Flight.flight_id == c.flight_id).with_for_update())
+        db.refresh(c)
+    get_flight(db, c.flight_id, active=True)
+    if not c.active:
+        raise HTTPException(409, "Clearance superseded")
+    if db.get(ContractValidationSettings, clearance_id) or db.scalar(select(ContractEvent).where(
+            ContractEvent.clearance_id == clearance_id)):
+        raise HTTPException(409, "Confirm settings once, before observations")
+    stamp = utc_now().isoformat()
+    data = payload.model_dump(mode="json")
+    db.add(ContractValidationSettings(clearance_id=clearance_id, confirmed_at=stamp, settings=data))
+    db.commit()
+    return {"clearance_id": clearance_id, "confirmed_at": stamp, "settings": data}
 
 
 def time_reasons(payload, clock, created_at=None):
@@ -149,7 +170,7 @@ def receipt(event, replayed=False):
 
 def snapshot(db, c):
     from app.schemas.observation_contract import ObservationContract
-    reasons = ["validation_pending"]  # Full three-state comparison belongs to SPEC-005.
+    reasons = []
     if not c.active:
         reasons.append("superseded_clearance")
     flight = get_flight(db, c.flight_id)
@@ -183,6 +204,13 @@ def snapshot(db, c):
                     reasons.extend(field["quality"]["reasons"])
         if any(e["availability"] != "available" for e in data["evidence"]):
             reasons.append("evidence_unavailable")
+    from app.services.validation.decision import decide
+    decision = decide(db, c, clock)
+    decision_reasons = decision.pop("reasons")
+    if db.get(ContractValidationSettings, c.clearance_id):
+        reasons = decision_reasons  # Only requested, checked fields determine the verdict.
+    else:
+        reasons.extend(decision_reasons)
     return {"clearance_id": c.clearance_id, "flight_id": c.flight_id,
             "created_at": c.created_at, "active": c.active,
-            "status": "UNVERIFIED", "reasons": sorted(set(reasons)), "observations": c.latest}
+            "reasons": sorted(set(reasons)), "observations": c.latest, **decision}
