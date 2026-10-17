@@ -17,6 +17,7 @@ from app.schemas.receiving_v2 import ReceiverConfig
 from app.schemas.structure_rules import StructurePolicy
 from app.services.structure_rules import check_structure
 from app.services.validation_v2 import evaluate
+from app.services.incidents_v2 import reconcile, view
 from app.services.safety_trace_service import record
 
 
@@ -76,10 +77,12 @@ def trace(db, profile, event_type, payload, now):
     return row
 
 
-def refresh_validation(profile, state, now, ended=False):
+def refresh_validation(db, profile, state, now, ended=False):
     active_ids = {target["instruction_id"] for target in state["targets"].values() if target}
     state["readbacks"] = {iid: value for iid, value in state.get("readbacks", {}).items() if iid in active_ids}
     evaluate(state, profile.policy, profile.callsign, now, persist=True, ended=ended)
+    for item in reconcile(state, profile.flight_id, state["validation_snapshot"], now, ended=ended):
+        trace(db, profile, "INCIDENT_UPDATED", item, now)
 
 
 def start(db, callsign):
@@ -103,7 +106,7 @@ def start(db, callsign):
                 "structure_checks": {}})
         db.add(profile)
         initial = deepcopy(profile.state)
-        refresh_validation(profile, initial, now)
+        refresh_validation(db, profile, initial, now)
         profile.state = initial
         record(db, flight.flight_id, EventType.FLIGHT_STARTED)
         trace(db, profile, "FLIGHT_STARTED", {"callsign": callsign, "policy": profile.policy}, now)
@@ -121,9 +124,9 @@ def end(db, flight_id):
         flight, profile = context(db, flight_id, active=True, lock=True)
         flight.status, flight.ended_at = FlightStatus.ENDED, stamp(now)
         state = deepcopy(profile.state)
-        refresh_validation(profile, state, now, ended=True)
-        profile.state = state
         profile.revision += 1
+        refresh_validation(db, profile, state, now, ended=True)
+        profile.state = state
         record(db, flight_id, EventType.FLIGHT_ENDED)
         trace(db, profile, "FLIGHT_ENDED", {"unverified": True}, now)
     return session_response(flight, profile)
@@ -163,8 +166,14 @@ def register_segment(db, flight_id, segment):
         else:
             if instruction is None or instruction.flight_id != flight_id or instruction.status == "CANCELLED":
                 raise ReceivingError(409, "CONTEXT_MISMATCH", "Pilot segment requires the same active ATC input")
-            if state["latest_atc_input_id"] != segment.atc_input_id:
-                raise ReceivingError(409, "INVALID_SEQUENCE", "Pilot segment targets an older ATC input")
+            retained_correction = instruction.status == "ADOPTED" and any(
+                target and target["instruction_id"] == instruction.instruction_id
+                for target in state["targets"].values()) and any(
+                item["status"] == "OPEN" and item["stage"] == "READBACK"
+                and item["instruction_id"] == instruction.instruction_id
+                for item in state.get("incidents", []))
+            if state["latest_atc_input_id"] != segment.atc_input_id and not retained_correction:
+                raise ReceivingError(409, "INVALID_SEQUENCE", "Older ATC input has no retained readback error to correct")
             atc_segment = db.get(V2Segment, instruction.atc_segment_id)
             if parsed(segment.started_at) < parsed(atc_segment.payload["ended_at"]):
                 raise ReceivingError(409, "INVALID_SEQUENCE", "Pilot cannot precede ATC capture completion")
@@ -182,7 +191,7 @@ def register_segment(db, flight_id, segment):
             payload=data, fingerprint=fingerprint(data), cancelled=not segment.complete)
         db.add(stored)
         profile.revision += 1
-        refresh_validation(profile, state, now)
+        refresh_validation(db, profile, state, now)
         profile.state = state
         trace(db, profile, "SEGMENT_REGISTERED", data, now)
         return segment_response(db, stored, "ACCEPTED")
@@ -215,11 +224,11 @@ def cancel_segment(db, flight_id, segment_id, reason):
                 for field, current in state["current"]["READBACK"].items():
                     if current and current.get("segment_id") == segment_id:
                         state["current"]["READBACK"][field] = None
-            refresh_validation(profile, state, utc_now())
+            profile.revision += 1
+            refresh_validation(db, profile, state, utc_now())
             profile.state = state
             if segment.payload["role"] == "ATC":
                 instruction.status = "CANCELLED"
-            profile.revision += 1
             trace(db, profile, "SEGMENT_CANCELLED", {"segment_id": segment_id, "reason": reason}, utc_now())
         return segment_response(db, segment, "ACCEPTED")
 
@@ -329,7 +338,7 @@ def receive(db, flight_id, message, kind):
                             "structure_check": structure_check_for(state, pilot),
                         }, now)
         profile.revision += 1
-        refresh_validation(profile, state, now)
+        refresh_validation(db, profile, state, now)
         profile.state = state
         event = trace(db, profile, "INPUT_RECEIVED", {
             "kind": kind, "input_id": input_id, "applied": applied, "reason": reason,
@@ -360,6 +369,10 @@ def apply_health(profile, state, message, now):
     if message.channel != "CAMERA":
         state["readbacks"] = {}
     return True, "HEALTH_RECORDED_AWAITING_NEW_OBSERVATION"
+
+
+def data_evidence(obj):
+    return [ref.model_dump(mode="json") for ref in obj.evidence_refs]
 
 
 def apply_observation(profile, state, obj, instruction, segment, now):
@@ -426,7 +439,7 @@ def apply_observation(profile, state, obj, instruction, segment, now):
             instruction_id=instruction.instruction_id, segment_id=obj.segment_id,
             observation_id=obj.observation_id, observed_at=obj.observed_at,
             value=obj.callsign.value if call_eligible else None, structure_eligible=call_eligible,
-            reason=reason)
+            reason=reason, attempt_id=obj.attempt_id, evidence_refs=data_evidence(obj), evidence_unavailable_reason=obj.evidence_unavailable_reason)
     for field, reading in obj.fields.items():
         target = state["targets"][field]
         previous = state["current"][obj.source].get(field)
@@ -451,7 +464,9 @@ def apply_observation(profile, state, obj, instruction, segment, now):
             result="UNVERIFIED", reason=issue or "AWAITING_THREE_STATE_VALIDATION",
             instruction_id=target["instruction_id"] if target else None,
             structure_eligible=obj.source == "COCKPIT" or checked.result == "PASS",
-            segment_id=getattr(obj, "segment_id", None))
+            segment_id=getattr(obj, "segment_id", None),
+            frame_id=getattr(obj, "frame_id", None), attempt_id=getattr(obj, "attempt_id", None),
+            evidence_refs=data_evidence(obj), evidence_unavailable_reason=obj.evidence_unavailable_reason)
         applied = applied or issue is None
         if issue:
             reasons.append(issue)
@@ -482,4 +497,18 @@ def get_state(db, flight_id):
         callsign=profile.callsign, targets=targets, readback_required=state["readback_required"],
         channels=state["channels"], current=state["current"], result=validation["result"],
         structure_checks=state.get("structure_checks", {}),
-        validation=validation, reason=validation["reason"])
+        validation=validation, reason=validation["reason"],
+        incident_version="1", incidents=view(state, validation))
+
+
+def revalidate(db, flight_id):
+    """Persist timer-driven verdicts/incidents; GET remains read-only."""
+    now = utc_now()
+    with atomic(db):
+        _, profile = context(db, flight_id, active=True, lock=True)
+        state = deepcopy(profile.state)
+        profile.revision += 1
+        refresh_validation(db, profile, state, now)
+        profile.state = state
+        trace(db, profile, "REVALIDATED", {"validation": state["validation_snapshot"]}, now)
+    return get_state(db, flight_id)

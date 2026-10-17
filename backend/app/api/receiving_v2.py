@@ -86,3 +86,8 @@ def trace(flight_id: str, after: int = Query(default=0, ge=0), limit: int = Quer
         V2TraceEvent.id > after).order_by(V2TraceEvent.id).limit(limit)).all()
     return [dict(event_id=f"v2-event-{row.id}", sequence=row.id, event_type=row.event_type,
         occurred_at=row.occurred_at, revision=row.revision, snapshot=row.snapshot) for row in rows]
+
+
+@router.post("/{flight_id}/revalidate")
+def revalidate(flight_id: str, db: Session = Depends(get_db)):
+    return service.revalidate(db, flight_id)
