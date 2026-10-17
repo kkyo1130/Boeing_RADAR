@@ -12,9 +12,9 @@ from mock_producer import MockProducer, ROOT
 
 
 @pytest.fixture(scope="session")
-def live_backend(tmp_path_factory):
+def live_backend(tmp_path_factory, evidence_root):
     directory = tmp_path_factory.mktemp("http-backend")
-    env = dict(os.environ, RADAR_DATABASE_URL=f"sqlite:///{directory / 'integration.db'}",
+    env = dict(os.environ, RADAR_EVIDENCE_ROOT=str(evidence_root), RADAR_DATABASE_URL=f"sqlite:///{directory / 'integration.db'}",
         RADAR_V2_CONFIG=str(ROOT / "contracts/examples/integration/config.json"))
     # Bind once, then pass the listening socket to uvicorn: no port allocation race.
     with socket.socket() as listener, (directory / "server.log").open("w+") as log:
@@ -56,3 +56,9 @@ def producer(live_backend, tmp_path):
         yield producer
     finally:
         producer.close()
+
+
+@pytest.fixture(scope='session')
+def evidence_root(tmp_path_factory):
+    """Disposable media used only by synthetic integration producers."""
+    return tmp_path_factory.mktemp('interface-evidence')
