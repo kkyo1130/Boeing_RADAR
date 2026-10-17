@@ -167,8 +167,10 @@ def check_structure(data, *, target_callsign, registry, segment, instruction_id,
         raw_value, raw_issues = None, []
         if raw_text and len(raw_text) <= 128:
             raw = normalize(raw_text)
-            if name == "ALT" and (re.match(r"(?:flight level\b|fl(?:\s|[0-9]))", raw) or raw.endswith(" feet")):
+            if name == "ALT" and (re.match(r"(?:flight level\b|fl(?:\s|[0-9]))", raw) or re.search(r"\bfeet\b", raw)):
                 raw_values, raw_issues = parse_command("maintain " + raw)
+                if not raw_issues and set(raw_values) != {name}:
+                    raw_issues.append((name, "INVALID", "RAW_FIELD_SET_CONFLICT"))
                 raw_value = raw_values.get("ALT")
             elif name == "ALT":
                 raw_value = feet(raw)

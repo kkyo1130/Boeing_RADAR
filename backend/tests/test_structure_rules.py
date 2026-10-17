@@ -205,3 +205,12 @@ def test_excessively_long_numeric_text_is_reviewed_without_integer_conversion_fa
     else:
         data["fields"]["ALT"]["raw_text"] = "9"*5000
     assert check_structure(data, **context).result == "NEEDS_REVIEW"
+
+
+@pytest.mark.parametrize("raw", ["FL040 heading 090", "4000 feet heading zero nine zero"])
+def test_altitude_raw_field_cannot_hide_an_extra_heading_command(raw):
+    data, context = sample("Radar one two three maintain FL040", {"ALT": 4000})
+    data["fields"]["ALT"]["raw_text"] = raw
+    result = check_structure(data, **context)
+    assert result.result == "INVALID"
+    assert "RAW_FIELD_SET_CONFLICT" in {check.reason for check in result.checks}

@@ -108,3 +108,13 @@ def test_reused_sample_cannot_inherit_another_observations_report(scenario):
     assert s.send(data).status_code == 201
     assert s.inputs()[0]["reason"] == "SOURCE_SAMPLE_REUSED"
     assert s.trace()[-1]["snapshot"]["structure_check"] is None
+
+
+def test_extra_command_in_altitude_raw_text_is_not_adopted(scenario):
+    s = scenario
+    data = s.speech(s.segment(), partial=True)
+    data["fields"]["ALT"]["raw_text"] = "FL040 heading 090"
+    assert s.send(data).status_code == 201
+    assert s.state()["structure_checks"]["ATC"]["result"] == "INVALID"
+    assert s.state()["targets"]["ALT"] is None
+    assert s.inputs()[0]["payload"] == data
