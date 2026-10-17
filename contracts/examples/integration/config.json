@@ -1,0 +1,12 @@
+{
+  "callsigns": {
+    "RADAR123": {
+      "radar-one-two-three": "Radar one two three"
+    }
+  },
+  "freshness": {
+    "max_age_seconds": 60.0,
+    "max_future_skew_seconds": 0.1,
+    "minimum_model_score": 0.5
+  }
+}
