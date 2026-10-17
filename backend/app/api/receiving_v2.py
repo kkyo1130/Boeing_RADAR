@@ -1,5 +1,9 @@
 """Versioned intake routes. No inference provider or aircraft control is called."""
 from fastapi import APIRouter, Depends, Query, Request
+from typing import Literal
+from fastapi.responses import FileResponse
+from app.schemas.evidence_v2 import EvidenceInteraction
+from app.services import evidence_v2
 from fastapi.exceptions import RequestValidationError
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.responses import JSONResponse
@@ -91,3 +95,22 @@ def trace(flight_id: str, after: int = Query(default=0, ge=0), limit: int = Quer
 @router.post("/{flight_id}/revalidate")
 def revalidate(flight_id: str, db: Session = Depends(get_db)):
     return service.revalidate(db, flight_id)
+
+
+@router.get("/{flight_id}/evidence/{observation_id}")
+def evidence(flight_id: str, observation_id: str, instruction_id: str,
+             stage: Literal["READBACK", "SETTING"], field: Literal["ALT", "HDG", "CALLSIGN"], db: Session = Depends(get_db)):
+    return evidence_v2.metadata(db, flight_id, instruction_id, stage, field, observation_id)
+
+
+@router.get("/{flight_id}/evidence/{observation_id}/media/{role}/{evidence_id}")
+def media(flight_id: str, observation_id: str, role: Literal["ATC", "OBSERVED"], evidence_id: str,
+          instruction_id: str, stage: Literal["READBACK", "SETTING"], field: Literal["ALT", "HDG", "CALLSIGN"], db: Session = Depends(get_db)):
+    path, mime = evidence_v2.content(db, flight_id, instruction_id, stage, field, observation_id, role, evidence_id)
+    return FileResponse(path, media_type=mime, headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"})
+
+
+@router.post("/{flight_id}/interactions", status_code=201)
+def interaction(flight_id: str, payload: EvidenceInteraction, db: Session = Depends(get_db)):
+    result, status = evidence_v2.interact(db, flight_id, payload)
+    return JSONResponse(status_code=status, content=result)

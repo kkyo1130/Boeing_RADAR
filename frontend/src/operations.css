@@ -60,3 +60,14 @@
   .op-badge { align-self: flex-start; }
   .op-header .brand { font-size: 18px; }
 }
+
+.op-row-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.op-row-actions button { font-size: 12px; padding: 7px 10px; }
+.op-evidence { border-color: #739887; }
+.op-evidence-group { border-top: 1px solid #35424e; padding-top: 18px; margin-top: 18px; }
+.op-evidence img { max-width: 100%; max-height: 400px; object-fit: contain; }
+.op-evidence audio { width: 100%; max-width: 520px; }
+.op-evidence figure { margin: 18px 0; }
+.op-evidence blockquote { margin: 18px 0; border-left: 3px solid #93c6b6; padding: 10px 16px; background: #151e25; }
+.op-evidence figcaption { color: #a8b6c2; font-size: 12px; overflow-wrap: anywhere; }
+.op-notice { background: #24372e; border: 1px solid #739887; padding: 14px; border-radius: 8px; }
