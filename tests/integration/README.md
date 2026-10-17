@@ -41,3 +41,5 @@ cd backend
 SPEC-005-WI-01 이후에는 합성 구조 규칙 정책도 비행별로 고정한다. 기존21개에 명시 FL 통과·모델 PASS/원문값 충돌 거부·미지원 조건 보류3개를 추가해 현재 HTTP 통합은24개다. 규칙 결과의 공개 JSON Schema와 원본/Trace의 관측 ID 대응도 검사한다. 최초 WI-03의21개 수행 기록은 당시 근거로 유지한다.
 
 SPEC-005-WI-02에서 정상/조기 일치→즉시 재불일치와 Cockpit 미입력 중 복창 오류 우선2개를 추가해 현재 HTTP 통합은26개다. validation-snapshot-v1 Schema·판정/Trace 대응을 확인한다. 정밀5초 경계·부분 지시·타이머 rollback은 backend 가상 시계 테스트다. 과거 UNVERIFIED 고정 설명은 당시 수신 구현의 한계이며 현재 최종 비교는 state.validation을 사용한다.
+
+SPEC-005-WI-03은 완료 이후 설정 필드9개 조합, 확실한 복창 오류+다른 복창 품질 보류+Cockpit 판독 불가, 새 실행/비행의 정상 근거 격리11개를 추가했다. 현재 HTTP 전체는37개다. 요청·접수 event_id·원본/지시/관측 ID·판정/Trace·공개 Schema를 대조한다. 유한한 fixture 회귀로 실제 모델 정확도나 실장비 성공률을 계산하지 않는다. 상세 전체 AC 근거는 [WI-03](../../docs/spec/005-safe-validation/workitem/wi-03.md)에 기록한다.
