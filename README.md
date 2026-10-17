@@ -8,6 +8,17 @@ MCP 사진·인식 결과·결과 JSON과 실행 방법은 [Vision PoC 문서](d
 
 관제 지시(ATC), 조종사 복명복창(Readback), Cockpit 설정값을 하나의 Clearance로 연결하는 Python 3.11+ PoC입니다. FastAPI 앱 하나에서 ALT/HDG 정확 일치 비교와 Flight Session, Safety Trace 저장을 처리합니다. 실제 STT·Vision AI·SDR 대신 JSON Mock Observation을 입력합니다.
 
+## 공통 개발 환경
+
+새 팀원 설치·버전·설정·실행 및 CI 재현은 [개발 환경 안내](docs/development/README.md)를 따릅니다.
+
+```sh
+python3 scripts/bootstrap.py
+python3 scripts/verify.py --http-smoke
+```
+
+Python 3.13·Node 24가 기준입니다. 자동 검증은 실장비 성공을 뜻하지 않습니다. 아래 개별 Backend 설치 방법도 사용할 수 있습니다.
+
 ## 설치 및 실행
 
 저장소 루트에서 `backend/`로 이동해 Python 3.11 이상으로 실행합니다. 통신은 골격입니다. 태블릿 MCP 화면은 [frontend 안내](frontend/README.md), Vision 촬영/ROI·스트림은 [태블릿 데모 안내](vision/docs/tablet-demo.md)를 따릅니다.
@@ -43,8 +54,8 @@ Boeing_RADAR/
 ├── vision/                   # 정지 이미지·영상/웹캠 OCR·상태 감시
 ├── communication/            # 통신 파트 골격
 ├── contracts/                # 관측 결과 계약 초안·예제
-├── tests/integration/        # 파트 간 통합 테스트 골격
-├── scripts/                  # 실행·평가 스크립트 골격
+├── tests/integration/        # 계약·판정 API 통합 회귀
+├── scripts/                  # 공통 설치·검증·HTTP 시연
 ├── docs/IMPLEMENTATION.md
 ├── README.md
 └── .gitignore
@@ -146,3 +157,5 @@ python -m pytest -q
 ## TODO / 범위
 
 향후 STT·Vision·통신 어댑터, 판단 보류·입력 건전성·근거 제공·재검증 및 리포트를 구현합니다. 상세 범위는 [스펙](spec.md)을 따릅니다. 자문 반영으로 QNH/Baro와 기압 센서 Sensor Cross-Check는 이번 범위에서 제외합니다. 백엔드는 P0 Mock 흐름이며 Vision은 정지 이미지·영상/웹캠 OCR·상태 감시·안정화, frontend는 태블릿 MCP 수동 화면까지 구현했습니다. 서버 통합과 실제 태블릿 촬영 검증은 남아 있습니다. 운영 도입에는 인증, 마이그레이션, 병렬 변경의 충돌 제어가 추가로 필요합니다. 항공 운용 판정용으로 검증된 시스템은 아닙니다.
+
+운영 화면·로컬 Whisper·ATC WAV/Pilot 마이크·Vision 전송·리포트·평가 실행은 [운영 안내](docs/development/operations.md)를 따릅니다. `/operations`는 서버 운영 화면이며 기본 `/` 태블릿 MCP와 구분합니다.

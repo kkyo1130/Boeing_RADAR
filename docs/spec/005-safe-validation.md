@@ -21,7 +21,7 @@
 
 ## 이미 구현된 기반
 
-validation_service.py의 ALT/HDG 정확 비교·Readback 우선·오류 단계와 스키마 범위 검증이 있다. SPEC-002 v1 경로는 UNVERIFIED와 품질/시각 정보를 보존한다. 이번 WI-01은 추출 후 결정론적 검사 함수를 추가하며 WI-02에서 명시 설정을 요구하는 3상태 판정·API 연결을 구현했다. 전체 기능 회귀 WI-03과 실입력 인수는 후속 작업이다. 상세 실행 근거는 [구현 현황](../IMPLEMENTATION_STATUS.md)을 참조한다. 아래 WI는 확장 요구까지 포함하므로 이 기반만으로 done 처리하지 않는다.
+validation_service.py의 ALT/HDG 정확 비교·Readback 우선·오류 단계와 스키마 범위 검증이 있다. SPEC-002 v1 경로는 UNVERIFIED와 품질/시각 정보를 보존한다. 이번 WI-01은 추출 후 결정론적 검사 함수를 추가하며 WI-02에서 명시 설정을 요구하는 3상태 판정·API 연결을 구현했다. 2026-10-16 WI-03의 모의 전체 회귀까지 완료했으며 실제 입력 인수는 후속 범위다. 상세 실행 근거는 [구현 현황](../IMPLEMENTATION_STATUS.md)을 참조한다. 아래 WI는 확장 요구까지 포함하므로 이 기반만으로 done 처리하지 않는다.
 
 ## 완료 조건
 
@@ -90,10 +90,10 @@ validation_service.py의 ALT/HDG 정확 비교·Readback 우선·오류 단계�
 
 #### 결과·검증·리뷰·인수인계
 
-- 구현: 미착수; 코드 기준·변경 파일은 수행 후 기록.
-- 검증: 미실행; 실제 명령·환경·기대/관찰 결과·통과/실패/차단을 수행 후 기록.
-- 리뷰: 미수행; 계약·범위·회귀·근거 검토와 지적 해결 여부를 수행 후 기록.
-- 인수인계: 담당 세션 미배정; 선행 결과와 해당 미정 사항 확인 후 이 WI를 지정해 착수.
+- 구현: 2026-10-16 사용자 요청으로 `contracts/examples/validation-safety-cases.json`, `tests/integration/test_validation_safety_matrix.py`, [AC 대응표](../../tests/integration/validation-coverage.md) 추가. 기존 판정 제품 코드는 변경하지 않음. 정상 대조 후 source별 실패 주입 48개+복구 3개+혼합 오류 1개로 고정 기대 결과 검증. `python` 브랜치 `7c95feb` 기준 미커밋.
+- 검증: 새 Python 3.13 환경의 공통 명령 `python3 scripts/verify.py --python /private/tmp/radar-fresh-validation/bin/python --http-smoke`: Backend/계약/통합 **195 passed, 1 warning**, Vision **45 passed**, HTTP 시연·Frontend 빌드 통과. 이 중 기존 143개와 새 52개로 AC-01~03 전체 fixture/API 대조. ATC/Readback/Cockpit의 null·낮은/미상 점수·품질·근거·원문·시각·정책·문맥 실패가 이전 VERIFIED를 유지하거나 거짓 RESOLVED를 만들지 않고 사유·원본·확인 주체가 조회됨. 확인 가능한 Readback 불일치와 Cockpit 장애의 오류 우선순위도 확인.
+- 리뷰: 단일 에이전트가 역할 지침 적용. 테스트는 먼저 정상 상태를 증명해 항상 보류하는 구현도 통과하지 못하게 구성. 정답 사유 목록은 추론 입력으로 제공하지 않고 기존 Mock 생산자가 서버 모델을 직접 import하지 않음. 실제 장애/모델 성능·위험 0으로 일반화하지 않음. 단계별 해결과 전체 정상의 의미 보존 확인.
+- 인수인계: SPEC-005의 모의 범위 AC 전체 검증 완료. 실카메라·음성·SDR·실제 모델/생산자 어댑터·다른 DB·실제 입력 E2E는 미실행이며 SPEC-003/004/009에서 검증. 모델 점수/정책은 실장비 안전 기준이 아님. 다음은 SPEC-006-WI-01 운영 화면과 SPEC-008-WI-01 Trace 확장 등 선행 충족 작업. 커밋·푸시·PR 갱신 미실행.
 
 ## 변경 기록
 
@@ -102,3 +102,7 @@ validation_service.py의 ALT/HDG 정확 비교·Readback 우선·오류 단계�
 - 2026-10-13: WI-01 검사 함수·명시 모의 정책·31개 회귀 사례 추가. AC-01 모의 범위 완료, API 최종 판정은 WI-02에서 구현.
 
 - 2026-10-14: WI-02 명시 정책·확인 문맥·단계별 3상태 판정 및 새 관측 해결 구현. AC-02 모의 환경 검증 완료, WI-03 전체 회귀 및 실입력 인수는 별도.
+
+- 2026-10-16: WI-03 source별 정상 대조·거짓 정상 실패 주입 52개 및 AC 대응표 추가. AC-01~03 모의 fixture/API 전체 검증 완료.
+
+2026-10-17 커밋 인수인계: 사용자 요청으로 기능별 커밋에 보존했다. 앞선 미커밋 표기는 당시 기록이며 코드 커밋과 재검증 근거는 [단계별 커밋 기록](todo.md#2026-10-17-단계별-커밋-기록)을 따른다. 실제 인수 미실행 상태는 유지한다.
