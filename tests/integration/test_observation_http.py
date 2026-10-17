@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from mock_producer import CASES, MockProducer, timestamp
+from mock_producer import CASES, MockProducer, timestamp, validate
 
 
 def stored(producer, payload):
@@ -236,3 +236,26 @@ def test_legacy_http_contract_and_ended_v2_flight_remain_distinct(producer):
     p.request("POST", p.path+"/end")
     assert p.send(p.camera(), expected=409)["code"] == "FLIGHT_ENDED"
     assert p.state()["reason"] == "FLIGHT_ENDED"
+
+
+@pytest.mark.parametrize("command,value,expected", [
+    ("maintain FL040", 4000, "PASS"),
+    ("maintain four thousand feet", 3000, "INVALID"),
+    ("after departure maintain three thousand feet", 3000, "NEEDS_REVIEW"),
+])
+def test_server_rechecks_structure_independently_of_extractor_pass(producer, command, value, expected):
+    p = producer
+    data = p.speech(p.segment(), "atc-partial.json")
+    data["transcript"] = "Radar one two three " + command
+    data["fields"]["ALT"].update(value=value, raw_text=str(value))
+    p.send(data)
+    state = p.state()
+    report = state["structure_checks"]["ATC"]
+    validate("structure-result-v1", report)
+    assert data["instruction_check"] == "PASS"
+    assert report["result"] == expected
+    assert report["observation_id"] == data["observation_id"]
+    assert stored(p, data)["payload"] == data
+    assert stored(p, data)["applied"] == (expected == "PASS")
+    assert p.trace()[-1]["snapshot"]["structure_check"] == report
+    assert state["result"] == "UNVERIFIED"

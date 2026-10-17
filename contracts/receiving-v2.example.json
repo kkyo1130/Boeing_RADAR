@@ -4,5 +4,6 @@
       "radar-one-two-three": "Radar one two three"
     }
   },
-  "freshness": null
+  "freshness": null,
+  "structure_rules": null
 }

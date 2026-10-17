@@ -12,7 +12,7 @@ backend/.venv/bin/python -m pytest tests/integration -q --basetemp=/tmp/radar-co
 
 mock 생산자 [mock_producer.py](mock_producer.py)는 backend DTO·서비스·ORM을 import하지 않는다. [기존 v2 예제](../../contracts/examples/v2/)와 [통합 fixture](../../contracts/examples/integration/)에서 JSON을 만들고 공개 JSON Schema로 요청/접수/오류/목표 snapshot을 검사한 뒤 실제 HTTP로 전송한다. 서버 내부의 시각·DB·서비스 함수를 monkeypatch하지 않는다. DTO의 교차 제약은 실제 서버의422 응답으로도 확인한다.
 
-원본 시각·ID·목표 revision은 매번 실행 시 생성/조회한다. 품질은 `cases.json`이 **명시한 합성 입력**이며 실제 모델 점수나 정확도가 아니다. VALID 예제의 테스트 품질만 설정하고 UNREADABLE 필드의 null/사유/품질은 보존한다. `config.json`의60초/0.1초/0.5점은 여유 있는 fixture 설정으로 운용 기준을 제안하지 않는다. `fixture-audio-*`는 mock 구간의 참조 문자열이며 실제 녹음·미디어 재생 검증을 뜻하지 않는다.
+원본 시각·ID·목표 revision은 매번 실행 시 생성/조회한다. 품질은 `cases.json`이 **명시한 합성 입력**이며 실제 모델 점수나 정확도가 아니다. VALID 예제의 테스트 품질만 설정하고 UNREADABLE 필드의 null/사유/품질은 보존한다. `config.json`의 규칙 상한50000ft/목표 급변10000ft/방위180도와60초/0.1초/0.5점은 여유 있는 fixture 설정으로 운용 기준을 제안하지 않는다. `fixture-audio-*`는 mock 구간의 참조 문자열이며 실제 녹음·미디어 재생 검증을 뜻하지 않는다.
 
 각 테스트의 임시 디렉터리에 `exchange.json`을 남긴다. 실행 ID, 전송/응답 UTC 시각, HTTP 경로, 요청 JSON, 응답 코드·본문을 기록하며 실패한 HTTP 응답도 보존한다. 별도 비행 재실행 사례는 `second-exchange.json`도 남긴다. 서버 로그·DB는 `http-backend0/`에 있다. 실행 기록과 DB는 Git에 추가하지 않는다.
 
@@ -37,3 +37,5 @@ backend/.venv/bin/python contracts/check_v2.py
 cd backend
 .venv/bin/python -m pytest -q
 ```
+
+SPEC-005-WI-01 이후에는 합성 구조 규칙 정책도 비행별로 고정한다. 기존21개에 명시 FL 통과·모델 PASS/원문값 충돌 거부·미지원 조건 보류3개를 추가해 현재 HTTP 통합은24개다. 규칙 결과의 공개 JSON Schema와 원본/Trace의 관측 ID 대응도 검사한다. 최초 WI-03의21개 수행 기록은 당시 근거로 유지한다.

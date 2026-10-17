@@ -1,6 +1,7 @@
 """Receiving policy and session DTOs; these do not perform three-state comparison."""
 from pydantic import Field, model_validator
 from app.schemas.observation_v2 import ContractModel, Identifier, Reason, Score
+from app.schemas.structure_rules import StructurePolicy
 
 
 class FreshnessPolicy(ContractModel):
@@ -12,6 +13,7 @@ class FreshnessPolicy(ContractModel):
 class ReceiverConfig(ContractModel):
     callsigns: dict[Identifier, dict[Identifier, Reason]]
     freshness: FreshnessPolicy | None
+    structure_rules: StructurePolicy | None = None
 
     @model_validator(mode="after")
     def check_aliases(self):
