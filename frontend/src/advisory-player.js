@@ -101,8 +101,6 @@ export class AdvisoryPlayer {
     this.inputs.set(token, input); this.publish('입력 우선 · 안내 보류');
     try {
       await this.request(this.url('inputs'), { method: 'POST', body: { event_id, token, kind, action: 'BEGIN' } });
-      if (this.closed) { await this.end(input); return null; }
-      await start(); return input;
     } catch (e) {
       if (e.status === 409 || e.status === 422) this.inputs.delete(token);
       // On a lost BEGIN response preserve the token for explicit END recovery.
@@ -110,6 +108,16 @@ export class AdvisoryPlayer {
       this.publish('입력 시작 실패 · 녹음/재생은 시작하지 않았습니다');
       return null;
     }
+    if (this.closed) { await this.end(input); return null; }
+    try { await start(); return input; }
+    catch {
+      await this.end(input);
+      this.publish(this.inputs.has(token) ? '입력 시작 실패 · 종료 확인 대기, 안내 보류' : '입력 시작 실패 · 입력 예약을 종료했습니다');
+      return null;
+    }
+  }
+  hasCaptureInput() {
+    return [...this.inputs.values(), ...(this.snapshot?.voice?.inputs || [])].some(i => ['ATC', 'PILOT'].includes(i.kind));
   }
   async end(input) {
     if (!input) return;

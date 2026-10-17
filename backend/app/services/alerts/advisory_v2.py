@@ -139,7 +139,7 @@ def command(db, flight_id, action, payload):
                 return previous['result']
             inputs = voice['inputs']
             if payload.action == 'BEGIN':
-                if payload.token in inputs or (payload.kind in ('ATC', 'PILOT') and any(i['kind'] in ('ATC', 'PILOT') for i in inputs.values())):
+                if payload.token in inputs or (payload.kind in ('ATC', 'PILOT', 'EVIDENCE') and any(i['kind'] in ('ATC', 'PILOT') for i in inputs.values())):
                     raise receiver.ReceivingError(409, 'INVALID_SEQUENCE', 'Capture already active; request is not queued')
                 inputs[payload.token] = dict(token=payload.token, kind=payload.kind, started_at=stamp(now))
             else:

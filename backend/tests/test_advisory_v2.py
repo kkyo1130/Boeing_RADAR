@@ -170,3 +170,13 @@ def test_two_clients_cannot_claim_the_same_sentence_concurrently(scenario):
     with ThreadPoolExecutor(max_workers=2) as executor:
         statuses=list(executor.map(lambda _:claim(s,candidate).status_code,range(2)))
     assert sorted(statuses)==[201,409]
+
+
+def test_evidence_cannot_begin_during_capture_or_atc_tail(scenario):
+    s=scenario
+    for kind in ['ATC','PILOT']:
+        c=control(s,kind=kind).json()
+        assert control(s,kind='EVIDENCE').status_code==409
+        assert len(s.state()['voice']['inputs'])==1
+        assert control(s,kind=kind,action='END',token=c['token']).status_code==200
+    assert control(s,kind='EVIDENCE').status_code==200

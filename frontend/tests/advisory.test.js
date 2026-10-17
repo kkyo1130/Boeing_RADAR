@@ -79,3 +79,20 @@ test('input adapter END targets the original owner after flight selection change
   const unregisterB=audioFocus.register(b.p);await audioFocus.end(input);
   assert.equal(a.p.inputs.size,0);assert.equal(b.calls.length,0);unregisterB();unregister();a.p.close();b.p.close();
 });
+test('evidence cannot play over local or server ATC/PILOT capture or tail',async()=>{
+  for(const mode of ['local','server']) {
+    const f=fixture();const unregister=audioFocus.register(f.p);let played=0;
+    if(mode==='local')await f.p.begin('ATC');else f.p.update({...f.snapshot,voice:{...f.snapshot.voice,inputs:[{token:'remote',kind:'PILOT'}]}},true);
+    await audioFocus.startEvidence({pause(){},async play(){played++;}});
+    assert.equal(played,0);assert.equal(f.calls.filter(c=>c.body.kind==='EVIDENCE').length,0);unregister();f.p.close();
+  }
+});
+test('accepted BEGIN is ended automatically when adapter startup throws',async()=>{
+  const f=fixture();assert.equal(await f.p.begin('PILOT',()=>{throw new Error('microphone unavailable');}),null);
+  assert.equal(f.p.inputs.size,0);assert.deepEqual(f.calls.map(c=>c.body.action),['BEGIN','END']);f.p.close();
+});
+test('startup failure with lost END preserves visible suppression and retry token',async()=>{
+  const f=fixture();const original=f.p.request;f.p.request=(url,opts)=>opts?.body.action==='END'?Promise.reject(new Error('lost')):original(url,opts);
+  await f.p.begin('ATC',()=>{throw new Error('failed');});assert.equal(f.p.inputs.size,1);
+  const input=[...f.p.inputs.values()][0];f.p.request=original;await f.p.end(input);assert.equal(f.p.inputs.size,0);f.p.close();
+});

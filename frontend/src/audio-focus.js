@@ -21,7 +21,7 @@ export const audioFocus = {
     if (evidence.has(element)) return;
     element.pause();
     const item = { owner, input: null, cancelled: false, phase: 'pending' }; evidence.set(element, item);
-    if (!owner) { evidence.delete(element); return; }
+    if (!owner || owner.hasCaptureInput()) { evidence.delete(element); return; }
     const input = await item.owner.begin('EVIDENCE'); item.input = input;
     if (!input || item.cancelled) { evidence.delete(element); if (input) await item.owner.end(input); return; }
     item.phase = 'playing';

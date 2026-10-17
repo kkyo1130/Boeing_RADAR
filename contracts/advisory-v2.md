@@ -26,7 +26,7 @@ POST `.../voice/claims` `{attempt_id, candidate_id}` →201. 트랜잭션 안에
 
 POST `.../voice/attempts/{attempt_id}` `{status: COMPLETED|INTERRUPTED|FAILED}` →200. 같은 terminal 상태 재전송은 동일 결과, 다른 terminal 상태409, 다른 비행/없는 시도404. 서버 최신 자격이 없거나 종료된 문장은 CANCELLED, 중단/실패/만료는 완료가 아니다. COMPLETED만 연결된 발생 건의 voice_completed_at을 바꾼다. 만료 후 지연된 완료 보고는409 또는 취소이며 정상 완료로 승격하지 않는다. 비행 종료 뒤에도 기존 시도의 중단 보고를 허용한다.
 
-POST `.../voice/inputs` `{event_id, token, kind: ATC|PILOT|SIMULATION|EVIDENCE, action: BEGIN|END}` →200. 같은 event_id/내용 재전송은 동일 receipt, 내용 충돌409. ATC/PILOT 동시 입력은409로 차단하며 예약하지 않는다. BEGIN은 현재 안내에 중단 요청을 표시하고 모든 안내 claim을 억제한다. END는 같은 token/kind를 닫는다. ATC token은 재생·수음 여유 시간 전체를 포함해야 한다. 자동 타이머로 입력 완료를 추정하지 않는다. 입력 종료 응답을 잃으면 같은 event_id로 재시도한다. 새로고침 후에도 서버 token과 종료 버튼이 남는다.
+POST `.../voice/inputs` `{event_id, token, kind: ATC|PILOT|SIMULATION|EVIDENCE, action: BEGIN|END}` →200. 같은 event_id/내용 재전송은 동일 receipt, 내용 충돌409. ATC/PILOT 동시 입력과 ATC/PILOT token 중 새 EVIDENCE 입력은409로 차단하며 예약하지 않는다. BEGIN은 현재 안내에 중단 요청을 표시하고 모든 안내 claim을 억제한다. END는 같은 token/kind를 닫는다. ATC token은 재생·수음 여유 시간 전체를 포함해야 한다. 자동 타이머로 입력 완료를 추정하지 않는다. 입력 종료 응답을 잃으면 같은 event_id로 재시도한다. 새로고침 후에도 서버 token과 종료 버튼이 남는다.
 
 strict DTO는 추가 필드·임의 result/resolve/status를422로 거부한다. 기존 ContractErrorV2 code를 사용한다. SQLite BEGIN IMMEDIATE/기존 row lock으로 직렬화하고 revision·VOICE_CLAIM/VOICE_INPUT/VOICE_RESULT·VOICE_POLICY_CHANGED Trace와 JSON 상태를 같은 트랜잭션에 저장한다. DB commit 실패는 모두 rollback한다. 미디어/원본 DB 구조 변경은 없으며 기존 비행 JSON은 최초 갱신 때 voice를 초기화한다. history 응답은50개지만 원본 JSON/Trace 보관 수명주기는 SPEC-008 범위다.
 
@@ -36,7 +36,7 @@ strict DTO는 추가 필드·임의 result/resolve/status를422로 거부한다.
 
 자동재생 차단·파일/디코딩 실패·AudioContext suspend는 `음성 사용 불가`와 명시적 다시 켜기로 처리한다. 실패를 완료로 표시하지 않는다. 결과 저장 응답 유실은 동일 attempt/status로 재전송하고 미확정 동안 다음 claim을 시작하지 않는다. 서버 단절/새 지시/현재 자격 소실은 재생을 중단한다. 페이지 종료/장애로 보고를 못 하면 다음 command의 서버 lease 만료 처리로 INTERRUPTED가 된다.
 
-실제 입력 구현자는 `audioFocus.begin('ATC'|'PILOT', startCallback)`을 사용한다. 이 호출은 안내·근거 음성을 **동기 중단한 뒤** 서버 입력 허가를 요청하고 성공했을 때만 callback을 호출한다. 차단/실패에는 실제 입력을 시작하거나 예약하지 않는다. 끝나면 `audioFocus.end(input)`을 호출한다. callback의 실제 녹음 취소/실패 정리와 ATC tail 완료는 입력 어댑터 책임이다. 원격 생산자가 API만 호출하고 이 어댑터를 건너뛴 경우 현재 UI의 갱신 주기(1초 poll+통신)에 따라 중단되므로 즉시 로컬 오디오 우선순위를 보장하지 않는다. 실제 PTT/STT는 SPEC-004에서 이 어댑터와 연결해야 한다.
+실제 입력 구현자는 `audioFocus.begin('ATC'|'PILOT', startCallback)`을 사용한다. 이 호출은 안내·근거 음성을 **동기 중단한 뒤** 서버 입력 허가를 요청하고 성공했을 때만 callback을 호출한다. 차단/실패에는 실제 입력을 시작하거나 예약하지 않는다. 끝나면 `audioFocus.end(input)`을 호출한다. 접수된 BEGIN 뒤 callback 시작 실패는 자동 END로 정리하며 END 저장 실패 때만 보류 token을 유지한다. callback이 일부 시작한 실제 장치의 취소/실패 정리와 ATC tail 완료는 입력 어댑터 책임이다. 원격 생산자가 API만 호출하고 이 어댑터를 건너뛴 경우 현재 UI의 갱신 주기(1초 poll+통신)에 따라 중단되므로 즉시 로컬 오디오 우선순위를 보장하지 않는다. 실제 PTT/STT는 SPEC-004에서 이 어댑터와 연결해야 한다.
 
 패널의 원본 음성도 EVIDENCE token을 열어 안내와 겹치지 않는다. native play 요청에서 일단 pause→안내 stop→서버 token→사용자 재생을 이어간다. pause/end/error/패널 닫기/새 선택은 token을 닫고, ATC/PILOT 시작은 원본 음성을 우선 중단한다. 저장 실패 시 안내를 보수적으로 계속 보류하며 종료 재확인 버튼을 제공한다. BEGIN 응답 유실 후 END409이면 GET으로 해당 token 부재가 확인된 경우에만 로컬 보류를 푼다.
 
