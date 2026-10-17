@@ -159,6 +159,28 @@ def test_duplicate_id_is_idempotent_and_different_content_is_conflict(scenario):
     assert len(s.trace()) == events
 
 
+@pytest.mark.parametrize("has_current", [False, True])
+def test_future_target_revision_is_rejected_without_mutating_state(scenario, has_current):
+    s = scenario
+    s.adopt(); s.tick()
+    if has_current:
+        assert s.send(s.camera()).status_code == 201
+        s.tick()
+    before, inputs, trace = s.state(), s.inputs(), s.trace()
+    data = s.camera()
+    data["target_revision"] = before["revision"] + 1
+    response = s.send(data)
+    assert response.status_code == 409
+    assert response.json()["code"] == "CONTEXT_MISMATCH"
+    assert s.state() == before
+    assert s.inputs() == inputs
+    assert s.trace() == trace
+    # The exact current server revision is valid; the rejected frame was not consumed.
+    data["target_revision"] = before["revision"]
+    assert s.send(data).status_code == 201
+    assert s.state()["current"]["COCKPIT"]["HDG"]["value"] == 0
+
+
 def test_source_frame_cannot_be_replayed_with_a_new_observation_id(scenario):
     s = scenario
     s.adopt(); s.tick()

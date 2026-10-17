@@ -329,6 +329,8 @@ def apply_health(profile, state, message, now):
 
 
 def apply_observation(profile, state, obj, instruction, segment, now):
+    if obj.source == "COCKPIT" and obj.target_revision > profile.revision:
+        raise ReceivingError(409, "CONTEXT_MISMATCH", "Cockpit target_revision exceeds current flight revision")
     reason = temporal_reason(profile, obj.observed_at, now)
     if profile.policy and (parsed(obj.processed_at) - now).total_seconds() > profile.policy["max_future_skew_seconds"]:
         reason = reason or "FUTURE_PROCESSING_TIME"
