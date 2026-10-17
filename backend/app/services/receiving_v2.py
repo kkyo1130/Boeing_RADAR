@@ -14,6 +14,8 @@ from app.core.enums import FlightStatus, EventType
 from app.models.flight import Flight
 from app.models.observation_v2 import V2FlightContext, V2Instruction, V2Segment, V2TraceEvent, V2Input
 from app.schemas.receiving_v2 import ReceiverConfig
+from app.schemas.structure_rules import StructurePolicy
+from app.services.structure_rules import check_structure
 from app.services.safety_trace_service import record
 
 
@@ -89,7 +91,9 @@ def start(db, callsign):
         profile = V2FlightContext(flight_id=flight.flight_id, callsign=callsign,
             callsign_registry=config.callsigns, policy=config.freshness.model_dump() if config.freshness else None,
             revision=0, state={"targets": {"ALT": None, "HDG": None}, "readback_required": None,
-                "channels": {}, "current": {"COCKPIT": {}, "READBACK": {}}, "latest_atc_input_id": None})
+                "channels": {}, "current": {"COCKPIT": {}, "READBACK": {}}, "latest_atc_input_id": None,
+                "structure_policy": config.structure_rules.model_dump() if config.structure_rules else None,
+                "structure_checks": {}})
         db.add(profile)
         record(db, flight.flight_id, EventType.FLIGHT_STARTED)
         trace(db, profile, "FLIGHT_STARTED", {"callsign": callsign, "policy": profile.policy}, now)
@@ -258,6 +262,11 @@ def receipt(row, disposition):
         event_id=f"v2-event-{row.event_id}", received_at=row.received_at, disposition=disposition)
 
 
+def structure_check_for(state, observation):
+    checked = state.get("structure_checks", {}).get(observation.source)
+    return checked if checked and checked["observation_id"] == observation.observation_id else None
+
+
 def receive(db, flight_id, message, kind):
     obj = message.root if kind == "OBSERVATION" else message
     data = obj.model_dump(mode="json")
@@ -298,12 +307,14 @@ def receive(db, flight_id, message, kind):
                         pending.applied, pending.reason = apply_observation(profile, state, pilot, pending_instruction, pending_segment, now)
                         trace(db, profile, "DEFERRED_READBACK_RECHECKED", {
                             "input_id": pending.input_id, "applied": pending.applied, "reason": pending.reason,
+                            "structure_check": structure_check_for(state, pilot),
                         }, now)
         profile.revision += 1
         profile.state = state
         event = trace(db, profile, "INPUT_RECEIVED", {
             "kind": kind, "input_id": input_id, "applied": applied, "reason": reason,
             "payload": data, "state": state,
+            "structure_check": structure_check_for(state, obj) if kind == "OBSERVATION" else None,
         }, now)
         row = V2Input(flight_id=flight_id, kind=kind, input_id=input_id, source=source, sample_id=sample_id,
             fingerprint=fingerprint(data), received_at=stamp(now), payload=data,
@@ -352,6 +363,14 @@ def apply_observation(profile, state, obj, instruction, segment, now):
         api_health = state["channels"].get("SPEECH_API")
         if api_health and api_health["status"] != "AVAILABLE":
             reason = reason or "SPEECH_API_UNAVAILABLE"
+        configured = state.get("structure_policy")
+        checked = check_structure(obj.model_dump(mode="json"), target_callsign=profile.callsign,
+            registry=profile.callsign_registry, segment=segment.payload,
+            instruction_id=instruction.instruction_id, previous_targets=state["targets"],
+            policy=StructurePolicy.model_validate(configured) if configured else None)
+        state.setdefault("structure_checks", {})[obj.source] = checked.model_dump(mode="json")
+        if checked.result != "PASS":
+            reason = reason or "STRUCTURE_" + checked.result
     channel = "CAMERA" if obj.source == "COCKPIT" else "MICROPHONE"
     health = state["channels"].get(channel)
     if health and (obj.observed_at is None or parsed(obj.observed_at) <= parsed(health["observed_at"])):
@@ -424,4 +443,5 @@ def get_state(db, flight_id):
     return dict(schema_version="2", flight_id=flight_id, revision=profile.revision, status=flight.status,
         callsign=profile.callsign, targets=targets, readback_required=state["readback_required"],
         channels=state["channels"], current=state["current"], result="UNVERIFIED",
+        structure_checks=state.get("structure_checks", {}),
         reason="FLIGHT_ENDED" if flight.status == FlightStatus.ENDED else "THREE_STATE_VALIDATION_NOT_IMPLEMENTED")

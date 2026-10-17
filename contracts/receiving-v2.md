@@ -69,3 +69,7 @@ Pilot 구간 시작은 해당 ATC 구간 종료보다 이르면 안 된다. 같�
 v2 숫자/health payload는 새 v2 Trace 테이블에 보존한다. 기존 SafetyEventResponse의 Observation·enum을 깨지 않도록 legacy trace에는 기존 형태의 비행 시작/종료만 기록한다. UI가 v2 입력을 조사할 때는 v2 safety-trace를 사용한다. 전체 비행 리포트·통합 집계는 SPEC-008에서 연결한다. legacy VERIFIED 값을 v2의 현재 판정으로 읽지 않는다.
 
 WI-03은 mock 생산자와 이 API를 연결해 정상/부분 지시/미인식/장애/새 지시/수정 관측 계약을 통합 검증한다. SPEC-005는 현재값의 숫자 비교·규칙·전체 상태를, SPEC-007은 Incident 수정 해결을 구현한다. 이 WI는 새 관측 수신 경로가 거짓 VERIFIED/RESOLVED를 만들지 않는 것을 검증하며 실제 기기 성능을 주장하지 않는다.
+
+## SPEC-005-WI-01 구조 검사 연결
+
+ATC/READBACK에는 [결정론적 구조 검사](structure-rules.md)를 수신 적용 전에 추가한다. `RADAR_V2_CONFIG.structure_rules`는 비행별 고정 정책이며 미설정 상한/급변 기준을 임의로 채우지 않는다. 모델 PASS여도 서버 INVALID/NEEDS_REVIEW는 적용하지 않고 사유 STRUCTURE_INVALID/STRUCTURE_NEEDS_REVIEW와 검사 근거를 남긴다. 서버 PASS가 기존 모델/품질/시간 보류를 해제하지 않는다. state의 structure_checks와 해당 입력 Trace의 structure_check에서 결과를 조회한다. 스키마 검증과 HTTP 접수, 규칙 PASS, 최종 3상태 판정은 별개다. 원본 payload와 기존 v1 계약은 보존한다.

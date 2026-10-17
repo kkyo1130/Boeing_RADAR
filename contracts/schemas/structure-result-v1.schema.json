@@ -1,0 +1,123 @@
+{
+  "$defs": {
+    "RuleCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "rule": {
+          "title": "Rule",
+          "type": "string"
+        },
+        "field": {
+          "anyOf": [
+            {
+              "enum": [
+                "ALT",
+                "HDG",
+                "CALLSIGN"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Field"
+        },
+        "result": {
+          "enum": [
+            "PASS",
+            "INVALID",
+            "NEEDS_REVIEW"
+          ],
+          "title": "Result",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "result",
+        "reason"
+      ],
+      "title": "RuleCheck",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "rules_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Rules Version",
+      "type": "string"
+    },
+    "observation_id": {
+      "title": "Observation Id",
+      "type": "string"
+    },
+    "flight_id": {
+      "title": "Flight Id",
+      "type": "string"
+    },
+    "segment_id": {
+      "title": "Segment Id",
+      "type": "string"
+    },
+    "attempt_id": {
+      "title": "Attempt Id",
+      "type": "string"
+    },
+    "result": {
+      "enum": [
+        "PASS",
+        "INVALID",
+        "NEEDS_REVIEW"
+      ],
+      "title": "Result",
+      "type": "string"
+    },
+    "policy_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Policy Ref"
+    },
+    "derived_values": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "title": "Derived Values",
+      "type": "object"
+    },
+    "checks": {
+      "items": {
+        "$ref": "#/$defs/RuleCheck"
+      },
+      "title": "Checks",
+      "type": "array"
+    }
+  },
+  "required": [
+    "observation_id",
+    "flight_id",
+    "segment_id",
+    "attempt_id",
+    "result",
+    "policy_ref",
+    "derived_values",
+    "checks"
+  ],
+  "title": "StructureResult",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:radar:contracts:structure-result-v1"
+}

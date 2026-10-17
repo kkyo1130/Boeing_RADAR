@@ -86,3 +86,7 @@ SQLite 추가 migration·기존 DB 보존·동시 중복·commit 실패 원자�
 ## 2026-10-18 SPEC-002-WI-03 계약 HTTP 통합
 
 PR #6을 `aae3113`로 squash merge한 dev를 기준으로 독립 JSON 생산자와 실제 임시 uvicorn/SQLite를 연결했다. 통합21개·기존 backend174개·Schema6종/fixture21개 검사 통과. 0/null·부분 지시 출처·미인식·장애 복구·새 목표/프레임·잘못된 버전/단위/연결·중복·시도 순서·실행 격리와 원본/Trace 대응을 검증했다. 상세 근거·실행 안내·미실행 범위는 [WI-03](spec/002-observation-contracts/workitem/wi-03.md)을 따른다. 실제 카메라·STT/OCR·최종 판정·알림·리포트 연동 성공을 뜻하지 않는다.
+
+## 2026-10-18 SPEC-005-WI-01 결정론적 구조화 검사
+
+PR #7의 자동 리뷰가 head7bd3544에 대해 지적 없이 완료된 것을 확인하고 d46c3ac로 squash merge한 dev에서 진행했다. 모델 PASS와 서버 규칙 결과를 분리해 원문/필드 raw_text·HDG/명시 FL·등록 호출부호/구간·시각 순서·명시 상한/급변 정책을 검사한다. 비PASS 입력은 목표/현재 숫자에 적용하지 않고 원본과 해당 관측의 규칙 근거를 같은 수신 트랜잭션으로 저장한다. 새 정책·결과 Schema2종과 문형 fixture20개, backend251개·실제 HTTP24개 검증 근거를 추가했다. 실제 모델/장비·최종 3상태/타이머/알림/Incident는 미검증/후속 범위이며 v2 전체 결과는 계속 UNVERIFIED다. 상세 구현·검증·리뷰·인수인계는 [WI-01](spec/005-safe-validation/workitem/wi-01.md)을 따른다.

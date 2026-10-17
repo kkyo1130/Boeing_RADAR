@@ -109,6 +109,7 @@ def setup(client, tmp_path, monkeypatch):
     config = dict(callsigns={"RADAR123": {"radar-one-two-three": "Radar one two three"},
                              "OTHER123": {"other-one-two-three": "Other one two three"}},
                   freshness=dict(max_age_seconds=10.0, max_future_skew_seconds=0.2, minimum_model_score=0.5))
+    config["structure_rules"] = {'policy_ref': 'synthetic-contract-tests/1', 'max_altitude_ft': 50000, 'max_altitude_change_ft': 10000, 'max_heading_change_deg': 180}
     path = tmp_path / "receiver.json"
     path.write_text(json.dumps(config))
     monkeypatch.setenv("RADAR_V2_CONFIG", str(path))

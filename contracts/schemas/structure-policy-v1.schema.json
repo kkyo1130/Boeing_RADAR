@@ -1,0 +1,58 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "policy_ref": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Policy Ref",
+      "type": "string"
+    },
+    "max_altitude_ft": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Max Altitude Ft"
+    },
+    "max_altitude_change_ft": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Max Altitude Change Ft"
+    },
+    "max_heading_change_deg": {
+      "anyOf": [
+        {
+          "maximum": 180,
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Max Heading Change Deg"
+    }
+  },
+  "required": [
+    "policy_ref",
+    "max_altitude_ft",
+    "max_altitude_change_ft",
+    "max_heading_change_deg"
+  ],
+  "title": "StructurePolicy",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:radar:contracts:structure-policy-v1"
+}
