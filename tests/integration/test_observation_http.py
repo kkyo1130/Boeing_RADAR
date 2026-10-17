@@ -259,3 +259,39 @@ def test_server_rechecks_structure_independently_of_extractor_pass(producer, com
     assert stored(p, data)["applied"] == (expected == "PASS")
     assert p.trace()[-1]["snapshot"]["structure_check"] == report
     assert state["result"] == "UNVERIFIED"
+
+
+def test_three_state_early_match_and_immediate_deviation_over_http(producer):
+    p = producer
+    atc, _ = p.adopt()
+    p.send(p.speech(p.segment(atc)))
+    camera = p.camera()
+    camera["fields"]["HDG"].update(value=270, raw_text="270")
+    p.send(camera)
+    matched = p.state()
+    validate("validation-snapshot-v1", matched["validation"])
+    assert matched["result"] == "NORMAL"
+    assert matched["validation"]["phase"] == "MONITORING"
+    changed = p.camera()
+    changed["fields"]["HDG"].update(value=90, raw_text="90")
+    p.send(changed)
+    report = p.state()["validation"]
+    validate("validation-snapshot-v1", report)
+    assert report["result"] == "MISMATCH"
+    assert report["advisory_candidates"][0]["field"] == "HDG"
+    assert report["advisory_candidates"][0]["reason"] == "SETTING_DEVIATED_AFTER_MATCH"
+    assert p.trace()[-1]["snapshot"]["validation"] == report
+
+
+def test_confirmed_readback_error_wins_over_missing_cockpit_over_http(producer):
+    p = producer
+    atc, _ = p.adopt()
+    data = p.speech(p.segment(atc))
+    data["transcript"] = "Radar one two three maintain four thousand feet heading two seven zero"
+    data["fields"]["ALT"].update(value=4000, raw_text="4000")
+    p.send(data)
+    report = p.state()["validation"]
+    validate("validation-snapshot-v1", report)
+    assert report["result"] == "MISMATCH"
+    assert report["representative_stage"] == "READBACK"
+    assert report["setting"]["result"] == "UNVERIFIED"

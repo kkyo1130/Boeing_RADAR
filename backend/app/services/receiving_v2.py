@@ -16,6 +16,7 @@ from app.models.observation_v2 import V2FlightContext, V2Instruction, V2Segment,
 from app.schemas.receiving_v2 import ReceiverConfig
 from app.schemas.structure_rules import StructurePolicy
 from app.services.structure_rules import check_structure
+from app.services.validation_v2 import evaluate
 from app.services.safety_trace_service import record
 
 
@@ -75,6 +76,12 @@ def trace(db, profile, event_type, payload, now):
     return row
 
 
+def refresh_validation(profile, state, now, ended=False):
+    active_ids = {target["instruction_id"] for target in state["targets"].values() if target}
+    state["readbacks"] = {iid: value for iid, value in state.get("readbacks", {}).items() if iid in active_ids}
+    evaluate(state, profile.policy, profile.callsign, now, persist=True, ended=ended)
+
+
 def start(db, callsign):
     try:
         path = os.environ["RADAR_V2_CONFIG"]
@@ -95,6 +102,9 @@ def start(db, callsign):
                 "structure_policy": config.structure_rules.model_dump() if config.structure_rules else None,
                 "structure_checks": {}})
         db.add(profile)
+        initial = deepcopy(profile.state)
+        refresh_validation(profile, initial, now)
+        profile.state = initial
         record(db, flight.flight_id, EventType.FLIGHT_STARTED)
         trace(db, profile, "FLIGHT_STARTED", {"callsign": callsign, "policy": profile.policy}, now)
     return session_response(flight, profile)
@@ -110,6 +120,9 @@ def end(db, flight_id):
     with atomic(db):
         flight, profile = context(db, flight_id, active=True, lock=True)
         flight.status, flight.ended_at = FlightStatus.ENDED, stamp(now)
+        state = deepcopy(profile.state)
+        refresh_validation(profile, state, now, ended=True)
+        profile.state = state
         profile.revision += 1
         record(db, flight_id, EventType.FLIGHT_ENDED)
         trace(db, profile, "FLIGHT_ENDED", {"unverified": True}, now)
@@ -160,6 +173,7 @@ def register_segment(db, flight_id, segment):
             if previous and parsed(segment.started_at) <= parsed(previous.payload["started_at"]):
                 raise ReceivingError(409, "INVALID_SEQUENCE", "Pilot segment is older than the current attempt")
             instruction.latest_pilot_attempt_id = segment.attempt_id
+            state.setdefault("readbacks", {}).pop(instruction.instruction_id, None)
             for field, target in state["targets"].items():
                 if target and target["instruction_id"] == instruction.instruction_id:
                     state["current"]["READBACK"][field] = None
@@ -168,6 +182,7 @@ def register_segment(db, flight_id, segment):
             payload=data, fingerprint=fingerprint(data), cancelled=not segment.complete)
         db.add(stored)
         profile.revision += 1
+        refresh_validation(profile, state, now)
         profile.state = state
         trace(db, profile, "SEGMENT_REGISTERED", data, now)
         return segment_response(db, stored, "ACCEPTED")
@@ -194,9 +209,13 @@ def cancel_segment(db, flight_id, segment_id, reason):
             segment.cancelled = True
             state = deepcopy(profile.state)
             if segment.payload["role"] == "PILOT":
+                current_call = state.get("readbacks", {}).get(instruction.instruction_id)
+                if current_call and current_call.get("segment_id") == segment_id:
+                    state["readbacks"].pop(instruction.instruction_id)
                 for field, current in state["current"]["READBACK"].items():
                     if current and current.get("segment_id") == segment_id:
                         state["current"]["READBACK"][field] = None
+            refresh_validation(profile, state, utc_now())
             profile.state = state
             if segment.payload["role"] == "ATC":
                 instruction.status = "CANCELLED"
@@ -310,11 +329,13 @@ def receive(db, flight_id, message, kind):
                             "structure_check": structure_check_for(state, pilot),
                         }, now)
         profile.revision += 1
+        refresh_validation(profile, state, now)
         profile.state = state
         event = trace(db, profile, "INPUT_RECEIVED", {
             "kind": kind, "input_id": input_id, "applied": applied, "reason": reason,
             "payload": data, "state": state,
             "structure_check": structure_check_for(state, obj) if kind == "OBSERVATION" else None,
+            "validation": state["validation_snapshot"],
         }, now)
         row = V2Input(flight_id=flight_id, kind=kind, input_id=input_id, source=source, sample_id=sample_id,
             fingerprint=fingerprint(data), received_at=stamp(now), payload=data,
@@ -336,6 +357,8 @@ def apply_health(profile, state, message, now):
     sources = ["COCKPIT"] if message.channel == "CAMERA" else ["READBACK"]
     for source in sources:
         state["current"][source] = {}
+    if message.channel != "CAMERA":
+        state["readbacks"] = {}
     return True, "HEALTH_RECORDED_AWAITING_NEW_OBSERVATION"
 
 
@@ -395,6 +418,15 @@ def apply_observation(profile, state, obj, instruction, segment, now):
         return True, "TARGETS_ADOPTED_AWAITING_VALIDATION"
     applied = False
     reasons = []
+    if obj.source == "READBACK":
+        # A registered, explicit callsign difference remains separate from missing input.
+        call_eligible = reason is None or (reason == "OUT_OF_TARGET" and all(
+            check.result == "PASS" or check.reason == "CALLSIGN_OUT_OF_TARGET" for check in checked.checks))
+        state.setdefault("readbacks", {})[instruction.instruction_id] = dict(
+            instruction_id=instruction.instruction_id, segment_id=obj.segment_id,
+            observation_id=obj.observation_id, observed_at=obj.observed_at,
+            value=obj.callsign.value if call_eligible else None, structure_eligible=call_eligible,
+            reason=reason)
     for field, reading in obj.fields.items():
         target = state["targets"][field]
         previous = state["current"][obj.source].get(field)
@@ -417,6 +449,8 @@ def apply_observation(profile, state, obj, instruction, segment, now):
         state["current"][obj.source][field] = dict(value=reading.value if issue is None else None,
             unit=reading.unit, observed_at=obj.observed_at, observation_id=obj.observation_id,
             result="UNVERIFIED", reason=issue or "AWAITING_THREE_STATE_VALIDATION",
+            instruction_id=target["instruction_id"] if target else None,
+            structure_eligible=obj.source == "COCKPIT" or checked.result == "PASS",
             segment_id=getattr(obj, "segment_id", None))
         applied = applied or issue is None
         if issue:
@@ -430,7 +464,9 @@ def get_state(db, flight_id):
     flight, profile = context(db, flight_id)
     state = deepcopy(profile.state)
     now = utc_now()
-    for fields in state["current"].values():
+    for source, fields in state["current"].items():
+        if source == "READBACK":
+            continue  # Completed readback facts are evaluated with their proof IDs.
         for field, current in fields.items():
             if not current:
                 continue
@@ -440,8 +476,10 @@ def get_state(db, flight_id):
     # Remove internal per-target receive revision from the public target DTO.
     targets = {name: ({k:v for k,v in value.items() if k != "target_revision"} if value else None)
                for name,value in state["targets"].items()}
+    validation = evaluate(state, profile.policy, profile.callsign, now,
+        ended=flight.status == FlightStatus.ENDED).model_dump(mode="json")
     return dict(schema_version="2", flight_id=flight_id, revision=profile.revision, status=flight.status,
         callsign=profile.callsign, targets=targets, readback_required=state["readback_required"],
-        channels=state["channels"], current=state["current"], result="UNVERIFIED",
+        channels=state["channels"], current=state["current"], result=validation["result"],
         structure_checks=state.get("structure_checks", {}),
-        reason="FLIGHT_ENDED" if flight.status == FlightStatus.ENDED else "THREE_STATE_VALIDATION_NOT_IMPLEMENTED")
+        validation=validation, reason=validation["reason"])

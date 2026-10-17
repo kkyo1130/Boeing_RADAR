@@ -1,6 +1,6 @@
 # 공통 관측 v2 수신 API
 
-SPEC-002-WI-02의 실행 계약이다. [WI-01 DTO·구조 계약](observation-v2.md)을 기존 Mock API와 분리된 `/api/v2`에 연결한다. 입력 저장·문맥 검증·현재 항목/목표 연결을 구현하며 최종 숫자 비교(NORMAL/MISMATCH)·알림·Incident 해결은 SPEC-005/006/007의 후속 범위다. v2 state는 항상 UNVERIFIED로 표시해 수신 성공을 전체 정상으로 만들지 않는다.
+SPEC-002-WI-02의 실행 계약이다. [WI-01 DTO·구조 계약](observation-v2.md)을 기존 Mock API와 분리된 `/api/v2`에 연결한다. 입력 저장·문맥 검증·현재 항목/목표 연결을 구현한다. 최종 숫자 비교는 SPEC-005-WI-02의 별도 validation 계약에 연결하고 실제 알림·Incident 해결은 SPEC-006/007의 후속 범위다. 최종 숫자 비교는 SPEC-005-WI-02의 validation 계약에 연결하며 수신 성공만으로 전체 정상으로 만들지 않는다.
 
 ## 설정과 설치
 
@@ -34,7 +34,7 @@ python -m app.migrate_observation_v2 --database-url sqlite:///./radar.db
 | POST `/api/v2/flights/{flight_id}/speech-segments/{segment_id}/cancel` | `{reason}`. 현재 시도 취소200. 이미 채택된 ATC 지시는 취소409 |
 | POST `/api/v2/flights/{flight_id}/observations` | ObservationV2. 201 신규 접수, 동일 ID·내용200 DUPLICATE, ID 내용 충돌409 |
 | POST `/api/v2/flights/{flight_id}/health-events` | HealthEventV2. 201 접수 또는 동일 이벤트200 |
-| GET `/api/v2/flights/{flight_id}/state` | 항목별 목표·출처, 이번 복창 요구, 채널, 현재 관측/사유. 최종 result=UNVERIFIED |
+| GET `/api/v2/flights/{flight_id}/state` | 항목별 목표·출처, 이번 복창 요구, 채널, 현재 관측/사유. 동적 result=NORMAL/MISMATCH/UNVERIFIED와 reason, validation(단계·필드 판정 및 안내 후보) |
 | GET `/api/v2/flights/{flight_id}/inputs?limit=100` | 최신순 입력·원본 payload·applied·사유·접수 이벤트 참조. 최대1000 |
 | GET `/api/v2/flights/{flight_id}/safety-trace?after=0&limit=100` | 이벤트 순서·시각·revision·원본/변경 snapshot. sequence 오름차순, 최대1000 |
 
@@ -73,3 +73,7 @@ WI-03은 mock 생산자와 이 API를 연결해 정상/부분 지시/미인식/�
 ## SPEC-005-WI-01 구조 검사 연결
 
 ATC/READBACK에는 [결정론적 구조 검사](structure-rules.md)를 수신 적용 전에 추가한다. `RADAR_V2_CONFIG.structure_rules`는 비행별 고정 정책이며 미설정 상한/급변 기준을 임의로 채우지 않는다. 모델 PASS여도 서버 INVALID/NEEDS_REVIEW는 적용하지 않고 사유 STRUCTURE_INVALID/STRUCTURE_NEEDS_REVIEW와 검사 근거를 남긴다. 서버 PASS가 기존 모델/품질/시간 보류를 해제하지 않는다. state의 structure_checks와 해당 입력 Trace의 structure_check에서 결과를 조회한다. 스키마 검증과 HTTP 접수, 규칙 PASS, 최종 3상태 판정은 별개다. 원본 payload와 기존 v1 계약은 보존한다.
+
+## SPEC-005-WI-02 3상태 판정 연결
+
+최종 비교는 [validation-v2](validation-v2.md)와 state.validation을 따른다. v2 최상위 result/reason은 유효한 단계/필드 비교를 반영한다. 이전 UNVERIFIED 고정 설명은 당시 수신 구현의 한계다. current는 수신 조회 호환용으로 유지한다. 판정/타이머·Trace는 기존 수신 트랜잭션에 저장하고 GET은 현재 시각으로 비교하되 저장하지 않는다. 실제 음성/Incident 해결을 접수 성공과 혼동하지 않는다.

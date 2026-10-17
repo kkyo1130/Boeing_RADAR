@@ -90,3 +90,7 @@ PR #6을 `aae3113`로 squash merge한 dev를 기준으로 독립 JSON 생산자�
 ## 2026-10-18 SPEC-005-WI-01 결정론적 구조화 검사
 
 PR #7의 자동 리뷰가 head7bd3544에 대해 지적 없이 완료된 것을 확인하고 d46c3ac로 squash merge한 dev에서 진행했다. 모델 PASS와 서버 규칙 결과를 분리해 원문/필드 raw_text·HDG/명시 FL·등록 호출부호/구간·시각 순서·명시 상한/급변 정책을 검사한다. 비PASS 입력은 목표/현재 숫자에 적용하지 않고 원본과 해당 관측의 규칙 근거를 같은 수신 트랜잭션으로 저장한다. 새 정책·결과 Schema2종과 문형 fixture20개, backend251개·실제 HTTP24개 검증 근거를 추가했다. 실제 모델/장비·최종 3상태/타이머/알림/Incident는 미검증/후속 범위이며 v2 전체 결과는 계속 UNVERIFIED다. 상세 구현·검증·리뷰·인수인계는 [WI-01](spec/005-safe-validation/workitem/wi-01.md)을 따른다.
+
+## 2026-10-18 SPEC-005-WI-02 3상태·오류 단계
+
+PR #8 리뷰 P2를 수정·검증해525f98a로 병합한 기준에서 READBACK/SETTING별 NORMAL/MISMATCH/UNVERIFIED·대표 단계·안내 후보를 구현했다. 복창 확인 최초5초·조기 전체 일치·이후 재불일치 즉시 확인, ALT 부분 변경 시 기존 HDG 감시와 최신 지시/복창 대기 전환을 분리한다. 판정·타이머/완료 기록·Trace는 수신과 원자 저장하고 GET은 사본에서 기한/만료를 재평가한다. backend288/HTTP26·계약 검사·미실행 범위는 [WI-02 MD 하단 결과](spec/005-safe-validation/workitem/wi-02.md)를 따른다. 실제 음성·Incident 해결·장비/모델/전체 E2E는 후속 범위다.

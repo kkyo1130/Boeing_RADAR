@@ -54,7 +54,7 @@
 
 `INPUT_RECEIVED` 및 `DEFERRED_READBACK_RECHECKED` Trace snapshot에 해당 입력의 `structure_check`를 남긴다. 취소/재사용/선행 ATC 미채택 등으로 이번 입력의 검사를 하지 않았으면null이며 이전 입력의 결과를 빌려 넣지 않는다. 원본 payload·상태·검사 근거는 기존 수신 트랜잭션 안에서 함께 저장/rollback된다. 같은 관측 재전송은 같은 접수 event_id를 반환하고 재검사를 중복 기록하지 않는다.
 
-새 DB 컬럼·migration은 없다. 새 설정/검사 snapshot은 기존 v2 context의 JSON state와 Trace를 사용한다. 정책 snapshot이 없는 기존 v2 비행은 필요한 검사를 NEEDS_REVIEW로 처리하며 목표를 임의 채택하지 않는다. 기존 v1 경로·DTO·Trace는 변경하지 않는다. 최종 v2 state 결과는 계속 UNVERIFIED이며 5초 대기·오류 단계·알림·Incident 해결은 SPEC-005-WI-02 이후의 작업이다.
+새 DB 컬럼·migration은 없다. 새 설정/검사 snapshot은 기존 v2 context의 JSON state와 Trace를 사용한다. 정책 snapshot이 없는 기존 v2 비행은 필요한 검사를 NEEDS_REVIEW로 처리하며 목표를 임의 채택하지 않는다. 기존 v1 경로·DTO·Trace는 변경하지 않는다. 최종 비교와5초 대기/오류 단계는 [WI-02 계약](validation-v2.md)에 연결했다. 규칙 PASS 자체가 전체 정상은 아니며 실제 음성/Incident 해결은 후속 작업이다.
 
 ## 검증
 
