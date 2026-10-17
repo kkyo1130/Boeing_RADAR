@@ -34,7 +34,7 @@ python -m app.migrate_observation_v2 --database-url sqlite:///./radar.db
 | POST `/api/v2/flights/{flight_id}/speech-segments/{segment_id}/cancel` | `{reason}`. 현재 시도 취소200. 이미 채택된 ATC 지시는 취소409 |
 | POST `/api/v2/flights/{flight_id}/observations` | ObservationV2. 201 신규 접수, 동일 ID·내용200 DUPLICATE, ID 내용 충돌409 |
 | POST `/api/v2/flights/{flight_id}/health-events` | HealthEventV2. 201 접수 또는 동일 이벤트200 |
-| GET `/api/v2/flights/{flight_id}/state` | 항목별 목표·출처, 이번 복창 요구, 채널, 현재 관측/사유. 최종 result=UNVERIFIED |
+| GET `/api/v2/flights/{flight_id}/state` | 항목별 목표·출처, 이번 복창 요구, 채널, 현재 관측/사유. 동적 result=NORMAL/MISMATCH/UNVERIFIED와 reason, validation(단계·필드 판정 및 안내 후보) |
 | GET `/api/v2/flights/{flight_id}/inputs?limit=100` | 최신순 입력·원본 payload·applied·사유·접수 이벤트 참조. 최대1000 |
 | GET `/api/v2/flights/{flight_id}/safety-trace?after=0&limit=100` | 이벤트 순서·시각·revision·원본/변경 snapshot. sequence 오름차순, 최대1000 |
 
