@@ -1,0 +1,61 @@
+name: Automated verification
+
+'on':
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev, main, python, 'codex/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python fixtures (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version-file: .python-version
+      - name: OpenCV shared libraries (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1 libglib2.0-0
+      - run: python scripts/bootstrap.py --skip-frontend
+      - run: python scripts/verify.py --component backend --component vision --http-smoke
+
+  frontend:
+    name: Frontend build and Chromium fixture E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - run: npm ci
+        working-directory: frontend
+      - run: python3 scripts/verify.py --component frontend
+      - uses: actions/setup-python@v7
+        with:
+          python-version-file: .python-version
+      - run: python scripts/bootstrap.py --skip-frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: npm run test:e2e
+        working-directory: frontend
+        env:
+          RADAR_TEST_PYTHON: ../.venv/bin/python

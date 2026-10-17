@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './style.css';
 import cockpitReference from '../../docs/vision/assets/mcp-reference.png';
+import Operations from './Operations';
 
 const initial = { speed: 250, heading: 270, altitude: 3000 };
 const instruments = [
@@ -153,4 +154,4 @@ function App() {
   </main>;
 }
 
-createRoot(document.getElementById('root')).render(<App />);
+createRoot(document.getElementById('root')).render(location.pathname === '/operations' ? <Operations /> : <App />);
