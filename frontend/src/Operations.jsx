@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { request, SnapshotGate, dueRevalidations, POLL_MS, statusLabel, numberLabel, restartFlightState, readingFor, reconciledActionError } from './flight-client.js';
 import './operations.css';
+import EvidencePanel, { selectionFor, recordInteraction } from './EvidencePanel.jsx';
 
 const STORAGE_KEY = 'radar.v2.flight-id';
 const readFlight = () => { if (typeof window === 'undefined') return ''; try { return window.localStorage.getItem(STORAGE_KEY) || ''; } catch { return ''; } };
@@ -61,7 +62,7 @@ function Badge({ result, connected = true, ended = false }) {
 
 function Stamp({ value }) { return value ? <time dateTime={value}>{value}</time> : <span>시각 미상</span>; }
 
-export function Verdicts({ title, group, source, snapshot, connected, ended = false }) {
+export function Verdicts({ title, group, source, snapshot, connected, ended = false, onEvidence, onAcknowledge }) {
   return <section className="op-panel" aria-label={title}>
     <div className="op-section-heading"><h2>{title}</h2><Badge result={group.result} connected={connected} ended={ended} /></div>
     <div className="op-table-scroll"><table>
@@ -74,6 +75,11 @@ export function Verdicts({ title, group, source, snapshot, connected, ended = fa
           <td><Badge result={row.result} connected={connected} ended={ended} /><p>{ended ? '종료 시점의 관측 기록입니다' : connected ? reasons[row.reason] || '확인이 필요합니다' : '연결 복구 후 다시 확인합니다'}</p>
             <small>관측 <Stamp value={reading?.observed_at} /></small>
             {row.wait_until && <small>대기 종료 <Stamp value={row.wait_until} /></small>}
+            {row.instruction_id && row.observation_id && <div className="op-row-actions">
+              <button disabled={!connected} onClick={event => onEvidence?.(row, event.currentTarget)}>근거 보기</button>
+              {!ended && row.result !== 'NORMAL' && <button disabled={!connected} onClick={() => onAcknowledge?.(row)}>확인했음</button>}
+            </div>}
+            {source === 'READBACK' && row.result === 'MISMATCH' && !ended && <p>입력 채널의 PTT로 수정 복창을 시작하세요. 같은 지시의 필수 항목과 호출부호를 다시 말하세요. 확인 버튼을 누를 필요는 없습니다.</p>}
             <details><summary>지시·관측 식별자</summary><p>서버 사유 {row.reason}</p><p>지시 {row.instruction_id || '없음'}</p><p>관측 {row.observation_id || '없음'}</p></details>
           </td>
         </tr>;
@@ -88,13 +94,29 @@ export default function Operations() {
   const [callsign, setCallsign] = useState('');
   const [resumeId, setResumeId] = useState('');
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [refresh, setRefresh] = useState(0);
-  const actionRef = useRef(false);
+  const actionRef = useRef(false), opener = useRef(null), ackIds = useRef(new Map()), ackBusy = useRef(false), generation = useRef(0);
+  const [selected, setSelected] = useState(null), [ackMessage, setAckMessage] = useState('');
   const { snapshot, connected, error: connectionError, receivedAt } = useFlight(flightId, refresh);
   const ended = snapshot?.status === 'ENDED';
   useEffect(() => { setError(previous => reconciledActionError(previous, snapshot, connected)); }, [ended, connected]);
   function attach(id) {
     try { id ? localStorage.setItem(STORAGE_KEY, id) : localStorage.removeItem(STORAGE_KEY); } catch { /* Session works without browser storage. */ }
-    setError(''); setFlightId(id);
+    generation.current += 1; setError(''); setSelected(null); setAckMessage(''); ackIds.current.clear(); setFlightId(id);
+  }
+  function openEvidence(row, button) {
+    opener.current = button; setSelected(selectionFor(snapshot, row));
+  }
+  async function acknowledge(row) {
+    if (ackBusy.current || !connected || ended) return;
+    const currentGeneration = generation.current;
+    const selection = selectionFor(snapshot, row), key = JSON.stringify(selection);
+    const eventId = ackIds.current.get(key) || crypto.randomUUID(); ackIds.current.set(key, eventId);
+    ackBusy.current = true; setAckMessage('확인 기록을 저장하고 있습니다');
+    try {
+      await recordInteraction(selection, 'ACKNOWLEDGED', eventId);
+      if (generation.current === currentGeneration) setAckMessage('확인 기록을 저장했습니다. 해결 여부는 새 유효 관측으로 확인합니다.');
+    } catch (e) { if (generation.current === currentGeneration) setAckMessage(`확인 기록 저장에 실패했습니다. ${e.message}`); }
+    finally { ackBusy.current = false; }
   }
   async function start(event) {
     event.preventDefault();
@@ -121,6 +143,7 @@ export default function Operations() {
       <nav aria-label="화면 선택"><a href="/" target="_blank" rel="noreferrer">모의 MCP 열기 ↗</a></nav>
       <span className="op-muted">모의 환경 · 설정은 직접 조작</span></header>
     <div className="op-intro"><p className="eyebrow">FLIGHT OPERATIONS</p><h1>비행 상태 확인</h1><p>관제 지시와 복명복창, 카메라가 읽은 설정값을 함께 확인하세요.</p></div>
+    {ackMessage && <p className="op-notice" role="status">{ackMessage}</p>}
     {error && <p className="op-error" role="alert">{error}</p>}
     {!flightId ? <section className="op-panel op-start">
       <h2>대상 항공기</h2><form onSubmit={start}><label htmlFor="callsign">등록된 호출부호</label>
@@ -153,8 +176,9 @@ export default function Operations() {
             <small>채택 <Stamp value={snapshot.targets[field]?.adopted_at} /></small></article>)}</div>
           <p>이번 복창 항목: {snapshot.readback_required ? `${snapshot.readback_required.fields.map(field => fields[field]).join(' · ')} · 호출부호` : '지시 확인 대기'}</p>
         </section>
-        <Verdicts title="복명복창" group={snapshot.validation.readback} source="READBACK" snapshot={snapshot} connected={connected} ended={ended} />
-        <Verdicts title="Cockpit 설정" group={snapshot.validation.setting} source="COCKPIT" snapshot={snapshot} connected={connected} ended={ended} />
+        <Verdicts title="복명복창" group={snapshot.validation.readback} source="READBACK" snapshot={snapshot} connected={connected} ended={ended} onEvidence={openEvidence} onAcknowledge={acknowledge} />
+        <Verdicts title="Cockpit 설정" group={snapshot.validation.setting} source="COCKPIT" snapshot={snapshot} connected={connected} ended={ended} onEvidence={openEvidence} onAcknowledge={acknowledge} />
+        {selected && <EvidencePanel key={JSON.stringify(selected)} selected={selected} snapshot={snapshot} connected={connected} onClose={() => { setSelected(null); opener.current?.focus(); }} />}
         <section className="op-panel" aria-label="장치 상태"><h2>입력 장치</h2><div className="op-health">{[['CAMERA', '카메라'], ['MICROPHONE', '마이크'], ['SPEECH_API', '음성 처리']].map(([key, label]) => {
           const health = snapshot.channels[key];
           return <article key={key}><h3>{label}</h3><p>{!connected ? '서버 확인 불가' : { AVAILABLE: '사용 가능', DISCONNECTED: '연결 끊김', DEGRADED: '품질 저하', UNKNOWN: '확인 불가' }[health?.status] || '상태 수신 대기'}</p>

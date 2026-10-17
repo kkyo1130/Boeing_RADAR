@@ -35,7 +35,7 @@ Vite 개발 proxy가 같은 출처의 `/api` 요청을 기본 `http://127.0.0.1:
 
 END 성공 후 서버 ENDED snapshot을 조회해 종료 기록을 표시한다. 실패/시간 초과를 로컬 종료 성공으로 만들지 않고 다시 서버에서 확인한다. START/END 쓰기 요청은 자동 반복하지 않는다. 응답 유실 시 서버에서 이미 수행됐을 가능성은 기존 API의 한계이며 새 flight ID를 알아내는 목록/요청 멱등 계약은 아직 없다. 완성 리포트는 SPEC-008에서 제공한다.
 
-**후속 범위:** 실제 ATC 재생·PTT/STT·카메라 생산자 연결, 근거 미디어 열람/사용자 확인, 음성 안내·우선순위/중복 억제, 종료 리포트는 해당 WI에서 연결한다. 이 화면은 없는 입력 기능을 녹음 완료처럼 표시하지 않는다. 실제 입력은 기존 v2 생산자 API로 수신한다. [수신 계약](../contracts/receiving-v2.md), [판정 계약](../contracts/validation-v2.md), [발생 건 계약](../contracts/incidents-v2.md), [WI 기록](../docs/spec/006-advisory-interface/workitem/wi-01.md)을 따른다.
+**후속 범위:** 실제 ATC 재생·PTT/STT·카메라 생산자 연결, 음성 안내·우선순위/중복 억제, 종료 리포트는 해당 WI에서 연결한다. 이 화면은 없는 입력 기능을 녹음 완료처럼 표시하지 않는다. 실제 입력은 기존 v2 생산자 API로 수신한다. [수신 계약](../contracts/receiving-v2.md), [판정 계약](../contracts/validation-v2.md), [발생 건 계약](../contracts/incidents-v2.md), [WI 기록](../docs/spec/006-advisory-interface/workitem/wi-01.md)을 따른다.
 
 ## 기존 태블릿 촬영 화면
 
@@ -68,3 +68,12 @@ PC에서는 `http://localhost:5173/`, 같은 Wi-Fi의 태블릿에서는 Vite가
 카메라 캡처·ROI 설정·스트림 실행은 [태블릿 데모 안내](../vision/docs/tablet-demo.md)를 따른다.
 
 기술 참고: [React useState](https://react.dev/reference/react/useState), [Vite 실행 및 Node 요구사항](https://vite.dev/guide/).
+
+
+## 근거 패널과 사용자 확인 · SPEC-006-WI-02
+
+불일치/보류 항목의 `근거 보기`는 해당 지시의 ATC 원본과 선택 관측을 함께 연다. 원본 UTC/대본·품질·점수·ROI/프레임·음성을 확인할 수 있다. 음성은 재생 버튼으로만 시작하며, 근거 없음/접근 실패는 이유를 표시한다. 새 지시·새 관측·서버 단절 때 과거 미디어는 제거/정지하고 최신 근거를 다시 연다. 닫으면 원래 버튼으로 focus가 돌아간다.
+
+개발자가 backend 실행 환경에 RADAR_EVIDENCE_ROOT를 지정하고 생산자가 media:상대경로의 EvidenceRef를 제공해야 실제 파일을 볼 수 있다. 지원 형식/범위와 metadata/media API는 [실행 계약](../contracts/evidence-v2.md)을 따른다. 실제 영상·녹음·DB는 Git에 추가하지 않는다.
+
+`확인했음`은 해당 관측의 확인 기록만 저장하며 오류를 숨기거나 해결하지 않는다. 패널이 열린 기록도 재생 완료가 아니다. 파일이 없거나 확인 버튼을 누르지 않아도 기존 생산자의 수정 발화/새 카메라 입력은 가능하다. 실제 브라우저 마이크 PTT·STT 연결은 SPEC-004, 자동 안내 음성/교신 우선순위는 WI-03 후속 범위다.

@@ -86,3 +86,6 @@ state.incident_version/ incidents와 POST revalidate는 [Incident 계약](incide
 
 
 PR #12 시각 보완: state.readbacks는 현재 유효 지시별 호출부호 관측의 observation_id/segment_id/attempt_id/observed_at·값/근거를 반환한다. CALLSIGN 시각을 숫자 ALT/HDG 관측의 존재로 추정하지 않는다. 숫자 필드가 비어 있어도 호출부호 관측 시각은 조회할 수 있다.
+
+
+SPEC-006-WI-02의 현재 근거 조회/제한된 media 제공/명시적 확인·열람 기록은 [evidence-v2 계약](evidence-v2.md)을 따른다. 확인 기록으로 수신 적격성·현재 판정/Incident 해결을 바꾸지 않는다.
