@@ -1,6 +1,6 @@
 # RADAR 공통 관측 계약 v2
 
-SPEC-002-WI-01의 산출물이다. DTO와 JSON Schema·예제를 검증한 공통 계약이며, `/api/v2` 서버 수신·DB 저장·freshness 판정은 WI-02에서 구현한다. 현재 `/api`는 기존 ObservationInput 계약을 유지한다. 외부 API·실카메라 연동 성공을 뜻하지 않는다.
+SPEC-002-WI-01의 산출물이다. DTO와 JSON Schema·예제를 검증한 공통 계약이다. WI-02의 [v2 수신 API](receiving-v2.md)가 저장·문맥/중복/freshness 검사를 구현한다. 현재 `/api`는 기존 ObservationInput 계약을 유지한다. 외부 API·실카메라 연동 성공을 뜻하지 않는다.
 
 ## 원본과 재현
 
@@ -17,7 +17,7 @@ backend/.venv/bin/python contracts/check_v2.py --write
 backend/.venv/bin/python contracts/check_v2.py
 ```
 
-Backend 회귀는 `backend/`에서 `.venv/bin/python -m pytest -q`로 실행한다. `--write`는 스키마를 갱신하고 기본 검사는 파일이 DTO와 일치하는지 및 모든 예제의 기대 결과를 확인한다. 스키마는 v2 라우터에 자동 등록되지 않는다.
+Backend 회귀는 `backend/`에서 `.venv/bin/python -m pytest -q`로 실행한다. `--write`는 스키마를 갱신하고 기본 검사는 파일이 DTO와 일치하는지 및 모든 예제의 기대 결과를 확인한다. WI-02는 DTO를 v2 라우터에 명시적으로 연결한다. 이 생성 명령 자체는 라우터를 변경하지 않는다.
 
 ## 메시지 종류와 책임
 
@@ -25,7 +25,7 @@ Backend 회귀는 `backend/`에서 `.venv/bin/python -m pytest -q`로 실행한�
 | --- | --- | --- |
 | [observation-v2](schemas/observation-v2.schema.json) | Vision/음성 추출 → Backend | `source=COCKPIT/ATC/READBACK` 판별 union. source별 필드 외 추가 입력 금지 |
 | [health-event-v2](schemas/health-event-v2.schema.json) | 장치/어댑터 → Backend | 숫자 없이 채널 상태 전달. CAMERA/MICROPHONE/SPEECH_API |
-| [speech-segment-v2](schemas/speech-segment-v2.schema.json) | 수음 제어 → 음성 처리 | 구간·ATC 입력·시도·역할·원본 참조·완료 여부 |
+| [speech-segment-v2](schemas/speech-segment-v2.schema.json) | 수음 제어 → 구간 등록 | 구간·ATC 입력·시도·역할·원본 참조·완료 여부 |
 | [target-snapshot-v2](schemas/target-snapshot-v2.schema.json) | Backend → 생산자/UI | ALT/HDG별 목표·원본 지시와 이번 지시의 복창 요구 |
 | [ingestion-receipt-v2](schemas/ingestion-receipt-v2.schema.json) | Backend → 생산자 | 접수·동일 재전송 확인. 정상/해결 판정 필드 없음 |
 | [contract-error-v2](schemas/contract-error-v2.schema.json) | Backend → 생산자 | 코드·사유·입력 ID·오류 위치. 실패를 가짜 숫자로 반환하지 않음 |
@@ -109,7 +109,7 @@ SpeechSegmentV2는 ATC→ATC_PLAYBACK, PILOT→PILOT_PTT를 강제한다. 종료
 | 비행 ID·시도·지시 연결 불일치 | 409 CONTEXT_MISMATCH/INVALID_SEQUENCE | 다른 입력으로 재연결 금지 |
 | 종료 비행 입력 | 409 FLIGHT_ENDED | 현재 상태/종료 리포트 갱신 금지 |
 
-404·409·422 응답의 구체 envelope는 ContractErrorV2다. 알 수 없는 schema_version은 모델 검증 전에 수신 경계에서 구분할 수 있다. 202 비동기 작업 접수는 최종 관측 수신과 별도다. endpoint 경로 계획은 SPEC-002를 따르며 이 표는 아직 실행 API가 아니다.
+404·409·422 응답의 구체 envelope는 ContractErrorV2다. 알 수 없는 schema_version은 모델 검증 전에 수신 경계에서 구분할 수 있다. 202 비동기 작업 접수는 최종 관측 수신과 별도다. endpoint 경로 계획은 SPEC-002를 따르며 실제 등록된 경로와 상태 처리는 [v2 수신 API](receiving-v2.md)를 따른다.
 
 ## 기존 구현과 호환성
 
@@ -121,7 +121,7 @@ SpeechSegmentV2는 ATC→ATC_PLAYBACK, PILOT→PILOT_PTT를 강제한다. 종료
 | 로컬 frame UUID·frame_sequence | 재실행/재전송 identity와 구분. 공통 observation ID는 같은 요청 재전송 동안 유지. 원본 시각을 보존해 오래된 파일이 새 관측으로 둔갑하지 않게 함 |
 | 선택 speed 필드 | 기존 로컬 Vision 관측에 유지. 이번 ALT/HDG 공통 서버 계약에 자동 혼입하거나 속도 비교를 추가하지 않음 |
 
-기존 Vision 어댑터의 전송 구현은 SPEC-003-WI-04, 실제 수신·중복/지연/DB 마이그레이션은 SPEC-002-WI-02, 생산자/소비자 실통합은 WI-03에서 수행한다. v1↔v2 자동 변환·임의 단일 confidence 합성·null→0 변환을 제공하지 않는다.
+기존 Vision 어댑터의 전송 구현은 SPEC-003-WI-04, 실제 수신·중복/지연/DB 마이그레이션은 [SPEC-002-WI-02](receiving-v2.md), 생산자/소비자 실통합은 WI-03에서 수행한다. v1↔v2 자동 변환·임의 단일 confidence 합성·null→0 변환을 제공하지 않는다.
 
 ## Schema와 DTO의 검증 경계
 

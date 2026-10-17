@@ -2,11 +2,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.db import Base, engine
 from app.models import flight, clearance, safety_event
-from app.api import flights, clearances
+from app.api import flights, clearances, receiving_v2
+from app.migrate_observation_v2 import migrate
 
 @asynccontextmanager
 async def lifespan(app):
-    Base.metadata.create_all(engine)
+    migrate(engine)
     yield
 
 app = FastAPI(title="RADAR", version="0.1.0", lifespan=lifespan,
@@ -37,3 +38,6 @@ Readback 비교가 우선이며, 복명복창 오류 수정은 Cockpit이 없어
 )
 app.include_router(flights.router)
 app.include_router(clearances.router)
+
+app.include_router(receiving_v2.router)
+receiving_v2.install_handlers(app)

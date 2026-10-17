@@ -2,7 +2,7 @@
 
 ## 기본 정보
 
-- 요구사항 버전: 5
+- 요구사항 버전: 6
 - 상태: draft (목표 초안; 현재 구현과 미정 사항은 별도 표시)
 - Priority: P0
 - 근거: [서비스 방향](../service/overview.md), [요구사항 매핑](../service/requirements-map.md)
@@ -12,7 +12,7 @@
 
 파트가 공통 단위·지시 ID·품질·근거로 데이터를 주고받는다.
 
-포함 범위는 아래 workitem의 산출물이다. 실제 항공기 제어·QNH/Baro와 다른 기능의 소유 계약은 제외한다. 현재 실행 범위는 사용자 요청한 WI-01의 스키마·예제·검증이다. v2 API 수신·저장은 WI-02에서 구현한다.
+포함 범위는 아래 workitem의 산출물이다. 실제 항공기 제어·QNH/Baro와 다른 기능의 소유 계약은 제외한다. WI-01 계약과 WI-02 수신·저장·연결·시간 검사를 구현했다. 최종 숫자 비교와 3상태 판정·음성 모델·실장비 통합은 후속 WI 범위다.
 
 ## 동작·계약·미정 사항
 
@@ -59,7 +59,7 @@ WI-01에서 [공통 계약 v2](../../contracts/observation-v2.md), Pydantic DTO,
 | 늦은 결과 | 이전 시도 결과가 재시도 이후 도착 | 이전 결과가 새 시도·목표·해결 상태를 덮어쓰지 않음 |
 | 오래된 관측 | 설정 수정 이전 프레임으로 재검증 | 수정 완료로 인정하지 않음; 새 관측 필요 |
 
-freshness 한도·시계 허용 오차는 실측으로 정할 설정값이다. 확정 전 테스트는 명시한 가상 시각·한도를 사용하고 해당 수치를 제품 확정값으로 보고하지 않는다. 현재 필수 ALT/HDG DTO를 nullable로 바꾸는 것만으로 확장 계약을 완료 처리하지 않는다. 버전·경로·응답 의미와 현재 OpenAPI와의 호환성은 WI-01 계약에 기록했다. DB 마이그레이션과 실제 수신 상태 검증은 WI-02 범위다.
+freshness 한도·시계 허용 오차는 실측으로 정할 설정값이다. 확정 전 테스트는 명시한 가상 시각·한도를 사용하고 해당 수치를 제품 확정값으로 보고하지 않는다. 현재 필수 ALT/HDG DTO를 nullable로 바꾸는 것만으로 확장 계약을 완료 처리하지 않는다. 버전·경로·응답 의미와 현재 OpenAPI와의 호환성은 WI-01 계약에 기록했다. WI-02는 [수신 계약](../../contracts/receiving-v2.md)에 따라 추가 테이블 마이그레이션과 수신 상태 검증을 구현했다.
 
 ## 부분 변경 지시의 항목별 출처
 
@@ -73,7 +73,7 @@ SPEC-007 D-007-04에 따라 현재 적용하는 ALT·HDG의 목표값과 원본 
 
 ### 현재 API와 확장 경계
 
-WI-01 산출물: [DTO](../../backend/app/schemas/observation_v2.py), [Schema·예제 검사](../../contracts/check_v2.py), [호환성·의미 계약](../../contracts/observation-v2.md). JSON Schema는 구조 검증, DTO는 시간·필드·출처 관계를 추가 검증한다. 최신성·등록 목록·저장 상태에 따른 판정은 다음 WI의 책임이다.
+WI-01 산출물: [DTO](../../backend/app/schemas/observation_v2.py), [Schema·예제 검사](../../contracts/check_v2.py), [호환성·의미 계약](../../contracts/observation-v2.md). JSON Schema는 구조 검증, DTO는 시간·필드·출처 관계를 추가 검증한다. WI-02는 최신성·등록 목록·저장 상태에 따른 수신 적격성을 검사한다. 최종 비교 판정은 SPEC-005의 책임이다.
 
 현재 `backend/app/schemas/observation.py`는 ALT·HDG·confidence 필수, 추가 필드 금지다. `observed_at` 생략 시 서버 시각을 사용하므로 실제 촬영 freshness를 증명하지 못한다. 확장에서는 원본 시각과 time_basis를 명시하며 미상은 null+사유로 기록한다. 기존 요청에 임의의 원본 시각을 만들어 넣지 않는다.
 
@@ -91,13 +91,13 @@ WI-01 산출물: [DTO](../../backend/app/schemas/observation_v2.py), [Schema·�
 
 ### v2 요청·응답 계약과 후속 endpoint 계획
 
-공통 관측·health·음성 구간·목표·접수·오류 DTO와 예제는 [공통 계약 v2](../../contracts/observation-v2.md)에 정의했다. 아래 endpoint는 후속 수신 API 계획이다. 세션·완전한 UI snapshot·비동기 작업·리포트·재생 기록 DTO는 해당 WI에서 추가한다. 현재 서비스에 v2 route는 등록하지 않았다.
+공통 관측·health·음성 구간·목표·접수·오류 DTO와 예제는 [공통 계약 v2](../../contracts/observation-v2.md)에 정의했다. 관측·health·세션·구간 등록·state/이력 조회는 [수신 계약](../../contracts/receiving-v2.md)에 구현됐다. 아래의 리포트·음성 재생 등 미등록 경로는 후속 계획이다. 세션·완전한 UI snapshot·비동기 작업·리포트·재생 기록 DTO는 해당 WI에서 추가한다. 기존 v1 route·DTO는 유지하고 v2 route를 별도 등록했다. 아직 v1 세션을 v2로 자동 변환하지 않는다.
 
 | 메서드·경로 | 입력 | 출력·주요 실패 |
 | --- | --- | --- |
 | POST `/api/v2/flights` | `callsign` 등록값 | 201 `flight_id`, `status`, `revision`; 미등록 422 |
 | POST `/api/v2/flights/{id}/end` | 활성 비행 | 200 종료 snapshot, 중복 종료409 |
-| POST `/api/v2/flights/{id}/speech-segments` | `segment_id`, `atc_input_id`, `attempt_id`, `role`, `started_at`, `ended_at`, `complete`, `audio_ref` | 202 작업ID, 형식422·종료409. 완료 전 정상 결과 아님 |
+| POST `/api/v2/flights/{id}/speech-segments` | SpeechSegmentV2 | 201 구간 등록·instruction_id 예약, 동일 재전송200. 실제 STT 작업 큐·202 응답은 SPEC-004 후속 범위 |
 | POST `/api/v2/flights/{id}/observations` | 아래 관측 envelope | 201 접수 또는 동일 재전송200, 내용 충돌409 |
 | POST `/api/v2/flights/{id}/health-events` | `schema_version`, `flight_id`, `event_id`, `channel`, `observed_at`, `health` | 201 접수; 수치 관측 필수 아님 |
 | GET `/api/v2/flights/{id}/state` | 비행ID | 200 `revision`, `targets`, `readback`, `setting`, `health`, `input_permissions`, `advisories`; 없음404 |
@@ -108,7 +108,7 @@ WI-01 산출물: [DTO](../../backend/app/schemas/observation_v2.py), [Schema·�
 
 `target_revision`은 생산자가 알고 있던 서버 목표 버전이며 지시 소유권·최신성 판정을 대신하지 않는다. 음성의 mentioned_fields와 fields 키는 일치해야 하고, 실제 생략과 추출 실패는 각각 키 생략/명시적 null로 구분한다. UNKNOWN 명시 범위·실패 호출부호를 PASS로 바꾸지 않는다.
 
-body의 `flight_id`와 URL ID, 관측 시각·수신 시각·현재 목표·시도 ID의 대조는 WI-02가 구현한다. Schema 통과·접수 응답만으로 VERIFIED/RESOLVED를 만들지 않는다. 카메라 DISCONNECTED의 health는 수치 없이 전달하며 현재 상태의 마지막 숫자를 정상 근거로 재사용하지 않는다.
+body의 `flight_id`와 URL ID, 관측 시각·수신 시각·현재 목표·시도 ID의 대조는 WI-02가 구현했다. Schema 통과·접수 응답만으로 VERIFIED/RESOLVED를 만들지 않는다. 카메라 DISCONNECTED의 health는 수치 없이 전달하며 현재 상태의 마지막 숫자를 정상 근거로 재사용하지 않는다.
 
 ### 저장과 순서
 
@@ -139,6 +139,8 @@ body의 `flight_id`와 URL ID, 관측 시각·수신 시각·현재 목표·시�
 ### [SPEC-002-WI-03: 생산자·소비자 계약 통합 검증](002-observation-contracts/workitem/wi-03.md)
 
 ## 변경 기록
+
+- v6 · 2026-10-18: WI-02 수신 API·SQLite 추가 마이그레이션·원자 저장·중복/충돌·시도/지시 연결·stale/역순/장애 복구 구현. 구간 등록은 비동기 STT 실행과 구분해201을 반환. 정책은 명시 설정·비행별 고정, 미설정/불확실 입력과 최종 비교 미구현은 UNVERIFIED로 유지.
 
 - v5 · 2026-10-17: WI-01 공통 계약 실행 산출물 확정. 원본 시각 미상은 null+time_basis/사유로 보존하고 품질을 필드별로 명시. source별 shape·시도/지시 연결·부분 변경 목표·health·접수/오류 DTO, JSON Schema 6종 및 예제 검증. 기존 v1 route 유지; v2 수신·DB 마이그레이션은 WI-02.
 

@@ -76,3 +76,9 @@ JSON Mock Observation → Flight/Clearance 관리 → ATC와 Readback 비교 →
 ## SPEC-002-WI-01 계약 구현·PR 검토 · 2026-10-17
 
 공통 v2 DTO, JSON Schema6종, fixture21개·manifest, 계약 검사 도구를 작성했다. backend 전체117개 테스트와 Schema/DTO 예제 검사를 통과했다. 현재 v1 OpenAPI/라우터는 유지한다. 작업은 PR 검토 중이며 v2 수신·DB·중복/시간 기반 상태 검사는 다음 WI 범위다. [검증 기록](spec/002-observation-contracts/workitem/wi-01.md)에 범위·명령·미실행 항목을 남겼다. 이 상태는 dev 기반 현재 PR의 검증 범위이며 다른 열린 PR의 구현 완료를 판정하지 않는다.
+
+## v2 수신·저장·문맥 검사 · 2026-10-18
+
+PR #5의 계약이 dev에 squash merge(`5515878`)됐다. 후속 SPEC-002-WI-02는 별도 브랜치에서 v2 세션·구간 등록/취소·관측/health·현재 상태·입력/Trace 조회를 구현했다. 설정은 비행별 snapshot으로 고정하며 미설정·stale·미상·저품질·이전 시도는 현재 정상 근거로 쓰지 않는다. 부분 목표의 출처, 늦은 Pilot의 동일 ATC 연결, 장애 복구 후 새 관측을 검사한다.
+
+SQLite 추가 migration·기존 DB 보존·동시 중복·commit 실패 원자성 테스트를 포함해 backend172 passed, 경고1개. 계약 스키마6종·fixture21개 검사 통과. 기존 Mock 경로와 그 Trace 형태는 유지한다. v2 Trace는 별도 경로로 조회하며 최종 숫자 비교·규칙 판정·모델/실장비·통합 리포트는 아직 구현/검증하지 않았다. 상세 결과와 제약은 [WI-02](spec/002-observation-contracts/workitem/wi-02.md), 실행/API 계약은 [v2 수신 안내](../contracts/receiving-v2.md)를 따른다.
