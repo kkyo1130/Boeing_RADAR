@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SnapshotGate, dueRevalidations, numberLabel, statusLabel, request } from '../src/flight-client.js';
+import { SnapshotGate, dueRevalidations, numberLabel, statusLabel, request, restartFlightState, readingFor, reconciledActionError } from '../src/flight-client.js';
 
 const field = (overrides = {}) => ({ field: 'ALT', instruction_id: 'A', expected: 3000, actual: 3000,
   result: 'NORMAL', reason: 'VALUE_MATCH', wait_until: null, ...overrides });
@@ -65,4 +65,22 @@ test('request timeout and cancellation abort a stuck connection', async () => {
   global.fetch = (_, { signal }) => new Promise((_, reject) => signal.addEventListener('abort', () => reject(new Error('aborted'))));
   try { await assert.rejects(request('/api/v2/flights/x/state', { timeout: 10 }), /서버 응답/); }
   finally { global.fetch = previous; }
+});
+test('same flight retry preserves historical snapshot and time but clears current connection', () => {
+  const previous = { snapshot: snapshot(), connected: false, error: 'offline', receivedAt: 't0' };
+  const retry = restartFlightState(previous, 'FLT2-a');
+  assert.equal(retry.snapshot, previous.snapshot); assert.equal(retry.receivedAt, 't0');
+  assert.equal(retry.connected, false);
+  assert.equal(restartFlightState(previous, 'FLT2-b').snapshot, null);
+});
+test('confirmed END reconciles an action timeout; active/offline does not clear it', () => {
+  assert.equal(reconciledActionError('timeout', snapshot({ status: 'ENDED' }), true), '');
+  assert.equal(reconciledActionError('timeout', snapshot(), true), 'timeout');
+  assert.equal(reconciledActionError('timeout', snapshot({ status: 'ENDED' }), false), 'timeout');
+});
+test('callsign-only attempt has its own observation timestamp without numeric fields', () => {
+  const s = snapshot({ readbacks: { A: { observation_id: 'call', observed_at: 'capture-time' } } });
+  const verdict = field({ field: 'CALLSIGN', observation_id: 'call' });
+  assert.equal(readingFor(s, 'READBACK', verdict).observed_at, 'capture-time');
+  assert.equal(readingFor(s, 'READBACK', { ...verdict, observation_id: 'other' }), null);
 });

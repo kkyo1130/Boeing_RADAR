@@ -498,7 +498,7 @@ def get_state(db, flight_id):
         channels=state["channels"], current=state["current"], result=validation["result"],
         structure_checks=state.get("structure_checks", {}),
         validation=validation, reason=validation["reason"],
-        incident_version="1", incidents=view(state, validation))
+        incident_version="1", incidents=view(state, validation), readbacks=state.get("readbacks", {}))
 
 
 def revalidate(db, flight_id):

@@ -75,3 +75,19 @@ export function numberLabel(value, field) {
   if (field === 'CALLSIGN') return String(value);
   return `${Number(value).toLocaleString('en-US')}${field === 'ALT' ? ' ft' : '°'}`;
 }
+
+
+export function restartFlightState(previous, flightId) {
+  return previous.snapshot?.flight_id === flightId
+    ? { ...previous, connected: false, error: '' }
+    : { snapshot: null, connected: false, error: '', receivedAt: null };
+}
+
+export function readingFor(snapshot, source, row) {
+  const reading = row.field === 'CALLSIGN' ? snapshot.readbacks?.[row.instruction_id] : snapshot.current[source][row.field];
+  return reading?.observation_id === row.observation_id ? reading : null;
+}
+
+export function reconciledActionError(error, snapshot, connected) {
+  return connected && snapshot?.status === 'ENDED' ? '' : error;
+}

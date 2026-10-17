@@ -14,7 +14,7 @@ after(async () => { await server?.close(); });
 const row = (field, expected, actual, result, reason = 'VALUE_MATCH', iid = 'A') =>
   ({ field, expected, actual, result, reason, instruction_id: iid, observation_id: 'obs', wait_until: null });
 function render(rows, connected = true, source = 'COCKPIT', ended = false) {
-  const snapshot = { current: { COCKPIT: { ALT: { observed_at: '2026-10-18T00:00:00Z' } }, READBACK: {} } };
+  const snapshot = { current: { COCKPIT: { ALT: { observation_id: 'obs', observed_at: '2026-10-18T00:00:00Z' } }, READBACK: {} } };
   return renderToStaticMarkup(React.createElement(Verdicts, { title: '설정',
     group: { result: 'MISMATCH', fields: rows }, source, snapshot, connected, ended }));
 }

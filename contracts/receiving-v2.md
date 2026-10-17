@@ -83,3 +83,6 @@ ATC/READBACK에는 [결정론적 구조 검사](structure-rules.md)를 수신 �
 ## SPEC-007-WI-01 발생 건·재검증 연결
 
 state.incident_version/ incidents와 POST revalidate는 [Incident 계약](incidents-v2.md)을 따른다. 수신/취소/종료와 같은 트랜잭션에서 발생 건과 INCIDENT_UPDATED를 저장한다. 새 관측 해결(RESOLVED), 부분 지시 대체(SUPERSEDED), 미해결 종료(ENDED_UNRESOLVED)를 분리한다. GET은 현재 최신성만 계산하고 발생 건을 저장하지 않으므로 시간 경과만으로 저장할 판정은 소비자가 POST revalidate로 확정한다. 실제 재생/사용자 확인은 아직 연결하지 않는다.
+
+
+PR #12 시각 보완: state.readbacks는 현재 유효 지시별 호출부호 관측의 observation_id/segment_id/attempt_id/observed_at·값/근거를 반환한다. CALLSIGN 시각을 숫자 ALT/HDG 관측의 존재로 추정하지 않는다. 숫자 필드가 비어 있어도 호출부호 관측 시각은 조회할 수 있다.

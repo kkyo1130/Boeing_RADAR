@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { request, SnapshotGate, dueRevalidations, POLL_MS, statusLabel, numberLabel } from './flight-client.js';
+import { request, SnapshotGate, dueRevalidations, POLL_MS, statusLabel, numberLabel, restartFlightState, readingFor, reconciledActionError } from './flight-client.js';
 import './operations.css';
 
 const STORAGE_KEY = 'radar.v2.flight-id';
@@ -21,12 +21,14 @@ const reasons = {
 
 function useFlight(flightId, refresh) {
   const [state, setState] = useState({ snapshot: null, connected: false, error: '', receivedAt: null });
+  const sessionRef = useRef(null);
   useEffect(() => {
-    setState({ snapshot: null, connected: false, error: '', receivedAt: null });
-    if (!flightId) return;
+    setState(previous => restartFlightState(previous, flightId));
+    if (!flightId) { sessionRef.current = null; return; }
     const abort = new AbortController();
-    const gate = new SnapshotGate(flightId), completed = new Set();
-    let stopped = false, timer, serial = 0;
+    if (sessionRef.current?.gate.flightId !== flightId) sessionRef.current = { gate: new SnapshotGate(flightId), completed: new Set() };
+    const { gate, completed } = sessionRef.current;
+    let stopped = false, timer, serial = gate.serial;
     async function poll() {
       try {
         let data = await request(`/api/v2/flights/${encodeURIComponent(flightId)}/state`, { signal: abort.signal });
@@ -65,7 +67,7 @@ export function Verdicts({ title, group, source, snapshot, connected, ended = fa
     <div className="op-table-scroll"><table>
       <thead><tr><th>항목</th><th>관제 지시</th><th>{source === 'COCKPIT' ? '카메라 관측' : '조종사 복창'}</th><th>서버 확인</th></tr></thead>
       <tbody>{group.fields.map(row => {
-        const reading = row.field === 'CALLSIGN' ? Object.values(snapshot.current.READBACK).find(value => value?.observation_id === row.observation_id) : snapshot.current[source][row.field];
+        const reading = readingFor(snapshot, source, row);
         return <tr key={`${row.instruction_id}/${row.field}`}>
           <th scope="row">{fields[row.field]}</th>
           <td>{numberLabel(row.expected, row.field)}</td><td>{numberLabel(row.actual, row.field)}</td>
@@ -89,6 +91,7 @@ export default function Operations() {
   const actionRef = useRef(false);
   const { snapshot, connected, error: connectionError, receivedAt } = useFlight(flightId, refresh);
   const ended = snapshot?.status === 'ENDED';
+  useEffect(() => { setError(previous => reconciledActionError(previous, snapshot, connected)); }, [ended, connected]);
   function attach(id) {
     try { id ? localStorage.setItem(STORAGE_KEY, id) : localStorage.removeItem(STORAGE_KEY); } catch { /* Session works without browser storage. */ }
     setError(''); setFlightId(id);
