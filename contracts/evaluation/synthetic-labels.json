@@ -1,0 +1,93 @@
+{
+  "dataset_id": "radar-synthetic-protocol/1",
+  "split": "evaluation",
+  "training_sample_ids": [],
+  "tuning_sample_ids": [],
+  "limitations": "Protocol labels only; no real camera or audio samples. Not evidence of model accuracy.",
+  "samples": [
+    {
+      "sample_id": "synthetic-normal-clean",
+      "truth": "NORMAL",
+      "condition": "clean",
+      "provenance": "self_authored_synthetic_scenario",
+      "input_reference": "scenario:normal:clean"
+    },
+    {
+      "sample_id": "synthetic-normal-occlusion",
+      "truth": "NORMAL",
+      "condition": "occlusion",
+      "provenance": "self_authored_synthetic_scenario",
+      "input_reference": "scenario:normal:occlusion"
+    },
+    {
+      "sample_id": "synthetic-normal-blur",
+      "truth": "NORMAL",
+      "condition": "blur",
+      "provenance": "self_authored_synthetic_scenario",
+      "input_reference": "scenario:normal:blur"
+    },
+    {
+      "sample_id": "synthetic-normal-noise",
+      "truth": "NORMAL",
+      "condition": "noise",
+      "provenance": "self_authored_synthetic_scenario",
+      "input_reference": "scenario:normal:noise"
+    },
+    {
+      "sample_id": "synthetic-normal-delay",
+      "truth": "NORMAL",
+      "condition": "delay",
+      "provenance": "self_authored_synthetic_scenario",
+      "input_reference": "scenario:normal:delay"
+    },
+    {
+      "sample_id": "synthetic-normal-disconnect",
+      "truth": "NORMAL",
+      "condition": "disconnect",
+      "provenance": "self_authored_synthetic_scenario",
+      "input_reference": "scenario:normal:disconnect"
+    },
+    {
+      "sample_id": "synthetic-mismatch-clean",
+      "truth": "MISMATCH",
+      "condition": "clean",
+      "provenance": "self_authored_synthetic_scenario",
+      "input_reference": "scenario:mismatch:clean"
+    },
+    {
+      "sample_id": "synthetic-mismatch-occlusion",
+      "truth": "MISMATCH",
+      "condition": "occlusion",
+      "provenance": "self_authored_synthetic_scenario",
+      "input_reference": "scenario:mismatch:occlusion"
+    },
+    {
+      "sample_id": "synthetic-mismatch-blur",
+      "truth": "MISMATCH",
+      "condition": "blur",
+      "provenance": "self_authored_synthetic_scenario",
+      "input_reference": "scenario:mismatch:blur"
+    },
+    {
+      "sample_id": "synthetic-mismatch-noise",
+      "truth": "MISMATCH",
+      "condition": "noise",
+      "provenance": "self_authored_synthetic_scenario",
+      "input_reference": "scenario:mismatch:noise"
+    },
+    {
+      "sample_id": "synthetic-mismatch-delay",
+      "truth": "MISMATCH",
+      "condition": "delay",
+      "provenance": "self_authored_synthetic_scenario",
+      "input_reference": "scenario:mismatch:delay"
+    },
+    {
+      "sample_id": "synthetic-mismatch-disconnect",
+      "truth": "MISMATCH",
+      "condition": "disconnect",
+      "provenance": "self_authored_synthetic_scenario",
+      "input_reference": "scenario:mismatch:disconnect"
+    }
+  ]
+}
