@@ -289,3 +289,20 @@ def test_readback_callsign_requirement_is_strictly_true(value):
     payload["readback_required"]["callsign_required"] = value
     with pytest.raises(ValidationError):
         TargetSnapshotV2.model_validate(payload)
+
+
+@pytest.mark.parametrize("source", ["ATC", "READBACK"])
+@pytest.mark.parametrize("check", ["PASS", "INVALID", "NEEDS_REVIEW"])
+def test_unknown_mention_scope_requires_review_in_dto_and_schema(source, check):
+    payload = fixture("atc-ambiguous.json")
+    payload.update(source=source, instruction_check=check)
+    if source == "READBACK":
+        payload["instruction_id"] = "B"
+    schema = json.loads((ROOT / "contracts/schemas/observation-v2.schema.json").read_text())
+    validator = Draft202012Validator(schema, format_checker=FormatChecker())
+    assert validator.is_valid(payload) == (check == "NEEDS_REVIEW")
+    if check == "NEEDS_REVIEW":
+        ObservationV2.model_validate(payload)
+    else:
+        with pytest.raises(ValidationError, match="UNKNOWN mention scope"):
+            ObservationV2.model_validate(payload)

@@ -132,11 +132,11 @@ body의 `flight_id`와 URL ID, 관측 시각·수신 시각·현재 목표·시�
 
 <a id="wi-02"></a>
 
-### [SPEC-002-WI-02: 백엔드 수신·지시 연결과 중복/지연 처리](#wi-02)
+### [SPEC-002-WI-02: 백엔드 수신·지시 연결과 중복/지연 처리](002-observation-contracts/workitem/wi-02.md)
 
 <a id="wi-03"></a>
 
-### [SPEC-002-WI-03: 생산자·소비자 계약 통합 검증](#wi-03)
+### [SPEC-002-WI-03: 생산자·소비자 계약 통합 검증](002-observation-contracts/workitem/wi-03.md)
 
 ## 변경 기록
 

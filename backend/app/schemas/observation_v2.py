@@ -216,6 +216,12 @@ class CockpitObservation(ObservationBase):
 
 
 class SpeechObservation(ObservationBase):
+    model_config = ConfigDict(extra="forbid", json_schema_extra={
+        "allOf": [{
+            "if": {"properties": {"mention_status": {"const": "UNKNOWN"}}},
+            "then": {"properties": {"instruction_check": {"const": "NEEDS_REVIEW"}}},
+        }],
+    })
     segment_id: Identifier
     atc_input_id: Identifier
     attempt_id: Identifier
@@ -237,6 +243,8 @@ class SpeechObservation(ObservationBase):
             raise ValueError("mentioned_fields must be unique")
         if set(self.mentioned_fields) != set(self.fields):
             raise ValueError("mentioned_fields and fields keys must agree")
+        if self.mention_status == "UNKNOWN" and self.instruction_check != "NEEDS_REVIEW":
+            raise ValueError("UNKNOWN mention scope requires NEEDS_REVIEW")
         if self.instruction_check == "PASS" and (
             self.mention_status != "KNOWN" or not self.fields
             or self.callsign.validity != "VALID" or not self.transcript
