@@ -72,3 +72,7 @@ JSON Mock Observation → Flight/Clearance 관리 → ATC와 Readback 비교 →
 - 미실행: 실제 태블릿/웹캠, ROI GUI 수동 선택, 반사·흐림 평가 세트, 서버 통합. backend 제품 코드를 바꾸지 않아 기존 backend 회귀는 이번에 재실행하지 않음. WI-01~03 implementing, WI-04~05 pending 유지.
 
 재현과 다음 실장비 작업은 [태블릿 안내](../vision/docs/tablet-demo.md), 작업 기록은 [SPEC-003](spec/003-cockpit-vision.md)에 있다.
+
+## SPEC-002-WI-01 계약 구현·PR 검토 · 2026-10-17
+
+공통 v2 DTO, JSON Schema6종, fixture21개·manifest, 계약 검사 도구를 작성했다. backend 전체117개 테스트와 Schema/DTO 예제 검사를 통과했다. 현재 v1 OpenAPI/라우터는 유지한다. 작업은 PR 검토 중이며 v2 수신·DB·중복/시간 기반 상태 검사는 다음 WI 범위다. [검증 기록](spec/002-observation-contracts/workitem/wi-01.md)에 범위·명령·미실행 항목을 남겼다. 이 상태는 dev 기반 현재 PR의 검증 범위이며 다른 열린 PR의 구현 완료를 판정하지 않는다.

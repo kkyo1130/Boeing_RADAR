@@ -1,0 +1,58 @@
+{
+  "schema_version": "2",
+  "observation_id": "obs-readback-missing-callsign",
+  "flight_id": "flight-demo",
+  "observed_at": "2026-10-17T01:00:01Z",
+  "processed_at": "2026-10-17T01:00:01.200Z",
+  "time_basis": "CAPTURED",
+  "time_reason": null,
+  "target_revision": 1,
+  "channel_health": {
+    "status": "AVAILABLE",
+    "reason": null
+  },
+  "evidence_refs": [],
+  "evidence_unavailable_reason": "fixture_has_no_media",
+  "source": "READBACK",
+  "segment_id": "segment-pilot-B",
+  "atc_input_id": "input-B",
+  "attempt_id": "pilot-B-1",
+  "transcript": "Radar one two three climb and maintain four thousand feet",
+  "transcript_reason": null,
+  "callsign": {
+    "raw_text": null,
+    "value": null,
+    "validity": "UNREADABLE",
+    "reason": "callsign_missing",
+    "alias_key": null,
+    "quality": {
+      "model_score": null,
+      "input_quality": "UNKNOWN",
+      "reason": "not_evaluated",
+      "score_calibrated": false,
+      "calibration_ref": null
+    }
+  },
+  "mention_status": "KNOWN",
+  "mentioned_fields": [
+    "ALT"
+  ],
+  "instruction_check": "NEEDS_REVIEW",
+  "fields": {
+    "ALT": {
+      "value": 4000,
+      "unit": "ft",
+      "validity": "VALID",
+      "reason": null,
+      "raw_text": "4000",
+      "quality": {
+        "model_score": null,
+        "input_quality": "UNKNOWN",
+        "reason": "not_evaluated",
+        "score_calibrated": false,
+        "calibration_ref": null
+      }
+    }
+  },
+  "instruction_id": "B"
+}

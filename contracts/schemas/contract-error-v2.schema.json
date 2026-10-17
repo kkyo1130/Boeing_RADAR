@@ -1,0 +1,63 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "code": {
+      "enum": [
+        "INVALID_PAYLOAD",
+        "UNSUPPORTED_VERSION",
+        "NOT_FOUND",
+        "FLIGHT_ENDED",
+        "ID_CONTENT_CONFLICT",
+        "CONTEXT_MISMATCH",
+        "INVALID_SEQUENCE"
+      ],
+      "title": "Code",
+      "type": "string"
+    },
+    "message": {
+      "minLength": 1,
+      "pattern": "\\S",
+      "title": "Message",
+      "type": "string"
+    },
+    "input_id": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Input Id"
+    },
+    "field_path": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Field Path"
+    }
+  },
+  "required": [
+    "schema_version",
+    "code",
+    "message",
+    "input_id",
+    "field_path"
+  ],
+  "title": "ContractErrorV2",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:radar:contracts:contract-error-v2"
+}

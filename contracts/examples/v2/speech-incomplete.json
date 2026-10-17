@@ -1,0 +1,15 @@
+{
+  "schema_version": "2",
+  "flight_id": "flight-demo",
+  "segment_id": "segment-pilot-B",
+  "atc_input_id": "input-B",
+  "attempt_id": "pilot-B-1",
+  "role": "PILOT",
+  "role_basis": "PILOT_PTT",
+  "started_at": "2026-10-17T01:00:01Z",
+  "ended_at": "2026-10-17T01:00:02Z",
+  "complete": false,
+  "interruption_reason": "focus_lost",
+  "audio_ref": null,
+  "audio_unavailable_reason": "capture_interrupted"
+}

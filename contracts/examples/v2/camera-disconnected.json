@@ -1,0 +1,11 @@
+{
+  "schema_version": "2",
+  "event_id": "health-camera-001",
+  "flight_id": "flight-demo",
+  "channel": "CAMERA",
+  "observed_at": "2026-10-17T01:00:02Z",
+  "health": {
+    "status": "DISCONNECTED",
+    "reason": "camera_disconnected"
+  }
+}

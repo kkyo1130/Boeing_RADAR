@@ -1,0 +1,1063 @@
+{
+  "$defs": {
+    "AltitudeReading": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "else": {
+            "properties": {
+              "value": {
+                "type": "null"
+              },
+              "reason": {
+                "minLength": 1,
+                "type": "string"
+              }
+            }
+          },
+          "if": {
+            "properties": {
+              "validity": {
+                "const": "VALID"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "integer"
+              },
+              "reason": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "validity": {
+          "enum": [
+            "VALID",
+            "UNREADABLE",
+            "INVALID"
+          ],
+          "title": "Validity",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        },
+        "raw_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Raw Text"
+        },
+        "quality": {
+          "$ref": "#/$defs/Quality"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        },
+        "unit": {
+          "const": "ft",
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "validity",
+        "reason",
+        "raw_text",
+        "quality",
+        "value",
+        "unit"
+      ],
+      "title": "AltitudeReading",
+      "type": "object"
+    },
+    "AtcObservation": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mention_status": {
+                "const": "UNKNOWN"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "instruction_check": {
+                "const": "NEEDS_REVIEW"
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "observation_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Observation Id",
+          "type": "string"
+        },
+        "flight_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Flight Id",
+          "type": "string"
+        },
+        "observed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Observed At"
+        },
+        "processed_at": {
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$",
+          "title": "Processed At",
+          "type": "string"
+        },
+        "time_basis": {
+          "enum": [
+            "CAPTURED",
+            "HOST_RECEIVE",
+            "UNKNOWN"
+          ],
+          "title": "Time Basis",
+          "type": "string"
+        },
+        "time_reason": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Time Reason"
+        },
+        "target_revision": {
+          "minimum": 0,
+          "title": "Target Revision",
+          "type": "integer"
+        },
+        "channel_health": {
+          "$ref": "#/$defs/ChannelHealth"
+        },
+        "evidence_refs": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "evidence_unavailable_reason": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Evidence Unavailable Reason"
+        },
+        "segment_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Segment Id",
+          "type": "string"
+        },
+        "atc_input_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Atc Input Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "transcript": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Transcript"
+        },
+        "transcript_reason": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Transcript Reason"
+        },
+        "callsign": {
+          "$ref": "#/$defs/CallsignReading"
+        },
+        "mention_status": {
+          "enum": [
+            "KNOWN",
+            "UNKNOWN"
+          ],
+          "title": "Mention Status",
+          "type": "string"
+        },
+        "mentioned_fields": {
+          "items": {
+            "enum": [
+              "ALT",
+              "HDG"
+            ],
+            "type": "string"
+          },
+          "title": "Mentioned Fields",
+          "type": "array",
+          "uniqueItems": true
+        },
+        "instruction_check": {
+          "enum": [
+            "PASS",
+            "INVALID",
+            "NEEDS_REVIEW"
+          ],
+          "title": "Instruction Check",
+          "type": "string"
+        },
+        "fields": {
+          "$ref": "#/$defs/SpeechFields"
+        },
+        "source": {
+          "const": "ATC",
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "observation_id",
+        "flight_id",
+        "observed_at",
+        "processed_at",
+        "time_basis",
+        "time_reason",
+        "target_revision",
+        "channel_health",
+        "evidence_refs",
+        "evidence_unavailable_reason",
+        "segment_id",
+        "atc_input_id",
+        "attempt_id",
+        "transcript",
+        "transcript_reason",
+        "callsign",
+        "mention_status",
+        "mentioned_fields",
+        "instruction_check",
+        "fields",
+        "source"
+      ],
+      "title": "AtcObservation",
+      "type": "object"
+    },
+    "CallsignReading": {
+      "additionalProperties": false,
+      "properties": {
+        "raw_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Raw Text"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        },
+        "validity": {
+          "enum": [
+            "VALID",
+            "UNREADABLE",
+            "INVALID"
+          ],
+          "title": "Validity",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        },
+        "alias_key": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Alias Key"
+        },
+        "quality": {
+          "$ref": "#/$defs/Quality"
+        }
+      },
+      "required": [
+        "raw_text",
+        "value",
+        "validity",
+        "reason",
+        "alias_key",
+        "quality"
+      ],
+      "title": "CallsignReading",
+      "type": "object"
+    },
+    "ChannelHealth": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "AVAILABLE",
+            "DEGRADED",
+            "DISCONNECTED"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        }
+      },
+      "required": [
+        "status",
+        "reason"
+      ],
+      "title": "ChannelHealth",
+      "type": "object"
+    },
+    "CockpitFields": {
+      "additionalProperties": false,
+      "properties": {
+        "ALT": {
+          "$ref": "#/$defs/AltitudeReading"
+        },
+        "HDG": {
+          "$ref": "#/$defs/HeadingReading"
+        }
+      },
+      "required": [
+        "ALT",
+        "HDG"
+      ],
+      "title": "CockpitFields",
+      "type": "object"
+    },
+    "CockpitObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "2",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "observation_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Observation Id",
+          "type": "string"
+        },
+        "flight_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Flight Id",
+          "type": "string"
+        },
+        "observed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Observed At"
+        },
+        "processed_at": {
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$",
+          "title": "Processed At",
+          "type": "string"
+        },
+        "time_basis": {
+          "enum": [
+            "CAPTURED",
+            "HOST_RECEIVE",
+            "UNKNOWN"
+          ],
+          "title": "Time Basis",
+          "type": "string"
+        },
+        "time_reason": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Time Reason"
+        },
+        "target_revision": {
+          "minimum": 0,
+          "title": "Target Revision",
+          "type": "integer"
+        },
+        "channel_health": {
+          "$ref": "#/$defs/ChannelHealth"
+        },
+        "evidence_refs": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "evidence_unavailable_reason": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Evidence Unavailable Reason"
+        },
+        "source": {
+          "const": "COCKPIT",
+          "title": "Source",
+          "type": "string"
+        },
+        "frame_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Frame Id",
+          "type": "string"
+        },
+        "fields": {
+          "$ref": "#/$defs/CockpitFields"
+        }
+      },
+      "required": [
+        "schema_version",
+        "observation_id",
+        "flight_id",
+        "observed_at",
+        "processed_at",
+        "time_basis",
+        "time_reason",
+        "target_revision",
+        "channel_health",
+        "evidence_refs",
+        "evidence_unavailable_reason",
+        "source",
+        "frame_id",
+        "fields"
+      ],
+      "title": "CockpitObservation",
+      "type": "object"
+    },
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "FRAME",
+            "ROI",
+            "AUDIO",
+            "TRANSCRIPT"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "ref": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Ref",
+          "type": "string"
+        },
+        "field": {
+          "anyOf": [
+            {
+              "enum": [
+                "ALT",
+                "HDG"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Field"
+        },
+        "roi": {
+          "anyOf": [
+            {
+              "maxItems": 4,
+              "minItems": 4,
+              "prefixItems": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Roi"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "kind",
+        "ref",
+        "field",
+        "roi"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "HeadingReading": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "else": {
+            "properties": {
+              "value": {
+                "type": "null"
+              },
+              "reason": {
+                "minLength": 1,
+                "type": "string"
+              }
+            }
+          },
+          "if": {
+            "properties": {
+              "validity": {
+                "const": "VALID"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "integer"
+              },
+              "reason": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "validity": {
+          "enum": [
+            "VALID",
+            "UNREADABLE",
+            "INVALID"
+          ],
+          "title": "Validity",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        },
+        "raw_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Raw Text"
+        },
+        "quality": {
+          "$ref": "#/$defs/Quality"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "maximum": 359,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        },
+        "unit": {
+          "const": "deg",
+          "title": "Unit",
+          "type": "string"
+        }
+      },
+      "required": [
+        "validity",
+        "reason",
+        "raw_text",
+        "quality",
+        "value",
+        "unit"
+      ],
+      "title": "HeadingReading",
+      "type": "object"
+    },
+    "Quality": {
+      "additionalProperties": false,
+      "description": "Uncalibrated model scores and measured input quality are separate.",
+      "properties": {
+        "model_score": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Model Score"
+        },
+        "input_quality": {
+          "enum": [
+            "SUFFICIENT",
+            "INSUFFICIENT",
+            "UNKNOWN"
+          ],
+          "title": "Input Quality",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        },
+        "score_calibrated": {
+          "title": "Score Calibrated",
+          "type": "boolean"
+        },
+        "calibration_ref": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Calibration Ref"
+        }
+      },
+      "required": [
+        "model_score",
+        "input_quality",
+        "reason",
+        "score_calibrated",
+        "calibration_ref"
+      ],
+      "title": "Quality",
+      "type": "object"
+    },
+    "ReadbackObservation": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mention_status": {
+                "const": "UNKNOWN"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "instruction_check": {
+                "const": "NEEDS_REVIEW"
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "2",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "observation_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Observation Id",
+          "type": "string"
+        },
+        "flight_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Flight Id",
+          "type": "string"
+        },
+        "observed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Observed At"
+        },
+        "processed_at": {
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$",
+          "title": "Processed At",
+          "type": "string"
+        },
+        "time_basis": {
+          "enum": [
+            "CAPTURED",
+            "HOST_RECEIVE",
+            "UNKNOWN"
+          ],
+          "title": "Time Basis",
+          "type": "string"
+        },
+        "time_reason": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Time Reason"
+        },
+        "target_revision": {
+          "minimum": 0,
+          "title": "Target Revision",
+          "type": "integer"
+        },
+        "channel_health": {
+          "$ref": "#/$defs/ChannelHealth"
+        },
+        "evidence_refs": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "evidence_unavailable_reason": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Evidence Unavailable Reason"
+        },
+        "segment_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Segment Id",
+          "type": "string"
+        },
+        "atc_input_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Atc Input Id",
+          "type": "string"
+        },
+        "attempt_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "transcript": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Transcript"
+        },
+        "transcript_reason": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Transcript Reason"
+        },
+        "callsign": {
+          "$ref": "#/$defs/CallsignReading"
+        },
+        "mention_status": {
+          "enum": [
+            "KNOWN",
+            "UNKNOWN"
+          ],
+          "title": "Mention Status",
+          "type": "string"
+        },
+        "mentioned_fields": {
+          "items": {
+            "enum": [
+              "ALT",
+              "HDG"
+            ],
+            "type": "string"
+          },
+          "title": "Mentioned Fields",
+          "type": "array",
+          "uniqueItems": true
+        },
+        "instruction_check": {
+          "enum": [
+            "PASS",
+            "INVALID",
+            "NEEDS_REVIEW"
+          ],
+          "title": "Instruction Check",
+          "type": "string"
+        },
+        "fields": {
+          "$ref": "#/$defs/SpeechFields"
+        },
+        "source": {
+          "const": "READBACK",
+          "title": "Source",
+          "type": "string"
+        },
+        "instruction_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Instruction Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "observation_id",
+        "flight_id",
+        "observed_at",
+        "processed_at",
+        "time_basis",
+        "time_reason",
+        "target_revision",
+        "channel_health",
+        "evidence_refs",
+        "evidence_unavailable_reason",
+        "segment_id",
+        "atc_input_id",
+        "attempt_id",
+        "transcript",
+        "transcript_reason",
+        "callsign",
+        "mention_status",
+        "mentioned_fields",
+        "instruction_check",
+        "fields",
+        "source",
+        "instruction_id"
+      ],
+      "title": "ReadbackObservation",
+      "type": "object"
+    },
+    "SpeechFields": {
+      "additionalProperties": false,
+      "properties": {
+        "ALT": {
+          "$ref": "#/$defs/AltitudeReading"
+        },
+        "HDG": {
+          "$ref": "#/$defs/HeadingReading"
+        }
+      },
+      "title": "SpeechFields",
+      "type": "object"
+    }
+  },
+  "discriminator": {
+    "mapping": {
+      "ATC": "#/$defs/AtcObservation",
+      "COCKPIT": "#/$defs/CockpitObservation",
+      "READBACK": "#/$defs/ReadbackObservation"
+    },
+    "propertyName": "source"
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/CockpitObservation"
+    },
+    {
+      "$ref": "#/$defs/AtcObservation"
+    },
+    {
+      "$ref": "#/$defs/ReadbackObservation"
+    }
+  ],
+  "title": "ObservationV2",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:radar:contracts:observation-v2"
+}

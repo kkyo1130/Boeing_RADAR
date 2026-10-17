@@ -1,0 +1,85 @@
+{
+  "$defs": {
+    "ChannelHealth": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "AVAILABLE",
+            "DEGRADED",
+            "DISCONNECTED"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        }
+      },
+      "required": [
+        "status",
+        "reason"
+      ],
+      "title": "ChannelHealth",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "event_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "flight_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "title": "Flight Id",
+      "type": "string"
+    },
+    "channel": {
+      "enum": [
+        "CAMERA",
+        "MICROPHONE",
+        "SPEECH_API"
+      ],
+      "title": "Channel",
+      "type": "string"
+    },
+    "observed_at": {
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$",
+      "title": "Observed At",
+      "type": "string"
+    },
+    "health": {
+      "$ref": "#/$defs/ChannelHealth"
+    }
+  },
+  "required": [
+    "schema_version",
+    "event_id",
+    "flight_id",
+    "channel",
+    "observed_at",
+    "health"
+  ],
+  "title": "HealthEventV2",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:radar:contracts:health-event-v2"
+}

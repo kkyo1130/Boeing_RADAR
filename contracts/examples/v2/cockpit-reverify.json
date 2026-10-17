@@ -1,0 +1,48 @@
+{
+  "schema_version": "2",
+  "observation_id": "obs-correction-001",
+  "flight_id": "flight-demo",
+  "observed_at": "2026-10-17T01:00:06Z",
+  "processed_at": "2026-10-17T01:00:06.200Z",
+  "time_basis": "CAPTURED",
+  "time_reason": null,
+  "target_revision": 2,
+  "channel_health": {
+    "status": "AVAILABLE",
+    "reason": null
+  },
+  "evidence_refs": [],
+  "evidence_unavailable_reason": "fixture_has_no_media",
+  "source": "COCKPIT",
+  "frame_id": "frame-new",
+  "fields": {
+    "ALT": {
+      "value": 4000,
+      "unit": "ft",
+      "validity": "VALID",
+      "reason": null,
+      "raw_text": "4000",
+      "quality": {
+        "model_score": null,
+        "input_quality": "UNKNOWN",
+        "reason": "not_evaluated",
+        "score_calibrated": false,
+        "calibration_ref": null
+      }
+    },
+    "HDG": {
+      "value": 270,
+      "unit": "deg",
+      "validity": "VALID",
+      "reason": null,
+      "raw_text": "270",
+      "quality": {
+        "model_score": null,
+        "input_quality": "UNKNOWN",
+        "reason": "not_evaluated",
+        "score_calibrated": false,
+        "calibration_ref": null
+      }
+    }
+  }
+}

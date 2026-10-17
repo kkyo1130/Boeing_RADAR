@@ -1,0 +1,52 @@
+{
+  "additionalProperties": false,
+  "description": "Acknowledges durable receipt, never a NORMAL/VERIFIED safety verdict.",
+  "properties": {
+    "schema_version": {
+      "const": "2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "flight_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "title": "Flight Id",
+      "type": "string"
+    },
+    "input_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "title": "Input Id",
+      "type": "string"
+    },
+    "event_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "received_at": {
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$",
+      "title": "Received At",
+      "type": "string"
+    },
+    "disposition": {
+      "enum": [
+        "ACCEPTED",
+        "DUPLICATE"
+      ],
+      "title": "Disposition",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "flight_id",
+    "input_id",
+    "event_id",
+    "received_at",
+    "disposition"
+  ],
+  "title": "IngestionReceiptV2",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:radar:contracts:ingestion-receipt-v2"
+}
