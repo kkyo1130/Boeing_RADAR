@@ -1,6 +1,45 @@
-# 태블릿 MCP 촬영 화면
+# RADAR 운영 화면과 태블릿 MCP
 
-React/Vite 기반 모의 MCP 화면이다. 사람이 선택 ALT·HDG·IAS를 바꾸며 Vision은 태블릿을 촬영한 카메라 영상만 읽는다. 서버 판정/비행 운영 UI는 아직 구현하지 않았다. 이 화면의 선택값을 Vision에 전달하는 API·메시지·자동 설정 기능은 없다.
+`/operations`는 SPEC-006-WI-01의 서버 운영 화면이다. `/`는 기존 독립 모의 MCP 촬영 화면이다. 운영 화면의 지시가 MCP 선택값을 바꾸지 않으며 MCP 값도 서버 관측으로 직접 전송하지 않는다.
+
+## 운영 화면 실행
+
+기존 backend 의존성을 설치하고 등록 호출부호/최신성/구조 규칙을 지정한 RADAR_V2_CONFIG로 서버를 실행한다. 아래 계약 설정 예제는 합성 테스트용이며 장비에서 검증된 기준이 아니다.
+
+```sh
+# 저장소 루트
+export RADAR_V2_CONFIG="$PWD/contracts/examples/integration/config.json"
+# backend 디렉터리에서
+uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+다른 터미널에서 frontend 디렉터리 기준:
+
+```sh
+npm ci
+npm run dev
+# http://localhost:5173/operations
+npm test
+npm run build
+```
+
+Vite 개발 proxy가 같은 출처의 `/api` 요청을 기본 `http://127.0.0.1:8000`으로 보낸다. 다른 포트는 `RADAR_API_TARGET=http://127.0.0.1:다른포트 npm run dev`로 지정한다. 태블릿에서도 API는 Vite 서버를 경유하므로 기기 자신의 localhost로 API를 요청하지 않는다. 프로덕션 배포에는 `/api` reverse proxy와 `/operations`의 SPA fallback을 별도로 구성해야 한다. API URL에 비밀 키를 넣지 않는다.
+
+등록 호출부호를 입력해 START하고 server flight ID를 고정해 사용한다. 미등록 호출부호는 서버가422로 거부하며 허용 목록을 표시한다. 브라우저에는 flight ID만 보관하고 새로고침/다시 연결 시 전체 state를 다시 조회한다. 기존 비행 ID로 수동 연결할 수도 있다. `비행 선택으로`는 로컬 선택만 해제하며 서버 비행을 종료하지 않는다.
+
+화면은 서버 result/validation의 지시·복창·설정·단계·사유·관측 UTC와 CAMERA/MICROPHONE/SPEECH_API 상태를 표시한다. ALT는 feet, HDG는0~359도이며0과null을 구분한다. 부분 새 지시의 출처와 현재 필수 복창 항목을 함께 보여주며 미변경 항목의 오류/이력은 유지한다. 숫자를 비교해 프런트에서 판정을 만들지 않는다.
+
+상태 조회는 요청 종료 후1초마다 실행하고4초 응답 제한을 둔다. 이는 프로토타입 통신 설정이며 운용 지연 보장이 아니다. 실패 시 이전 숫자를 마지막 수신 기록으로 남기되 현재 정상/불일치 배지는 모두 판단 보류로 전환하고 END를 막는다. 낮은 revision/뒤늦은 요청/다른 비행 응답은 적용하지 않는다. 같은 revision의 더 늦은 서버 freshness 판정은 반영한다. 화면 전환/재연결 때 이전 요청을 취소하며 API/일치 상태 자체는 브라우저 저장소에 저장하지 않는다.
+
+서버가 `ADJUSTMENT_DEADLINE_MISMATCH`를 반환하면 비행·지시·wait_until별 POST revalidate를 호출해 시간 경과 판정/Incident를 서버에 저장한다. 브라우저 시각으로5초 종료를 판정하지 않는다. 실패하면 재시도하고 성공한 같은 대기는 반복 저장하지 않는다. 서버 재접속/페이지 재생성 시 확인 명령이 다시 생길 수 있으나 발생 건 ID 중복 생성은 서버가 막는다.
+
+END 성공 후 서버 ENDED snapshot을 조회해 종료 기록을 표시한다. 실패/시간 초과를 로컬 종료 성공으로 만들지 않고 다시 서버에서 확인한다. START/END 쓰기 요청은 자동 반복하지 않는다. 응답 유실 시 서버에서 이미 수행됐을 가능성은 기존 API의 한계이며 새 flight ID를 알아내는 목록/요청 멱등 계약은 아직 없다. 완성 리포트는 SPEC-008에서 제공한다.
+
+**후속 범위:** 실제 ATC 재생·PTT/STT·카메라 생산자 연결, 근거 미디어 열람/사용자 확인, 음성 안내·우선순위/중복 억제, 종료 리포트는 해당 WI에서 연결한다. 이 화면은 없는 입력 기능을 녹음 완료처럼 표시하지 않는다. 실제 입력은 기존 v2 생산자 API로 수신한다. [수신 계약](../contracts/receiving-v2.md), [판정 계약](../contracts/validation-v2.md), [발생 건 계약](../contracts/incidents-v2.md), [WI 기록](../docs/spec/006-advisory-interface/workitem/wi-01.md)을 따른다.
+
+## 기존 태블릿 촬영 화면
+
+React/Vite 기반 모의 MCP 화면이다. 사람이 선택 ALT·HDG·IAS를 바꾸며 Vision은 태블릿을 촬영한 카메라 영상만 읽는다. 이 화면의 선택값을 Vision에 전달하는 API·메시지·자동 설정 기능은 없다.
 
 기존 [Cockpit 참고 사진](../docs/vision/assets/mcp-reference.png)을 배경으로 사용하고 세 선택 숫자 창만 덮어 그린다. 주변 PFD·ND·COURSE·VERT SPD·스위치는 고정된 사진이며 실제 상태나 선택값과 동기화되지 않는다. MCP 확대(기본)와 전체 조종석 보기를 전환할 수 있다. 사진을 중복 저장하지 않고 Vite에서 공유 자산을 가져온다.
 

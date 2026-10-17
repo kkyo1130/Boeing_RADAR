@@ -178,3 +178,15 @@ def test_completed_readback_survives_age_for_continued_new_camera_monitoring(sce
     assert s.state()["result"] == "NORMAL"  # No repeat readback of unchanged ATC.
     cockpit(s, heading=90)
     assert s.state()["result"] == "MISMATCH"
+
+
+def test_callsign_only_observation_exposes_its_actual_capture_time(scenario):
+    s = scenario; a = s.adopt(); s.tick()
+    pilot = s.segment(a); data = s.speech(pilot)
+    data.update(fields={}, mentioned_fields=[], instruction_check="NEEDS_REVIEW", transcript="Radar one two three")
+    assert s.send(data).status_code == 201
+    state = s.state()
+    assert not any(state["current"]["READBACK"].values())
+    call = state["readbacks"][a["instruction_id"]]
+    assert call["observation_id"] == data["observation_id"]
+    assert call["observed_at"] == pilot["started_at"]
