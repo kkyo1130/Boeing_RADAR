@@ -82,3 +82,7 @@ JSON Mock Observation → Flight/Clearance 관리 → ATC와 Readback 비교 →
 PR #5의 계약이 dev에 squash merge(`5515878`)됐다. 후속 SPEC-002-WI-02는 별도 브랜치에서 v2 세션·구간 등록/취소·관측/health·현재 상태·입력/Trace 조회를 구현했다. 설정은 비행별 snapshot으로 고정하며 미설정·stale·미상·저품질·이전 시도는 현재 정상 근거로 쓰지 않는다. 부분 목표의 출처, 늦은 Pilot의 동일 ATC 연결, 장애 복구 후 새 관측을 검사한다.
 
 SQLite 추가 migration·기존 DB 보존·동시 중복·commit 실패 원자성 테스트를 포함해 backend172 passed, 경고1개. 계약 스키마6종·fixture21개 검사 통과. 기존 Mock 경로와 그 Trace 형태는 유지한다. v2 Trace는 별도 경로로 조회하며 최종 숫자 비교·규칙 판정·모델/실장비·통합 리포트는 아직 구현/검증하지 않았다. 상세 결과와 제약은 [WI-02](spec/002-observation-contracts/workitem/wi-02.md), 실행/API 계약은 [v2 수신 안내](../contracts/receiving-v2.md)를 따른다.
+
+## 2026-10-18 SPEC-002-WI-03 계약 HTTP 통합
+
+PR #6을 `aae3113`로 squash merge한 dev를 기준으로 독립 JSON 생산자와 실제 임시 uvicorn/SQLite를 연결했다. 통합21개·기존 backend174개·Schema6종/fixture21개 검사 통과. 0/null·부분 지시 출처·미인식·장애 복구·새 목표/프레임·잘못된 버전/단위/연결·중복·시도 순서·실행 격리와 원본/Trace 대응을 검증했다. 상세 근거·실행 안내·미실행 범위는 [WI-03](spec/002-observation-contracts/workitem/wi-03.md)을 따른다. 실제 카메라·STT/OCR·최종 판정·알림·리포트 연동 성공을 뜻하지 않는다.
