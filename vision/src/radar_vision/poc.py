@@ -105,6 +105,7 @@ def recognize(path, config, ocr_binary, output_dir, captured_at=None):
             except (subprocess.SubprocessError, OSError, ValueError, KeyError, TypeError):
                 result = {"value": None, "raw_text": "", "model_score": None, "reason": "ocr_unavailable"}
         result.update(unit="feet" if name == "altitude" else item["unit"], roi=item["roi"],
+                      display_unit=item["unit"],
                       contrast_stddev=round(contrast, 3), evidence=str(evidence))
         if preprocessing:
             result.update(ocr_evidence=str(ocr_evidence),
