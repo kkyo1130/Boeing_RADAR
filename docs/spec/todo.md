@@ -61,7 +61,7 @@
 
 ## 상태 변경 기록
 
-- 2026-10-18 PR #13 지적3건을 b09cf19에서 수정·재검증 후 ba2dc65로 squash merge, WI-02 done. WI-03 서버 단일 큐·브라우저 음성·교신/모의 구간 억제·발생 건별 완료 구현/검증 후 reviewing. done10/reviewing1/implementing3/pending21. [WI-03 상세 기록](006-advisory-interface/workitem/wi-03.md).
+- 2026-10-18 PR #13 지적3건을 b09cf19에서 수정·재검증 후 ba2dc65로 squash merge, WI-02 done. WI-03 서버 단일 큐·브라우저 음성·교신/모의 구간 억제·발생 건별 완료 구현·backend454/frontend36/HTTP47/빌드 검증 후 cd1f895·[PR #14](https://github.com/kkyo1130/Boeing_RADAR/pull/14) reviewing. done10/reviewing1/implementing3/pending21. [WI-03 상세 기록](006-advisory-interface/workitem/wi-03.md).
 
 - 2026-10-18 PR #12 P2 세 건을 f741754에서 수정·frontend18/backend419/HTTP43/공통 계약 검증, 스레드3개 해결 후8c3a796에 squash merge. WI-01 done. WI-02 근거 패널/미디어·사용자 확인 구현, frontend22/backend436/HTTP45/빌드·실제 브라우저 인수 후 커밋f733140·[PR #13](https://github.com/kkyo1130/Boeing_RADAR/pull/13) reviewing. done9/reviewing1/implementing3/pending22. [WI-02 상세 기록](006-advisory-interface/workitem/wi-02.md).
 
