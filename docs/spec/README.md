@@ -5,7 +5,7 @@
 | 스펙 | Priority | 상태·버전 | WI 수 |
 | --- | --- | --- | --- |
 | [SPEC-001: 개발 환경과 모노레포 실행](001-development.md) | P0 | draft · v1 | 3 |
-| [SPEC-002: 관측 계약과 지시 연결](002-observation-contracts.md) | P0 | draft · v5 | 3 |
+| [SPEC-002: 관측 계약과 지시 연결](002-observation-contracts.md) | P0 | draft · v6 | 3 |
 | [SPEC-003: Cockpit 영상 관측과 입력 건전성](003-cockpit-vision.md) | P0 | draft · v1 | 5 |
 | [SPEC-004: 관제·복명복창 음성 입력과 구조화](004-speech-communication.md) | P0 | draft · v1 | 4 |
 | [SPEC-005: 규칙 재검증과 3상태 교차검증](005-safe-validation.md) | P0 | draft · v1 | 3 |

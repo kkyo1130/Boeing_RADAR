@@ -275,9 +275,10 @@ def test_existing_vision_local_outputs_require_an_explicit_adapter():
             ObservationV2.model_validate(local)
 
 
-def test_v2_dtos_do_not_change_running_api_or_mount_v2_routes(client):
+def test_v2_receiving_keeps_the_running_legacy_input_contract(client):
     schema = client.get("/openapi.json").json()
-    assert not any(path.startswith("/api/v2") for path in schema["paths"])
+    assert "/api/flights/start" in schema["paths"]
+    assert "/api/v2/flights/{flight_id}/observations" in schema["paths"]
     fields = schema["components"]["schemas"]["ObservationInput"]
     assert set(fields["required"]) == {"altitude", "heading", "confidence"}
     assert fields["additionalProperties"] is False
