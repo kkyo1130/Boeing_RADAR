@@ -1,6 +1,6 @@
 # 공통 관측 v2 수신 API
 
-SPEC-002-WI-02의 실행 계약이다. [WI-01 DTO·구조 계약](observation-v2.md)을 기존 Mock API와 분리된 `/api/v2`에 연결한다. 입력 저장·문맥 검증·현재 항목/목표 연결을 구현한다. 최종 숫자 비교는 SPEC-005-WI-02의 별도 validation 계약에 연결하고 실제 알림·Incident 해결은 SPEC-006/007의 후속 범위다. 최종 숫자 비교는 SPEC-005-WI-02의 validation 계약에 연결하며 수신 성공만으로 전체 정상으로 만들지 않는다.
+SPEC-002-WI-02의 실행 계약이다. [WI-01 DTO·구조 계약](observation-v2.md)을 기존 Mock API와 분리된 `/api/v2`에 연결한다. 입력 저장·문맥 검증·현재 항목/목표 연결을 구현한다. 최종 숫자 비교는 SPEC-005-WI-02의 validation, 발생 건·해결 정책은 SPEC-007-WI-01의 Incident 계약에 연결하며 실제 알림은 SPEC-006의 후속 범위다. 수신 성공만으로 전체 정상으로 만들지 않는다.
 
 ## 설정과 설치
 
@@ -34,6 +34,7 @@ python -m app.migrate_observation_v2 --database-url sqlite:///./radar.db
 | POST `/api/v2/flights/{flight_id}/speech-segments/{segment_id}/cancel` | `{reason}`. 현재 시도 취소200. 이미 채택된 ATC 지시는 취소409 |
 | POST `/api/v2/flights/{flight_id}/observations` | ObservationV2. 201 신규 접수, 동일 ID·내용200 DUPLICATE, ID 내용 충돌409 |
 | POST `/api/v2/flights/{flight_id}/health-events` | HealthEventV2. 201 접수 또는 동일 이벤트200 |
+| POST `/api/v2/flights/{flight_id}/revalidate` | 현재 시각으로 판정·Incident를 원자적으로 저장하고 state 반환200. 종료409 |
 | GET `/api/v2/flights/{flight_id}/state` | 항목별 목표·출처, 이번 복창 요구, 채널, 현재 관측/사유. 동적 result=NORMAL/MISMATCH/UNVERIFIED와 reason, validation(단계·필드 판정 및 안내 후보) |
 | GET `/api/v2/flights/{flight_id}/inputs?limit=100` | 최신순 입력·원본 payload·applied·사유·접수 이벤트 참조. 최대1000 |
 | GET `/api/v2/flights/{flight_id}/safety-trace?after=0&limit=100` | 이벤트 순서·시각·revision·원본/변경 snapshot. sequence 오름차순, 최대1000 |
@@ -77,3 +78,8 @@ ATC/READBACK에는 [결정론적 구조 검사](structure-rules.md)를 수신 �
 ## SPEC-005-WI-02 3상태 판정 연결
 
 최종 비교는 [validation-v2](validation-v2.md)와 state.validation을 따른다. v2 최상위 result/reason은 유효한 단계/필드 비교를 반영한다. 이전 UNVERIFIED 고정 설명은 당시 수신 구현의 한계다. current는 수신 조회 호환용으로 유지한다. 판정/타이머·Trace는 기존 수신 트랜잭션에 저장하고 GET은 현재 시각으로 비교하되 저장하지 않는다. 실제 음성/Incident 해결을 접수 성공과 혼동하지 않는다.
+
+
+## SPEC-007-WI-01 발생 건·재검증 연결
+
+state.incident_version/ incidents와 POST revalidate는 [Incident 계약](incidents-v2.md)을 따른다. 수신/취소/종료와 같은 트랜잭션에서 발생 건과 INCIDENT_UPDATED를 저장한다. 새 관측 해결(RESOLVED), 부분 지시 대체(SUPERSEDED), 미해결 종료(ENDED_UNRESOLVED)를 분리한다. GET은 현재 최신성만 계산하고 발생 건을 저장하지 않으므로 시간 경과만으로 저장할 판정은 소비자가 POST revalidate로 확정한다. 실제 재생/사용자 확인은 아직 연결하지 않는다.
