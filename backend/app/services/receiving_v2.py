@@ -166,8 +166,14 @@ def register_segment(db, flight_id, segment):
         else:
             if instruction is None or instruction.flight_id != flight_id or instruction.status == "CANCELLED":
                 raise ReceivingError(409, "CONTEXT_MISMATCH", "Pilot segment requires the same active ATC input")
-            if state["latest_atc_input_id"] != segment.atc_input_id:
-                raise ReceivingError(409, "INVALID_SEQUENCE", "Pilot segment targets an older ATC input")
+            retained_correction = instruction.status == "ADOPTED" and any(
+                target and target["instruction_id"] == instruction.instruction_id
+                for target in state["targets"].values()) and any(
+                item["status"] == "OPEN" and item["stage"] == "READBACK"
+                and item["instruction_id"] == instruction.instruction_id
+                for item in state.get("incidents", []))
+            if state["latest_atc_input_id"] != segment.atc_input_id and not retained_correction:
+                raise ReceivingError(409, "INVALID_SEQUENCE", "Older ATC input has no retained readback error to correct")
             atc_segment = db.get(V2Segment, instruction.atc_segment_id)
             if parsed(segment.started_at) < parsed(atc_segment.payload["ended_at"]):
                 raise ReceivingError(409, "INVALID_SEQUENCE", "Pilot cannot precede ATC capture completion")

@@ -5,6 +5,8 @@ Playback/acknowledgement and real producer stabilization belong to later WIs.
 """
 from copy import deepcopy
 from uuid import uuid4
+from pydantic import ValidationError
+from app.schemas.incidents_v2 import IncidentEvidence
 
 from app.services.validation_v2 import parsed, stamp
 
@@ -20,9 +22,17 @@ def evidence(state, verdict):
     sample = "frame_id" if verdict["stage"] == "SETTING" else "segment_id"
     if not current.get(sample) or not current.get("observed_at"):
         return None  # Pre-policy state is not new, attributable correction evidence.
-    return {key: deepcopy(current.get(key)) for key in (
+    proof = {key: deepcopy(current.get(key)) for key in (
         "observation_id", "observed_at", "frame_id", "segment_id", "attempt_id", "evidence_refs",
         "evidence_unavailable_reason")}
+    if verdict["stage"] == "READBACK" and not proof["attempt_id"]:
+        return None
+    if bool(proof["evidence_refs"]) == (proof["evidence_unavailable_reason"] is not None):
+        return None
+    try:
+        return IncidentEvidence.model_validate(proof).model_dump(mode="json")
+    except ValidationError:
+        return None  # Legacy/incomplete provenance cannot emit an invalid Incident DTO.
 
 
 def key(item):

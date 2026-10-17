@@ -215,3 +215,75 @@ def test_runtime_incident_schema_matches_contract_and_real_response(scenario):
     schema["$id"] = "urn:radar:contracts:incident-v1"
     actual = json.loads((Path(__file__).resolve().parents[2] / "contracts/schemas/incident-v1.schema.json").read_text())
     assert schema == actual
+
+
+def test_retained_old_heading_readback_can_be_corrected_without_touching_new_altitude(scenario):
+    s = scenario; a = s.adopt(); s.tick()
+    bad = s.speech(s.segment(a))
+    bad["transcript"] = "Radar one two three maintain three thousand feet heading zero nine zero"
+    bad["fields"]["HDG"].update(value=90, raw_text="090")
+    assert s.send(bad).status_code == 201
+    occurrence = incidents(s, "OPEN")[0]["occurrence_id"]
+    s.tick(); b = s.adopt(partial=True)
+    match_readback(s, b, partial=True)
+    before = s.state()
+    match_readback(s, a)  # Explicit correction of still-owned HDG from instruction A.
+    after = s.state()
+    assert after["targets"] == before["targets"]
+    assert after["current"]["READBACK"]["ALT"] == before["current"]["READBACK"]["ALT"]
+    assert after["readback_required"]["instruction_id"] == b["instruction_id"]
+    row = next(row for row in incidents(s) if row["occurrence_id"] == occurrence)
+    assert row["status"] == "RESOLVED"
+    # Once corrected, an older instruction cannot start arbitrary new attempts.
+    s.tick()
+    with pytest.raises(AssertionError, match="409"):
+        s.segment(a)
+
+
+@pytest.mark.parametrize("missing", ["attempt_id", "evidence_refs", "evidence_unavailable_reason", "all"])
+def test_pre_policy_readback_provenance_never_emits_invalid_incident(scenario, missing):
+    from app.services.incidents_v2 import reconcile
+    s = scenario; atc = s.adopt(); s.tick()
+    data = s.speech(s.segment(atc))
+    data["transcript"] = "Radar one two three maintain four thousand feet heading two seven zero"
+    data["fields"]["ALT"].update(value=4000, raw_text="4000")
+    s.send(data)
+    snapshot = s.state(); snapshot["incidents"] = []
+    current = snapshot["current"]["READBACK"]["ALT"]
+    if missing == "evidence_unavailable_reason":
+        current.update(evidence_refs=[], evidence_unavailable_reason=None)
+    else:
+        for name in (("attempt_id", "evidence_refs", "evidence_unavailable_reason") if missing == "all" else (missing,)):
+            current.pop(name, None)
+    reconcile(snapshot, s.flight, snapshot["validation"], s.clock[0])
+    assert snapshot["incidents"] == []
+
+
+def test_old_persisted_readback_revalidation_returns_schema_valid_incidents(scenario):
+    from app.main import app
+    from app.db import get_db
+    from app.models.observation_v2 import V2FlightContext
+    from app.schemas.incidents_v2 import IncidentV1
+    s = scenario; atc = s.adopt(); s.tick()
+    data = s.speech(s.segment(atc))
+    data["transcript"] = "Radar one two three maintain four thousand feet heading two seven zero"
+    data["fields"]["ALT"].update(value=4000, raw_text="4000")
+    s.send(data)
+    db_generator = app.dependency_overrides[get_db]()
+    db = next(db_generator)
+    try:
+        profile = db.get(V2FlightContext, s.flight)
+        state = deepcopy(profile.state); state["incidents"] = []
+        for item in list(state["current"]["READBACK"].values()) + list(state["readbacks"].values()):
+            for name in ("attempt_id", "evidence_refs", "evidence_unavailable_reason"):
+                item.pop(name, None)
+        profile.state = state; db.commit()
+    finally:
+        db_generator.close()
+    response = s.client.post(s.url+"/revalidate")
+    assert response.status_code == 200
+    assert response.json()["result"] == "MISMATCH"  # Verdict remains visible.
+    assert response.json()["incidents"] == []
+    match_readback(s, atc)
+    for item in s.state()["incidents"]:
+        IncidentV1.model_validate(item)

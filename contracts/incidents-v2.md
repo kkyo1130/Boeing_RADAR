@@ -43,3 +43,10 @@ READBACK 수정은 새 발화에서 해당 지시가 현재 소유하는 필수 
 - 현재 flight JSON 상태와 INCIDENT_UPDATED(발생 건의 변경 snapshot), 입력 원본/판정 Trace는 기존 SQLite writer 트랜잭션에서 함께 commit/rollback한다. 동일 입력 ID 재전송은 기존 접수 event_id를 반환하며 새 전이를 기록하지 않는다. 해결/대체/종료된 발생 건은 삭제하지 않는다.
 
 후속 UI는 OPEN + current_check의 필드/사유를 사용해 미해결과 현재 확인 보류를 구분해야 한다. 전체 대표 validation이 새 복창을 기다려도 미변경 필드의 발생 건을 지우거나 음성 완료 이력을 초기화하지 않는다. SUPERSEDED/RESOLVED/ENDED_UNRESOLVED는 활성 오류/보류 음성 대상에서 제외한다. 실제 재생 취소와 교신 우선순위는 SPEC-006에서 연결한다.
+
+
+## PR #11 리뷰 보완
+
+부분 지시 이후에도 이전 지시가 소유하는 항목의 OPEN READBACK 오류가 있으면 그 이전 ATC 입력에 연결한 새 Pilot 구간을 수정용으로 등록할 수 있다. 기존 구간/시각/attempt 검사는 유지하며, 이미 대체된 ALT는 이 발화로 갱신하지 않는다. 이전 지시가 더는 목표를 소유하지 않거나 미해결 복창 오류가 없으면 과거 지시 신규 시도409를 유지한다. 현재 readback_required는 최신 지시를 가리킨다.
+
+이 정책 이전에 저장한 음성 현재값의 segment/time만으로 새 Incident를 만들지 않는다. attempt ID와 Schema에 맞는 evidence_refs/부재 사유까지 검사하고 불완전하면 발생 건 생성·해결 근거에서 제외한다. 필드 validation의 MISMATCH/UNVERIFIED는 계속 조회할 수 있으며 다음 적격 새 관측으로 정상적인 추적을 시작한다.

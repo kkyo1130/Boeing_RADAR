@@ -87,3 +87,20 @@ def test_end_keeps_unresolved_and_explicit_revalidate_is_versioned(producer):
     assert rows(p)[0]["status"] == "ENDED_UNRESOLVED"
     assert rows(p)[0]["resolved_at"] is None
     assert p.request("POST", p.path+"/revalidate", expected=409)["code"] == "FLIGHT_ENDED"
+
+
+def test_retained_old_heading_readback_correction_over_http(producer):
+    p = producer; a, _ = p.adopt()
+    data = p.speech(p.segment(a))
+    data["transcript"] = "Radar one two three maintain three thousand feet heading zero nine zero"
+    data["fields"]["HDG"].update(value=90, raw_text="090")
+    p.send(data)
+    occurrence = rows(p)[0]["occurrence_id"]
+    b, _ = p.adopt("atc-partial.json")
+    p.send(p.speech(p.segment(b), "atc-partial.json"))
+    before = p.state()
+    p.send(p.speech(p.segment(a)))
+    after = p.state()
+    assert after["targets"] == before["targets"]
+    assert after["current"]["READBACK"]["ALT"] == before["current"]["READBACK"]["ALT"]
+    assert next(row for row in rows(p) if row["occurrence_id"] == occurrence)["status"] == "RESOLVED"
