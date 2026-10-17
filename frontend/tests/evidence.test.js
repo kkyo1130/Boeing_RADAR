@@ -26,10 +26,17 @@ test('media URLs must be scoped same-origin API paths; external/active URLs are 
   const url = '/api/v2/flights/FLT-a/evidence/obs/media/OBSERVED/image?stage=READBACK';
   assert.equal(module.safeMediaUrl(url, selected), url);
 });
+test('consecutive dots inside valid identifiers are not traversal segments', () => {
+  const selection={...selected,observation_id:'obs..1'};
+  const url='/api/v2/flights/FLT-a/evidence/obs..1/media/OBSERVED/frame..1';
+  assert.equal(module.safeMediaUrl(url,selection),url);
+  assert.equal(module.safeMediaUrl('/api/v2/flights/FLT-a/evidence/obs..1/media/OBSERVED/%2e%2e',selection),null);
+});
 test('missing evidence remains explicit without blocking correction guidance', () => {
-  const group = { observation_id: 'obs', observed_at: null, transcript: 'Radar <script>one</script>', reading: null, assets: [], evidence_unavailable_reason: 'fixture_has_no_media' };
+  const group = { observation_id: 'obs', observed_at: null, time_reason:'capture_clock_unavailable', transcript: 'Radar <script>one</script>', reading: null, assets: [], evidence_unavailable_reason: 'fixture_has_no_media' };
   const html = renderToStaticMarkup(React.createElement(module.EvidenceContents, { selected, data: { groups: { OBSERVED: group } } }));
   assert.match(html, /근거 자료가 없습니다/); assert.match(html, /시각 미상/);
+  assert.match(html,/capture_clock_unavailable/);
   assert.doesNotMatch(html, /<script>/); assert.match(html, /&lt;script&gt;/);
 });
 test('audio uses explicit native controls and never autoplays; unavailable image is explained', () => {

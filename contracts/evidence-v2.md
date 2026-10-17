@@ -18,7 +18,7 @@ assets는 field=null 또는 선택 field의 EvidenceRef만 노출한다. evidenc
 
 허용 형식은 PNG/JPEG/WebP 이미지와 WAV/MP3/OGG 음성, 파일당 최대20MiB다. FRAME/ROI는 이미지, AUDIO는 음성 형식이어야 한다. SVG/HTML 등 active content는 제공하지 않는다. ROI 파일은 생산자가 제공하는 해당 ROI 이미지이며 좌표를 함께 표시한다. 서버가 다른 프레임을 임의로 잘라 대체하지 않는다.
 
-GET `/api/v2/flights/{flight_id}/evidence/{observation_id}/media/{ATC|OBSERVED}/{evidence_id}?instruction_id=...&stage=...&field=...`도 같은 선택 문맥을 다시 검사한다. metadata에서 받은 URL이어도 새 지시/관측으로 대체됐으면409다. 파일 불가/종류 충돌은404 ContractErrorV2이며 FileResponse는 no-store·nosniff를 설정한다. 표준 media controls/Range 동작을 사용하고 원본 음성은 사용자 조작으로만 재생한다.
+GET `/api/v2/flights/{flight_id}/evidence/{observation_id}/media/{ATC|OBSERVED}/{evidence_id}?instruction_id=...&stage=...&field=...`도 같은 선택 문맥을 다시 검사한다. metadata에서 받은 URL이어도 새 지시/관측으로 대체됐으면409다. 파일 불가/종류 충돌은404 ContractErrorV2이며 서버는 root·하위 디렉터리·파일을 O_NOFOLLOW로 열고 같은 파일 descriptor에서 정규 파일·20MiB 제한을 검사해 읽는다. 검증 뒤 경로를 다시 열지 않는다. 응답은 no-store·nosniff를 설정한다. 단일 bytes Range는206, 잘못된/다중/범위 밖 요청은416이다. 표준 media controls/Range 동작을 사용하고 원본 음성은 사용자 조작으로만 재생한다.
 
 브라우저는 API가 제공한 같은 flight/observation의 상대 media URL만 사용한다. 파일이 없거나 재생이 차단/실패하면 정상 완료로 표시하지 않고 이유를 알린다. 패널 닫기·선택 변경·새 관측·서버 단절 시 플레이어를 제거/정지한다. 새 관측에는 과거 자료를 자동 재연결하지 않는다.
 

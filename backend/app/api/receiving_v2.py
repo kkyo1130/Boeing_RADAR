@@ -1,7 +1,8 @@
 """Versioned intake routes. No inference provider or aircraft control is called."""
 from fastapi import APIRouter, Depends, Query, Request
 from typing import Literal
-from fastapi.responses import FileResponse
+from fastapi.responses import Response
+import re
 from app.schemas.evidence_v2 import EvidenceInteraction
 from app.services import evidence_v2
 from fastapi.exceptions import RequestValidationError
@@ -104,10 +105,23 @@ def evidence(flight_id: str, observation_id: str, instruction_id: str,
 
 
 @router.get("/{flight_id}/evidence/{observation_id}/media/{role}/{evidence_id}")
-def media(flight_id: str, observation_id: str, role: Literal["ATC", "OBSERVED"], evidence_id: str,
+def media(request: Request, flight_id: str, observation_id: str, role: Literal["ATC", "OBSERVED"], evidence_id: str,
           instruction_id: str, stage: Literal["READBACK", "SETTING"], field: Literal["ALT", "HDG", "CALLSIGN"], db: Session = Depends(get_db)):
-    path, mime = evidence_v2.content(db, flight_id, instruction_id, stage, field, observation_id, role, evidence_id)
-    return FileResponse(path, media_type=mime, headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"})
+    data, mime = evidence_v2.content(db, flight_id, instruction_id, stage, field, observation_id, role, evidence_id)
+    headers = {"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff", "Accept-Ranges": "bytes"}
+    value = request.headers.get("range")
+    if value:
+        match = re.fullmatch(r"bytes=(\d*)-(\d*)", value)
+        if not match or not any(match.groups()) or any(len(part) > 20 for part in match.groups()):
+            return Response(status_code=416, headers={**headers, "Content-Range": f"bytes */{len(data)}"})
+        first, last = match.groups()
+        start = int(first) if first else max(0, len(data)-int(last))
+        end = min(int(last), len(data)-1) if first and last else len(data)-1
+        if start > end or start >= len(data):
+            return Response(status_code=416, headers={**headers, "Content-Range": f"bytes */{len(data)}"})
+        headers["Content-Range"] = f"bytes {start}-{end}/{len(data)}"
+        return Response(data[start:end+1], status_code=206, media_type=mime, headers=headers)
+    return Response(data, media_type=mime, headers=headers)
 
 
 @router.post("/{flight_id}/interactions", status_code=201)

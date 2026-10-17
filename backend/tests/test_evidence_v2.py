@@ -112,6 +112,11 @@ def test_media_is_scoped_and_never_fetches_arbitrary_path(scenario, tmp_path, mo
         response = s.client.get(asset["url"])
         assert response.status_code == 200 and response.content == b"synthetic-image-fixture"
         assert response.headers["x-content-type-options"] == "nosniff"
+        for value, expected_bytes in [("bytes=0-3", b"synt"), ("bytes=10-", b"image-fixture"), ("bytes=-7", b"fixture")]:
+            partial = s.client.get(asset["url"], headers={"Range": value})
+            assert partial.status_code == 206 and partial.content == expected_bytes
+        for value in ["bytes=999-", "bytes=-0", "bytes=0-1,3-4", "bytes="+"9"*5000+"-"]:
+            assert s.client.get(asset["url"], headers={"Range": value}).status_code == 416
         cockpit(s)  # A URL captured earlier can no longer open the replaced observation.
         assert s.client.get(asset["url"]).status_code == 409
     else:
@@ -127,3 +132,26 @@ def test_actual_correction_readback_can_start_without_panel_or_ack(scenario):
     match_readback(s,a)
     assert s.state()["incidents"][0]["status"] == "RESOLVED"
     assert not any(e["event_type"] in ("USER_ACKNOWLEDGED", "EVIDENCE_OPENED") for e in s.trace())
+
+
+def test_open_descriptor_remains_safe_after_producer_replaces_path(tmp_path, monkeypatch):
+    from app.services import evidence_v2 as service
+    root=tmp_path/'media';root.mkdir();file=root/'image.png';file.write_bytes(b'original')
+    secret=tmp_path/'secret.png';secret.write_bytes(b'private')
+    monkeypatch.setenv('RADAR_EVIDENCE_ROOT', str(root))
+    original=service.os.fstat
+    def swap(fd):
+        info=original(fd)
+        file.unlink();file.symlink_to(secret)
+        return info
+    monkeypatch.setattr(service.os, 'fstat', swap)
+    assert service.read_media('media:image.png')[0] == b'original'
+
+
+def test_replaced_parent_directory_is_not_followed(tmp_path, monkeypatch):
+    from app.services import evidence_v2 as service
+    from app.services.receiving_v2 import ReceivingError
+    root=tmp_path/'media';root.mkdir();outside=tmp_path/'outside';outside.mkdir()
+    (outside/'image.png').write_bytes(b'private');(root/'sub').symlink_to(outside,target_is_directory=True)
+    monkeypatch.setenv('RADAR_EVIDENCE_ROOT', str(root))
+    with pytest.raises(ReceivingError):service.read_media('media:sub/image.png')

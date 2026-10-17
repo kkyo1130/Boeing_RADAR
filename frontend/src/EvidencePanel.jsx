@@ -16,7 +16,12 @@ export function evidenceUrl(selected) {
 }
 export function safeMediaUrl(url, selected) {
   if (typeof url !== 'string' || !url.startsWith(`/api/v2/flights/${encodeURIComponent(selected.flight_id)}/evidence/${encodeURIComponent(selected.observation_id)}/media/`)) return null;
-  if (url.includes('..') || url.includes('\\')) return null;
+  try {
+    const segments = url.split('?')[0].split('/').map(decodeURIComponent);
+    if (segments.some(part => part === '.' || part === '..' || part.includes('\\'))) return null;
+    const tail = url.split('?')[0].slice(url.indexOf('/media/') + 7).split('/');
+    if (tail.length !== 2 || !['ATC', 'OBSERVED'].includes(tail[0]) || !tail[1]) return null;
+  } catch { return null; }
   return url;
 }
 export async function recordInteraction(selected, action, eventId) {
@@ -42,6 +47,7 @@ export function EvidenceContents({ data, selected }) {
   return <>{Object.entries(data.groups).map(([role, group]) => <article className="op-evidence-group" key={role}>
     <h3>{role === 'ATC' ? '관제 지시 원본' : '선택한 관측 원본'}</h3>
     <small>관측 {group.observation_id} · 원본 시각 {group.observed_at || '시각 미상'}</small>
+    {!group.observed_at && group.time_reason && <small>시각 확인 불가 사유: {group.time_reason}</small>}
     {group.transcript && <blockquote>{group.transcript}</blockquote>}
     {group.reading && <p>입력 품질: {group.reading.quality?.input_quality || '미상'} · 모델 점수: {group.reading.quality?.model_score ?? '없음'} <small>모델 점수는 검증된 정확도가 아닙니다.</small></p>}
     {!group.assets.length && <p>근거 자료가 없습니다. <small>{group.evidence_unavailable_reason || '근거 미제공'}</small></p>}

@@ -4,6 +4,8 @@ Media references are local, explicit media: paths under a configured trusted roo
 Never fetch producer-provided URLs, arbitrary local files, or execute active content.
 """
 import os
+import stat
+from contextlib import ExitStack
 from pathlib import Path
 from urllib.parse import urlencode, quote
 from sqlalchemy import select
@@ -93,10 +95,10 @@ def content(db, flight_id, instruction_id, stage, field, observation_id, role, e
     ref = next((ref for ref in refs(observations[role], field) if ref["evidence_id"] == evidence_id), None)
     if not ref or ref["kind"] == "TRANSCRIPT":
         raise intake.ReceivingError(404, "NOT_FOUND", "Media is not available for this selection")
-    path, reason = media_path(ref["ref"])
-    if reason or ((ref["kind"] == "AUDIO") != MIME[path.suffix.lower()].startswith("audio/")):
-        raise intake.ReceivingError(404, "NOT_FOUND", reason or "MEDIA_KIND_CONFLICT")
-    return path, MIME[path.suffix.lower()]
+    data, mime = read_media(ref["ref"])
+    if (ref["kind"] == "AUDIO") != mime.startswith("audio/"):
+        raise intake.ReceivingError(404, "NOT_FOUND", "MEDIA_KIND_CONFLICT")
+    return data, mime
 
 
 def interact(db, flight_id, message):
@@ -127,3 +129,31 @@ def interact(db, flight_id, message):
 def interaction_receipt(event):
     return dict(schema_version="2", event_id=f"v2-event-{event.id}", recorded_at=event.occurred_at,
         action=event.snapshot["request"]["action"], observation_id=event.snapshot["request"]["observation_id"])
+
+
+def read_media(ref):
+    """Open every component without symlinks; validate/read the SAME descriptor."""
+    root = os.environ.get("RADAR_EVIDENCE_ROOT")
+    relative = Path(ref[6:]) if ref.startswith("media:") else Path()
+    if not root or not relative.parts or relative.is_absolute() or ".." in relative.parts or relative.suffix.lower() not in MIME:
+        raise intake.ReceivingError(404, "NOT_FOUND", "MEDIA_NOT_AVAILABLE")
+    try:
+        with ExitStack() as stack:
+            directory = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+            stack.callback(os.close, directory)
+            for part in relative.parts[:-1]:
+                directory = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=directory)
+                stack.callback(os.close, directory)
+            descriptor = os.open(relative.parts[-1], os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory)
+            stack.callback(os.close, descriptor)
+            info = os.fstat(descriptor)
+            if not stat.S_ISREG(info.st_mode) or info.st_size > MAX_BYTES:
+                raise OSError("Unsupported media file")
+            chunks, length = [], 0
+            while chunk := os.read(descriptor, min(65536, MAX_BYTES + 1 - length)):
+                chunks.append(chunk); length += len(chunk)
+                if length > MAX_BYTES:
+                    raise OSError("Media exceeded resource bound")
+            return b"".join(chunks), MIME[relative.suffix.lower()]
+    except OSError as exc:
+        raise intake.ReceivingError(404, "NOT_FOUND", "MEDIA_NOT_AVAILABLE") from exc
