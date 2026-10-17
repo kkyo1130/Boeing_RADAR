@@ -30,3 +30,5 @@ python -m pytest tests ../tests/integration -q
 - UTC의 Z와 +00:00은 같은 시각으로 비교하며 동일 이벤트 재시도도 동일하게 처리한다.
 
 SQLite는 매 테스트의 임시 DB를 사용하고 서버 시계는 제어한다. JSON 직렬화→TestClient HTTP API→DB→조회 경계를 검증한다. 외부 네트워크/실제 Uvicorn 서버·카메라·마이크·SDR·OCR/STT 모델 성능은 미검증이다. 서버의 수신 accepted를 정상 판정으로 해석하지 않으며 정책·확인 문맥을 등록하지 않은 이 통합 fixture의 상태는 UNVERIFIED다. SPEC-005-WI-02의 판정 활성화 검증은 backend/tests/test_three_state_decision.py에서 수행한다. Closed-loop 해결 상태·실제 근거 파일 저장/권한은 후속 스펙 범위다.
+
+SPEC-005-WI-03의 전체 AC 대응과 실패 주입 행렬은 [판정 회귀 근거](validation-coverage.md)를 참조한다. 공통 실행·CI는 [개발 환경 안내](../../docs/development/README.md)를 따른다.
