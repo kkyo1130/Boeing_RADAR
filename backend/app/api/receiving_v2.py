@@ -3,6 +3,8 @@ from fastapi import APIRouter, Depends, Query, Request
 from typing import Literal
 from fastapi.responses import Response
 import re
+from app.schemas.advisory_v2 import VoiceClaim, VoiceInput, VoiceResult
+from app.services.alerts import advisory_v2
 from app.schemas.evidence_v2 import EvidenceInteraction
 from app.services import evidence_v2
 from fastapi.exceptions import RequestValidationError
@@ -128,3 +130,16 @@ def media(request: Request, flight_id: str, observation_id: str, role: Literal["
 def interaction(flight_id: str, payload: EvidenceInteraction, db: Session = Depends(get_db)):
     result, status = evidence_v2.interact(db, flight_id, payload)
     return JSONResponse(status_code=status, content=result)
+
+
+@router.post("/{flight_id}/voice/claims", status_code=201)
+def voice_claim(flight_id: str, payload: VoiceClaim, db: Session = Depends(get_db)):
+    return advisory_v2.command(db, flight_id, 'claim', payload)
+
+@router.post("/{flight_id}/voice/inputs")
+def voice_input(flight_id: str, payload: VoiceInput, db: Session = Depends(get_db)):
+    return advisory_v2.command(db, flight_id, 'input', payload)
+
+@router.post("/{flight_id}/voice/attempts/{attempt_id}")
+def voice_result(flight_id: str, attempt_id: str, payload: VoiceResult, db: Session = Depends(get_db)):
+    return advisory_v2.command(db, flight_id, attempt_id+':'+payload.status, payload)

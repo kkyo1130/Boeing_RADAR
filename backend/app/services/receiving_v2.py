@@ -83,6 +83,12 @@ def refresh_validation(db, profile, state, now, ended=False):
     evaluate(state, profile.policy, profile.callsign, now, persist=True, ended=ended)
     for item in reconcile(state, profile.flight_id, state["validation_snapshot"], now, ended=ended):
         trace(db, profile, "INCIDENT_UPDATED", item, now)
+    from app.services.alerts.advisory_v2 import settle
+    before_voice = deepcopy(state.get('voice'))
+    voice = settle(state, profile.policy, profile.callsign, now, ended=ended)
+    if before_voice != voice:
+        trace(db, profile, 'VOICE_POLICY_CHANGED', {'episodes': voice['episodes'],
+            'active_attempt': next((a for a in voice['attempts'].values() if a['status'] == 'PLAYING'), None)}, now)
 
 
 def start(db, callsign):
@@ -493,7 +499,9 @@ def get_state(db, flight_id):
                for name,value in state["targets"].items()}
     validation = evaluate(state, profile.policy, profile.callsign, now,
         ended=flight.status == FlightStatus.ENDED).model_dump(mode="json")
+    from app.services.alerts.advisory_v2 import view as voice_view
     return dict(schema_version="2", flight_id=flight_id, revision=profile.revision, status=flight.status,
+        voice=voice_view(state, profile.policy, profile.callsign, now, ended=flight.status == FlightStatus.ENDED),
         callsign=profile.callsign, targets=targets, readback_required=state["readback_required"],
         channels=state["channels"], current=state["current"], result=validation["result"],
         structure_checks=state.get("structure_checks", {}),
