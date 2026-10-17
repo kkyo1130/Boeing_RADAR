@@ -61,7 +61,7 @@
 
 ## 상태 변경 기록
 
-- 2026-10-18 PR #14 리뷰2건 수정850dd17·backend455/frontend39/HTTP47/빌드·계약 재검증 후75e74ac로 squash merge, WI-03 done. WI-04 HTTP50/실제 서버 응답→React5/브라우저 카메라 장애·음성·새 영상 복구 인수. 실장비 선행 결과 미완료로 verifying·초안 PR 제출. done11/verifying1/implementing3/pending20. [WI-04 상세 기록](006-advisory-interface/workitem/wi-04.md).
+- 2026-10-18 PR #14 리뷰2건 수정850dd17·backend455/frontend39/HTTP47/빌드·계약 재검증 후75e74ac로 squash merge, WI-03 done. WI-04 HTTP50/실제 서버 응답→React5/브라우저 카메라 장애·음성·새 영상 복구 인수. 실장비 선행 결과 미완료로 verifying·커밋7e24960·[초안 PR #15](https://github.com/kkyo1130/Boeing_RADAR/pull/15) 제출. done11/verifying1/implementing3/pending20. [WI-04 상세 기록](006-advisory-interface/workitem/wi-04.md).
 
 - 2026-10-18 PR #13 지적3건을 b09cf19에서 수정·재검증 후 ba2dc65로 squash merge, WI-02 done. WI-03 서버 단일 큐·브라우저 음성·교신/모의 구간 억제·발생 건별 완료 구현·backend454/frontend36/HTTP47/빌드 검증 후 cd1f895·[PR #14](https://github.com/kkyo1130/Boeing_RADAR/pull/14) reviewing. done10/reviewing1/implementing3/pending21. [WI-03 상세 기록](006-advisory-interface/workitem/wi-03.md).
 
