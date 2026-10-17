@@ -1,0 +1,4 @@
+# Optional local inference; model weights are supplied separately and never committed.
+faster-whisper>=1.1,<2
+av>=11,<19
+sounddevice>=0.5,<1

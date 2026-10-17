@@ -1,0 +1,9 @@
+.operations section { margin: 1.5rem 0; padding: 1rem; border: 1px solid #52616c; border-radius: .5rem; }
+.operations .toolbar { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+.operations .sources { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+.operations article { padding: .8rem; background: #18232b; border-radius: .4rem; overflow-wrap: anywhere; }
+.operations img, .operations audio { max-width: 100%; }
+.operations textarea { width: 100%; font-family: monospace; }
+.operations .normal { color: #8ce9b4; } .operations .hold { color: #ffda88; } .operations .mismatch { color: #ff9393; }
+.operations button, .operations select, .operations input { padding: .5rem; }
+.operations a { color: #91d4ff; } .operations pre { white-space: pre-wrap; }

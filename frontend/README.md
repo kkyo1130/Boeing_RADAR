@@ -1,12 +1,12 @@
 # 태블릿 MCP 촬영 화면
 
-React/Vite 기반 모의 MCP 화면이다. 사람이 선택 ALT·HDG·IAS를 바꾸며 Vision은 태블릿을 촬영한 카메라 영상만 읽는다. 서버 판정/비행 운영 UI는 아직 구현하지 않았다. 이 화면의 선택값을 Vision에 전달하는 API·메시지·자동 설정 기능은 없다.
+React/Vite 기반 모의 MCP 화면이다. 사람이 선택 ALT·HDG·IAS를 바꾸며 Vision은 태블릿을 촬영한 카메라 영상만 읽는다. 서버 운영 화면은 `/operations`에 있으며 [운영·실입력 안내](../docs/development/operations.md)를 따른다. 이 화면의 선택값을 Vision에 전달하는 API·메시지·자동 설정 기능은 없다.
 
 기존 [Cockpit 참고 사진](../docs/vision/assets/mcp-reference.png)을 배경으로 사용하고 세 선택 숫자 창만 덮어 그린다. 주변 PFD·ND·COURSE·VERT SPD·스위치는 고정된 사진이며 실제 상태나 선택값과 동기화되지 않는다. MCP 확대(기본)와 전체 조종석 보기를 전환할 수 있다. 사진을 중복 저장하지 않고 Vite에서 공유 자산을 가져온다.
 
 ## 실행
 
-Node.js 20.19+ 또는 22.12+에서 frontend 디렉터리 기준으로 실행한다.
+기준은 Node.js 24이며 22.x의 22.20 이상 또는 24.x의 24.12 이상을 허용한다. frontend 디렉터리 기준으로 실행하며 공통 설치·버전 정책은 [개발 환경 안내](../docs/development/README.md)를 따른다.
 
 ```sh
 npm ci

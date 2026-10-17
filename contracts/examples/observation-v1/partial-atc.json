@@ -1,0 +1,58 @@
+{
+  "schema_version": "radar-observation/1",
+  "event_type": "observation",
+  "event_id": "event-1",
+  "observation_id": "obs-1",
+  "flight_id": "FLT-demo",
+  "clearance_id": "CLR-demo",
+  "source": "ATC",
+  "channel_id": "audio-1",
+  "input_mode": "audio_file",
+  "sample_id": "segment-1",
+  "captured_at": "2026-10-13T00:00:00Z",
+  "capture_time_basis": "provided",
+  "processed_at": "2026-10-13T00:00:01Z",
+  "health": {
+    "status": "available",
+    "reason": null
+  },
+  "intent": "initial",
+  "supersedes_observation_id": null,
+  "fields": {
+    "altitude": null,
+    "heading": {
+      "value": 0,
+      "unit": "degrees",
+      "reason": null,
+      "raw_text": "000",
+      "model_score": 0.9,
+      "score_calibrated": false,
+      "quality": {
+        "status": "acceptable",
+        "reasons": []
+      },
+      "evidence_ids": [
+        "image-1"
+      ]
+    }
+  },
+  "speech": {
+    "transcript": "RADAR one heading zero zero zero",
+    "callsign": "RADAR1",
+    "callsign_reason": null,
+    "role_basis": "labelled_fixture",
+    "conditions": [],
+    "ordered_actions": [
+      "heading 000"
+    ]
+  },
+  "evidence": [
+    {
+      "evidence_id": "image-1",
+      "kind": "audio",
+      "reference": "fixture:segment-1",
+      "availability": "available",
+      "roi": null
+    }
+  ]
+}

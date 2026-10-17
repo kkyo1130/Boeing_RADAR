@@ -4,3 +4,19 @@ __pycache__/
 *.pyc
 *.db
 *.db-*
+
+
+# 로컬 환경변수
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
+
+# 테스트 커버리지
+.coverage
+htmlcov/
+
+# 로그
+*.log

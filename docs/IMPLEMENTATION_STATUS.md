@@ -1,5 +1,20 @@
 # RADAR 구현 현황
 
+확인일: 2026-10-17. 현재 `python` 브랜치의 미커밋 확장을 포함한다. 최신 실행/제한은 [운영 안내](development/operations.md)와 각 스펙의 2026-10-17 기록을 따른다.
+
+| 영역 | 최신 코드와 남은 인수 |
+| --- | --- |
+| 환경·계약·판정 | 공통 설치/CI·v1 관측·명시 정책·3상태·안전 회귀 구현 |
+| Vision | 기존 카메라/ROI/OCR + 근거/서버/correction 어댑터; 실제 태블릿 카메라 전체 경로 미검증 |
+| 음성 | ATC WAV/Pilot 마이크·로컬 faster-whisper·구간/품질·보수적 구조화·서버 전송; 실제 마이크/정답 교신 인수 미실행 |
+| 운영 UI | /operations 서버 판정·근거·확인·선택 음성/억제·연결 실패 보류; Chromium fixture 검증, 실제 교신/음성 출력 미검증 |
+| Closed-loop·Report | 사건/수정/해결·확장 Trace·근거 수명주기·종료 리포트·JSON 출력 구현; 실입력 전체 시연 미실행 |
+| 평가 | 합성 프로토콜·분모/지연/실패 보고·동일 세트 버전 비교·합성 HTTP 리허설; 실제 독립 평가·발표 장비 인수 미실행 |
+
+로컬 검증: Backend/통합 215개·Vision 45개, Frontend 빌드·Chromium 2개·실제 HTTP legacy/v1 합성 시연 통과. 추가 변경 후 최종 결과는 아래 후속 기록에 남긴다. Whisper tiny.en 합성 WAV에서 오인식이 발생했고 보류됨을 확인했으며 정확도 통과로 보고하지 않는다. 원격 CI는 아직 실행하지 않았다.
+
+## 초기 기준선 기록 (아래는 2026-10-10 당시 상태)
+
 확인일: 2026-10-10. 현재 dev는 `9d1d561`이며 MCP 정지 이미지 PoC와 공유 문서가 병합됐다. 이번 태블릿 화면·Vision 스트림 작업은 `codex/tablet-mcp-stream`에 포함한 변경이다. 아래 backend 결과는 초기 기준선 검증이며 최신 Vision 검증은 문서 끝의 태블릿 작업 기록을 따른다.
 
 ## 구현된 흐름
@@ -72,3 +87,27 @@ JSON Mock Observation → Flight/Clearance 관리 → ATC와 Readback 비교 →
 - 미실행: 실제 태블릿/웹캠, ROI GUI 수동 선택, 반사·흐림 평가 세트, 서버 통합. backend 제품 코드를 바꾸지 않아 기존 backend 회귀는 이번에 재실행하지 않음. WI-01~03 implementing, WI-04~05 pending 유지.
 
 재현과 다음 실장비 작업은 [태블릿 안내](../vision/docs/tablet-demo.md), 작업 기록은 [SPEC-003](spec/003-cockpit-vision.md)에 있다.
+
+## 공통 계약 수신 추가 — 2026-10-13
+
+SPEC-002-WI-01 계약은 `6ca59c5`로 origin/python에 공유했다. WI-02는 현재 체크아웃의 `69f2f38`에 구현되어 있으며 [v1 API](../contracts/observation-api-v1.md)에서 지시 예약·관측/수정/health 수신·시각/중복/연결 검사·상태/이력 조회를 제공한다. legacy Mock 경로·테이블은 보존하고 추가 저장소를 사용한다. 신규 v1 입력은 항상 UNVERIFIED/validation_pending으로 표시하며 최종 판정은 SPEC-005 범위다. 실제 생산자·장치 연결은 미검증이다. 실행 결과와 남은 결정은 [WI-02](spec/002-observation-contracts.md#wi-02)에 기록한다.
+
+2026-10-13 WI-03에서 독립 Mock 생산자의 JSON API 통합 검증을 추가했다. SPEC-002의 Mock 범위 AC-01~03을 대조했으며 실장비/모델 어댑터 검증과 최종 판정은 미완료다. 재현은 [통합 검증 안내](../tests/integration/README.md), 결과는 [WI-03](spec/002-observation-contracts.md#wi-03)에 기록한다.
+
+## 결정론적 구조화 검사 — 2026-10-13
+
+SPEC-005-WI-01에서 [검사 함수·정책](../contracts/extraction-rules.md)을 추가했다. HDG/FL/원문 값/확인 문맥/급변을 PASS·INVALID·NEEDS_REVIEW로 검사한다. 함수 구현만 완료했으며 API 상태는 아직 UNVERIFIED/validation_pending이다. 최종 3상태 판정 연결은 WI-02 범위다. 모의 정책은 실장비 운용 기준이 아니며 결과와 검증 범위는 [WI-01](spec/005-safe-validation.md#wi-01)에 기록한다.
+
+## 3상태 판정 연결 — 2026-10-14
+
+SPEC-005-WI-02에서 [명시 설정·3상태 판정](../contracts/three-state-validation.md)을 v1 서버에 연결했다. 설정·확인 문맥·fresh/가용/검증된 입력이 있어야 NORMAL이며, 확인된 Readback/Setting 숫자 불일치는 MISMATCH, 불충분 근거는 UNVERIFIED다. 설정이 없는 기존 v1 입력은 계속 보류한다. 단계별 rules/비교·사유와 확인 주체/정책을 조회할 수 있다. Readback만 해결된 RESOLVED와 전체 NORMAL을 구분하고 장치 장애 후 새 관측을 요구한다. 이번 변경은 미커밋이며 실행 근거·미실행 범위는 [WI-02](spec/005-safe-validation.md#wi-02)에 기록한다. 전체 기능 검증 WI-03과 실장비 인수는 별도다.
+
+## 설치·검증 기반과 판정 전체 회귀 — 2026-10-16
+
+SPEC-001-WI-02/03에서 [공통 설치·실행·설정·검증 안내](development/README.md), Python/Node 기준·의존성 고정, 로컬 명령/CI를 추가했다. SPEC-005-WI-03은 [AC별 안전 회귀](../tests/integration/validation-coverage.md)를 추가해 모의 범위 전체 검증을 완료했다. 실제 설치/실행·명령 결과·원격 CI/실장비 미실행 근거는 각 workitem에 기록한다. 새로운 제품 기능·실제 생산자 연동을 구현했다고 해석하지 않는다. 이번 변경은 `python` 브랜치의 미커밋 상태다.
+
+## 2026-10-17 최종 검증
+
+Backend/계약/통합 215개·Vision 45개, Frontend 빌드·Chromium 2개, 실제 HTTP legacy/v1 네 합성 시나리오·리포트 출력 통과. 브라우저는 즉시 연결 실패 및 응답이 멈춘 경우(5초 제한) 모두 기존 정상 배지를 제거하고 재연결을 확인했다. 평가 CLI의 12개 합성 all-hold 예측/두 fixture 버전 비교는 도구 동작 확인이며 실제 모델 성능 평가가 아니다. 전체 변경 미커밋. 실행/제약은 운영 안내 참조.
+
+2026-10-17: 후속 구현을 기능별 6개 코드/테스트 커밋과 별도 문서 커밋으로 보존했다. 앞선 미커밋 표기는 당시 기록이다. [커밋 인수인계](spec/todo.md#2026-10-17-단계별-커밋-기록)를 따른다.
