@@ -14,7 +14,7 @@ export async function request(path, { method = 'GET', body, signal, timeout = TI
       headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body) });
     const data = await response.json();
-    if (!response.ok) throw new Error(data.message || `요청 실패 (${response.status})`);
+    if (!response.ok) throw Object.assign(new Error(data.message || `요청 실패 (${response.status})`), { status: response.status, code: data.code });
     return data;
   } catch (error) {
     if (controller.signal.aborted) throw new Error('서버 응답을 확인할 수 없습니다. 연결을 확인하세요.');

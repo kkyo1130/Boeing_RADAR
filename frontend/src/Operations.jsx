@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { request, SnapshotGate, dueRevalidations, POLL_MS, statusLabel, numberLabel, restartFlightState, readingFor, reconciledActionError } from './flight-client.js';
 import './operations.css';
+import VoicePanel from './VoicePanel.jsx';
 import EvidencePanel, { selectionFor, recordInteraction } from './EvidencePanel.jsx';
 
 const STORAGE_KEY = 'radar.v2.flight-id';
@@ -176,6 +177,7 @@ export default function Operations() {
             <small>채택 <Stamp value={snapshot.targets[field]?.adopted_at} /></small></article>)}</div>
           <p>이번 복창 항목: {snapshot.readback_required ? `${snapshot.readback_required.fields.map(field => fields[field]).join(' · ')} · 호출부호` : '지시 확인 대기'}</p>
         </section>
+        <VoicePanel snapshot={snapshot} connected={connected} />
         <Verdicts title="복명복창" group={snapshot.validation.readback} source="READBACK" snapshot={snapshot} connected={connected} ended={ended} onEvidence={openEvidence} onAcknowledge={acknowledge} />
         <Verdicts title="Cockpit 설정" group={snapshot.validation.setting} source="COCKPIT" snapshot={snapshot} connected={connected} ended={ended} onEvidence={openEvidence} onAcknowledge={acknowledge} />
         {selected && <EvidencePanel key={JSON.stringify(selected)} selected={selected} snapshot={snapshot} connected={connected} onClose={() => { setSelected(null); opener.current?.focus(); }} />}

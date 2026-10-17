@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { audioFocus } from './audio-focus.js';
 import { request } from './flight-client.js';
 
 export function selectionFor(snapshot, row) {
@@ -34,11 +35,11 @@ export async function recordInteraction(selected, action, eventId) {
 function MediaAsset({ asset, selected, transcript }) {
   const [failed, setFailed] = useState(false), element = useRef(null);
   const url = safeMediaUrl(asset.url, selected);
-  useEffect(() => { const player = element.current; return () => { if (player?.pause) { player.pause(); player.removeAttribute('src'); player.load(); } }; }, []);
+  useEffect(() => { const player = element.current; return () => { if (player?.pause) { player.pause(); audioFocus.endEvidence(player); player.removeAttribute('src'); player.load(); } }; }, []);
   if (asset.kind === 'TRANSCRIPT') return <p>{transcript ? '대본 근거는 위 텍스트로 표시합니다.' : '대본이 제공되지 않았습니다.'}</p>;
   if (!url || failed) return <p role="status">{asset.kind === 'AUDIO' ? '원본 음성을' : '근거 이미지를'} 열 수 없습니다. <small>{failed ? '파일 접근 또는 재생 실패' : asset.unavailable_reason || '근거 참조 확인 불가'}</small></p>;
   return <figure>{asset.kind === 'AUDIO'
-    ? <audio ref={element} controls preload="none" src={url} onError={() => setFailed(true)} aria-label="선택한 관측 원본 음성" />
+    ? <audio ref={element} controls preload="none" src={url} onPlay={event => audioFocus.startEvidence(event.currentTarget)} onPause={event => audioFocus.pauseEvidence(event.currentTarget)} onEnded={event => audioFocus.endEvidence(event.currentTarget)} onError={event => { audioFocus.endEvidence(event.currentTarget); setFailed(true); }} aria-label="선택한 관측 원본 음성" />
     : <img src={url} onError={() => setFailed(true)} alt={`${selected.field} ${asset.kind === 'ROI' ? 'ROI' : '프레임'} 근거 이미지`} />}
     <figcaption>{asset.kind} · {asset.evidence_id}{asset.roi && ` · ROI ${asset.roi.join(', ')}`}</figcaption></figure>;
 }
