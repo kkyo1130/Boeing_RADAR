@@ -75,6 +75,18 @@ def inspect_input(db, c, data, settings, clock, *, historical=False, previous=No
             evidence = {item.evidence_id: item for item in payload.evidence}
             if not field.evidence_ids or any(evidence[item].availability != "available" for item in field.evidence_ids):
                 reasons.append("evidence_unavailable")
+            from app.models.operations import StoredEvidence
+            for evidence_id in field.evidence_ids:
+                item = evidence[evidence_id]
+                if item.kind != ("image" if payload.source == "COCKPIT" else "audio"):
+                    reasons.append("evidence_kind_mismatch")
+                if item.reference.startswith("/api/v1/"):
+                    stored = db.get(StoredEvidence, evidence_id)
+                    expected = f"/api/v1/clearances/{c.clearance_id}/evidence/{evidence_id}"
+                    if (stored is None or stored.clearance_id != c.clearance_id or stored.deleted_at
+                            or item.reference != expected
+                            or not stored.media_type.startswith("image/" if item.kind == "image" else "audio/")):
+                        reasons.append("evidence_unavailable")
         fields[key] = {"eligible": not reasons, "reasons": sorted(set(reasons)),
                        "value": field.value if field else None}
     return {"rules": result.model_dump(mode="json"), "fields": fields}

@@ -41,7 +41,16 @@ def reserve(db, flight_id):
     get_flight(db, flight_id, active=True)
     for old in db.scalars(select(ContractClearance).where(
             ContractClearance.flight_id == flight_id, ContractClearance.active.is_(True))):
+        from app.services.operations import record
+        record(db, flight_id, old.clearance_id, "CLEARANCE_SUPERSEDED", utc_now().isoformat(),
+               decision=snapshot(db, old))
         old.active = False
+        from app.models.operations import Incident
+        for incident in db.scalars(select(Incident).where(Incident.clearance_id == old.clearance_id,
+                                                        Incident.status == "OPEN")):
+            incident.status = "SUPERSEDED"
+            record(db, flight_id, old.clearance_id, "INCIDENT_SUPERSEDED", utc_now().isoformat(),
+                   incident_id=incident.incident_id, reason="new_clearance")
     c = ContractClearance(clearance_id=f"V1-CLR-{uuid4()}", flight_id=flight_id,
                           created_at=utc_now().isoformat(), active=True, latest={})
     db.add(c)
@@ -156,9 +165,24 @@ def receive(db, payload):
         if payload.source == "ATC":
             # Changed instruction content invalidates all prior dependent observations.
             updated = {}
+            from app.models.operations import Incident
+            for incident in db.scalars(select(Incident).where(Incident.clearance_id == c.clearance_id,
+                                                            Incident.status == "OPEN")):
+                incident.status = "SUPERSEDED"
+                from app.services.operations import record
+                record(db, c.flight_id, c.clearance_id, "INCIDENT_SUPERSEDED", clock.isoformat(),
+                       incident_id=incident.incident_id, reason="atc_instruction_changed")
         updated[payload.source] = data
         c.latest = updated
-    # Receipt log and latest pointer are committed together, including rejected-time inputs.
+    from app.services.operations import record, reconcile
+    record(db, payload.flight_id, payload.clearance_id, "INPUT_RECEIVED", clock.isoformat(),
+           event_id=payload.event_id, accepted=accepted, reasons=reasons, intent=payload.intent)
+    if c:
+        db.flush()
+        decision = snapshot(db, c)
+        reconcile(db, c, decision, clock.isoformat())
+        record(db, c.flight_id, c.clearance_id, "DECISION", clock.isoformat(), decision=decision)
+    # Receipt, incident transition, trace and latest pointer share the transaction.
     db.commit()
     return receipt(event)
 
