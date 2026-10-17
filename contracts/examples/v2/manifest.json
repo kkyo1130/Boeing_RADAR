@@ -1,0 +1,149 @@
+[
+  {
+    "file": "cockpit-readable.json",
+    "schema": "observation-v2",
+    "valid": true,
+    "schema_valid": true,
+    "description": "HDG 0 is a valid number; absent model score is not calibrated accuracy."
+  },
+  {
+    "file": "cockpit-unreadable.json",
+    "schema": "observation-v2",
+    "valid": true,
+    "schema_valid": true,
+    "description": "ALT unreadable; preserve independently readable HDG."
+  },
+  {
+    "file": "cockpit-time-unknown.json",
+    "schema": "observation-v2",
+    "valid": true,
+    "schema_valid": true,
+    "description": "File capture time is unknown, never replaced by processing time. Receiver must withhold freshness judgement."
+  },
+  {
+    "file": "cockpit-stale.json",
+    "schema": "observation-v2",
+    "valid": true,
+    "schema_valid": true,
+    "description": "Structurally valid old input. Receiver must not treat schema validation as current NORMAL evidence."
+  },
+  {
+    "file": "cockpit-reverify.json",
+    "schema": "observation-v2",
+    "valid": true,
+    "schema_valid": true,
+    "description": "New ID and observation time for a correction, does not itself declare RESOLVED."
+  },
+  {
+    "file": "atc-full.json",
+    "schema": "observation-v2",
+    "valid": true,
+    "schema_valid": true,
+    "description": "Both ALT and HDG explicitly instructed; callsign mapping is an illustrative registered alias."
+  },
+  {
+    "file": "atc-partial.json",
+    "schema": "observation-v2",
+    "valid": true,
+    "schema_valid": true,
+    "description": "ALT-only instruction B does not fabricate a new HDG instruction."
+  },
+  {
+    "file": "atc-ambiguous.json",
+    "schema": "observation-v2",
+    "valid": true,
+    "schema_valid": true,
+    "description": "An unsuccessfully extracted mentioned ALT is not treated as an omitted ALT."
+  },
+  {
+    "file": "readback-partial.json",
+    "schema": "observation-v2",
+    "valid": true,
+    "schema_valid": true,
+    "description": "Callsign and ALT4000 suffice for B; persisted HDG270 is outside this readback scope."
+  },
+  {
+    "file": "readback-missing-callsign.json",
+    "schema": "observation-v2",
+    "valid": true,
+    "schema_valid": true,
+    "description": "Missing callsign remains null, never copied from the flight configuration."
+  },
+  {
+    "file": "camera-disconnected.json",
+    "schema": "health-event-v2",
+    "valid": true,
+    "schema_valid": true,
+    "description": "Channel event without numeric readings; receiver invalidates current display/verification."
+  },
+  {
+    "file": "targets-partial.json",
+    "schema": "target-snapshot-v2",
+    "valid": true,
+    "schema_valid": true,
+    "description": "ALT retains source B, HDG retains source A; require only B ALT and callsign."
+  },
+  {
+    "file": "speech-incomplete.json",
+    "schema": "speech-segment-v2",
+    "valid": true,
+    "schema_valid": true,
+    "description": "Incomplete recording is representable but must not be submitted for normal interpretation."
+  },
+  {
+    "file": "speech-complete.json",
+    "schema": "speech-segment-v2",
+    "valid": true,
+    "schema_valid": true,
+    "description": "ATC playback-controlled microphone recording; reference is illustrative, not a tracked audio file."
+  },
+  {
+    "file": "receipt.json",
+    "schema": "ingestion-receipt-v2",
+    "valid": true,
+    "schema_valid": true,
+    "description": "Receipt acknowledges storage, not NORMAL or VERIFIED."
+  },
+  {
+    "file": "error-conflict.json",
+    "schema": "contract-error-v2",
+    "valid": true,
+    "schema_valid": true,
+    "description": "409 envelope for conflicting content; no implementation is implied."
+  },
+  {
+    "file": "invalid-heading.json",
+    "schema": "observation-v2",
+    "valid": false,
+    "schema_valid": false,
+    "description": "Reject HDG360 instead of wrapping to0."
+  },
+  {
+    "file": "invalid-valid-null.json",
+    "schema": "observation-v2",
+    "valid": false,
+    "schema_valid": false,
+    "description": "Reject VALID with null numeric value."
+  },
+  {
+    "file": "invalid-version.json",
+    "schema": "observation-v2",
+    "valid": false,
+    "schema_valid": false,
+    "description": "Vision local output is not directly a v2 backend request."
+  },
+  {
+    "file": "invalid-mentions.json",
+    "schema": "observation-v2",
+    "valid": false,
+    "schema_valid": true,
+    "description": "Cross-object rule: claimed HDG mention lacks extracted failure or value. DTO rejects it."
+  },
+  {
+    "file": "invalid-target-scope.json",
+    "schema": "target-snapshot-v2",
+    "valid": false,
+    "schema_valid": true,
+    "description": "Do not require old HDG from A as if B instructed it."
+  }
+]

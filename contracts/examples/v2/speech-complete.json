@@ -1,0 +1,15 @@
+{
+  "schema_version": "2",
+  "flight_id": "flight-demo",
+  "segment_id": "segment-A",
+  "atc_input_id": "input-A",
+  "attempt_id": "attempt-A-1",
+  "role": "ATC",
+  "role_basis": "ATC_PLAYBACK",
+  "started_at": "2026-10-17T01:00:01Z",
+  "ended_at": "2026-10-17T01:00:02Z",
+  "complete": true,
+  "interruption_reason": null,
+  "audio_ref": "fixture-audio-A",
+  "audio_unavailable_reason": null
+}

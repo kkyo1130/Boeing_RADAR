@@ -1,0 +1,120 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "flight_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "title": "Flight Id",
+      "type": "string"
+    },
+    "segment_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "title": "Segment Id",
+      "type": "string"
+    },
+    "atc_input_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "title": "Atc Input Id",
+      "type": "string"
+    },
+    "attempt_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "title": "Attempt Id",
+      "type": "string"
+    },
+    "role": {
+      "enum": [
+        "ATC",
+        "PILOT"
+      ],
+      "title": "Role",
+      "type": "string"
+    },
+    "role_basis": {
+      "enum": [
+        "ATC_PLAYBACK",
+        "PILOT_PTT"
+      ],
+      "title": "Role Basis",
+      "type": "string"
+    },
+    "started_at": {
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$",
+      "title": "Started At",
+      "type": "string"
+    },
+    "ended_at": {
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$",
+      "title": "Ended At",
+      "type": "string"
+    },
+    "complete": {
+      "title": "Complete",
+      "type": "boolean"
+    },
+    "interruption_reason": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "pattern": "\\S",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Interruption Reason"
+    },
+    "audio_ref": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "pattern": "\\S",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Audio Ref"
+    },
+    "audio_unavailable_reason": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "pattern": "\\S",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Audio Unavailable Reason"
+    }
+  },
+  "required": [
+    "schema_version",
+    "flight_id",
+    "segment_id",
+    "atc_input_id",
+    "attempt_id",
+    "role",
+    "role_basis",
+    "started_at",
+    "ended_at",
+    "complete",
+    "interruption_reason",
+    "audio_ref",
+    "audio_unavailable_reason"
+  ],
+  "title": "SpeechSegmentV2",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:radar:contracts:speech-segment-v2"
+}

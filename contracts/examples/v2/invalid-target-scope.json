@@ -1,0 +1,30 @@
+{
+  "schema_version": "2",
+  "flight_id": "flight-demo",
+  "revision": 2,
+  "targets": {
+    "ALT": {
+      "value": 4000,
+      "unit": "ft",
+      "instruction_id": "B",
+      "source_observation_id": "obs-atc-B",
+      "adopted_at": "2026-10-17T01:00:02Z"
+    },
+    "HDG": {
+      "value": 270,
+      "unit": "deg",
+      "instruction_id": "A",
+      "source_observation_id": "obs-atc-A",
+      "adopted_at": "2026-10-17T01:00:01Z"
+    }
+  },
+  "readback_required": {
+    "instruction_id": "B",
+    "atc_input_id": "input-B",
+    "fields": [
+      "ALT",
+      "HDG"
+    ],
+    "callsign_required": true
+  }
+}
