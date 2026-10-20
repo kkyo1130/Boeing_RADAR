@@ -1,0 +1,65 @@
+{
+  "quality": {
+    "model_score": 0.9,
+    "input_quality": "SUFFICIENT",
+    "reason": null,
+    "score_calibrated": false,
+    "calibration_ref": null
+  },
+  "invalid_observations": [
+    {
+      "name": "version",
+      "patch": {
+        "schema_version": "999"
+      },
+      "status": 422,
+      "code": "UNSUPPORTED_VERSION"
+    },
+    {
+      "name": "unit",
+      "patch": {
+        "fields.ALT.unit": "FL"
+      },
+      "status": 422,
+      "code": "INVALID_PAYLOAD"
+    },
+    {
+      "name": "heading-range",
+      "patch": {
+        "fields.HDG.value": 360
+      },
+      "status": 422,
+      "code": "INVALID_PAYLOAD"
+    },
+    {
+      "name": "null-marked-valid",
+      "patch": {
+        "fields.ALT.value": null
+      },
+      "status": 422,
+      "code": "INVALID_PAYLOAD"
+    },
+    {
+      "name": "timestamp-without-zone",
+      "patch": {
+        "observed_at": "2026-10-18T00:00:00"
+      },
+      "status": 422,
+      "code": "INVALID_PAYLOAD"
+    },
+    {
+      "name": "timestamp-missing",
+      "remove": "observed_at",
+      "status": 422,
+      "code": "INVALID_PAYLOAD"
+    },
+    {
+      "name": "flight-mismatch",
+      "patch": {
+        "flight_id": "other-flight"
+      },
+      "status": 409,
+      "code": "CONTEXT_MISMATCH"
+    }
+  ]
+}

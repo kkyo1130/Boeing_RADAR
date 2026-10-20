@@ -4,10 +4,12 @@ from app.db import Base, engine
 from app.models import flight, clearance, safety_event
 from app.models import operations
 from app.api import flights, clearances, contract_observations
+from app.api import receiving_v2
+from app.migrate_observation_v2 import migrate
 
 @asynccontextmanager
 async def lifespan(app):
-    Base.metadata.create_all(engine)
+    migrate(engine)
     yield
 
 app = FastAPI(title="RADAR", version="0.1.0", lifespan=lifespan,
@@ -41,3 +43,6 @@ app.include_router(clearances.router)
 app.include_router(contract_observations.router)
 from app.api import operations as operations_api
 app.include_router(operations_api.router)
+
+app.include_router(receiving_v2.router)
+receiving_v2.install_handlers(app)

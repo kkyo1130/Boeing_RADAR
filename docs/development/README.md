@@ -61,7 +61,7 @@ cd frontend
 npm run dev
 ```
 
-주소는 http://localhost:5173/ . 기본 화면은 수동 태블릿 MCP, `/operations`는 서버 운영·근거·리포트 화면이다. [운영·실입력 안내](operations.md)를 따른다. Vite는 LAN 접속을 위해 0.0.0.0:5173을 사용한다. 태블릿에는 PC의 LAN 주소를 입력한다. Node 엔진 범위를 벗어나면 설치가 실패한다. 빌드는 `npm run build`다. Vite `/api` 프록시 기본 대상은 127.0.0.1:8000이며 `RADAR_API_TARGET`으로 변경할 수 있다.
+주소는 http://localhost:5173/ . 기본 화면은 수동 태블릿 MCP, `/operations`는 v2 비행 운영 화면, `/operations-v1`는 기존 v1 운영·근거·리포트 화면이다. [운영·실입력 안내](operations.md)를 따른다. Vite는 LAN 접속을 위해 0.0.0.0:5173을 사용한다. 태블릿에는 PC의 LAN 주소를 입력한다. Node 엔진 범위를 벗어나면 설치가 실패한다. 빌드는 `npm run build`다. Vite `/api` 프록시 기본 대상은 127.0.0.1:8000이며 `RADAR_API_TARGET`으로 변경할 수 있다.
 
 ## Vision 실행
 

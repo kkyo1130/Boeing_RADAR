@@ -1,0 +1,72 @@
+{
+  "schema_version": "2",
+  "observation_id": "obs-atc-A",
+  "flight_id": "flight-demo",
+  "observed_at": "2026-10-17T01:00:01Z",
+  "processed_at": "2026-10-17T01:00:01.200Z",
+  "time_basis": "CAPTURED",
+  "time_reason": null,
+  "target_revision": 1,
+  "channel_health": {
+    "status": "AVAILABLE",
+    "reason": null
+  },
+  "evidence_refs": [],
+  "evidence_unavailable_reason": "fixture_has_no_media",
+  "source": "ATC",
+  "segment_id": "segment-A",
+  "atc_input_id": "input-A",
+  "attempt_id": "attempt-A-1",
+  "transcript": "Radar one two three climb and maintain three thousand feet heading two seven zero",
+  "transcript_reason": null,
+  "callsign": {
+    "raw_text": "Radar one two three",
+    "value": "RADAR123",
+    "validity": "VALID",
+    "reason": null,
+    "alias_key": "radar-one-two-three",
+    "quality": {
+      "model_score": null,
+      "input_quality": "UNKNOWN",
+      "reason": "not_evaluated",
+      "score_calibrated": false,
+      "calibration_ref": null
+    }
+  },
+  "mention_status": "KNOWN",
+  "mentioned_fields": [
+    "ALT",
+    "HDG"
+  ],
+  "instruction_check": "PASS",
+  "fields": {
+    "ALT": {
+      "value": 3000,
+      "unit": "ft",
+      "validity": "VALID",
+      "reason": null,
+      "raw_text": "3000",
+      "quality": {
+        "model_score": null,
+        "input_quality": "UNKNOWN",
+        "reason": "not_evaluated",
+        "score_calibrated": false,
+        "calibration_ref": null
+      }
+    },
+    "HDG": {
+      "value": 270,
+      "unit": "deg",
+      "validity": "VALID",
+      "reason": null,
+      "raw_text": "270",
+      "quality": {
+        "model_score": null,
+        "input_quality": "UNKNOWN",
+        "reason": "not_evaluated",
+        "score_calibrated": false,
+        "calibration_ref": null
+      }
+    }
+  }
+}

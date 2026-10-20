@@ -1,6 +1,6 @@
 # RADAR 전체 작업 목록
 
-기준일: 2026-10-10. 현재 dev `9d1d561`에 MCP 정지 이미지 PoC·공유 문서가 병합되어 있다. 이번 태블릿 모의 MCP 화면·Vision 스트림 작업은 dev `9d1d561`에서 만든 `codex/tablet-mcp-stream`에 포함한 변경이다. SPEC-003은 사용자 지정 태블릿 환경을 반영한 v2, 나머지 스펙은 v1이다. 상태는 실제 저장소 근거로 갱신한다.
+기준일: 2026-10-18. PR #13 리뷰3건 수정 후 squash merge한 dev(`ba2dc65`) 기준이다. WI-02 done, SPEC-006-WI-03 음성·억제 정책을 전용 PR reviewing으로 제출한다. 다른 WI 상태는 유지한다.
 
 담당은 기획상 역할 제안이며 세션 배정은 아직 없다. 이 목록은 Git 작업 잠금이 아니다. 착수 전 팀 담당과 공유 상태를 확인한다. 선행 ID의 산출물이 현재 체크아웃에 있어야 한다.
 
@@ -31,11 +31,11 @@
 | [SPEC-005-WI-01](005-safe-validation.md#wi-01) | 독립 결정론적 구조화 검사 | P0 | 노남경 | SPEC-002-WI-02 | done |
 | [SPEC-005-WI-02](005-safe-validation.md#wi-02) | NORMAL/MISMATCH/UNVERIFIED와 오류 단계 | P0 | 노남경 | SPEC-005-WI-01 | done |
 | [SPEC-005-WI-03](005-safe-validation.md#wi-03) | 판정 전체 회귀·거짓 정상 확인 | P0 | 노남경 | SPEC-005-WI-02 | done |
-| [SPEC-006-WI-01](006-advisory-interface.md#wi-01) | React 비행 화면·운영 화면과 서버 연결 | P0 | 노남경 | SPEC-002-WI-02 | verifying |
-| [SPEC-006-WI-02](006-advisory-interface.md#wi-02) | 근거 패널·사용자 확인과 시각 안내 | P0 | 노남경 | SPEC-006-WI-01, SPEC-005-WI-02 | verifying |
+| [SPEC-006-WI-01](006-advisory-interface.md#wi-01) | React 비행 화면·운영 화면과 서버 연결 | P0 | 노남경 | SPEC-002-WI-02 | done |
+| [SPEC-006-WI-02](006-advisory-interface.md#wi-02) | 근거 패널·사용자 확인과 시각 안내 | P0 | 노남경 | SPEC-006-WI-01, SPEC-005-WI-02 | done |
 | [SPEC-006-WI-03](006-advisory-interface.md#wi-03) | 보조 음성·억제 정책과 선택 경고 단계 | P0/P1 | 노남경 | SPEC-006-WI-02 | verifying |
 | [SPEC-006-WI-04](006-advisory-interface.md#wi-04) | 알림·근거 화면 전체 검증 | P0 | 노남경 | SPEC-006-WI-03, SPEC-003-WI-05, SPEC-004-WI-04 | verifying |
-| [SPEC-007-WI-01](007-closed-loop.md#wi-01) | Incident·재검증·freshness 정책 | P0 | 노남경 | SPEC-005-WI-03, SPEC-002-WI-02 | verifying |
+| [SPEC-007-WI-01](007-closed-loop.md#wi-01) | Incident·재검증·freshness 정책 | P0 | 노남경 | SPEC-005-WI-03, SPEC-002-WI-02 | done |
 | [SPEC-007-WI-02](007-closed-loop.md#wi-02) | Vision·수정 Readback 재수신 연결 | P0 | 김세현·노남경·이예찬 | SPEC-007-WI-01, SPEC-003-WI-04, SPEC-004-WI-04 | verifying |
 | [SPEC-007-WI-03](007-closed-loop.md#wi-03) | Closed-loop 전체 시연 검증 | P0 | 공통 | SPEC-007-WI-02, SPEC-006-WI-04 | verifying |
 | [SPEC-008-WI-01](008-safety-trace-report.md#wi-01) | Safety Trace 확장과 근거 수명주기 | P0 | 노남경 | SPEC-002-WI-02, SPEC-005-WI-02 | verifying |
@@ -51,15 +51,31 @@
 
 ## 기존 구현과 이번 계획의 구분
 
-[구현 현황](../IMPLEMENTATION_STATUS.md)에 SPEC별 기존 기반과 남은 범위를 정리했다. 비교·재검증·기본 Trace 등 Mock 서버 기반이 이미 있지만 자문 반영 확장 WI의 전체 완료 조건은 미충족이라 pending을 유지한다. done WI 개수를 제품 완성률로 해석하지 않는다.
+[구현 현황](../IMPLEMENTATION_STATUS.md)에 SPEC별 기존 기반과 남은 범위를 정리했다. 비교·재검증·기본 Trace 등 Mock 서버 기반이 이미 있지만 자문 반영 확장 WI의 전체 완료 조건은 미충족이라 pending을 유지한다. 10/35 done을 제품 완성률로 해석하지 않는다.
 
 ## 다음 작업
 
-- 공통: SPEC-002-WI-01 공통 계약 정의 완료. WI-02 v1 수신·지시 연결·시각 검증 완료. WI-03 mock 생산자 계약 통합 검증 완료. SPEC-005-WI-01 결정론적 검사 완료. SPEC-005-WI-02 3상태 판정 연결 완료. SPEC-001 설치/자동 검증과 SPEC-005-WI-03 전체 회귀도 완료. 후속 운영 UI·Trace/Report·생산자·평가 코드는 추가했으며, 현재는 실제 장비/정답 데이터 인수와 코드 검증 근거를 분리해 확인한다.
-- 세현님: 태블릿용 MCP 화면과 Vision 영상/웹캠·상태 감시·안정화 구현. 다음은 태블릿 실제 프레임 저장→ROI 설정→정답 데이터→가림/끊김/재연결 검증. SPEC-003-WI-01~03은 실제 촬영/공통 계약 AC 미충족으로 implementing 유지. 서버 전송 WI-04 어댑터는 구현했으며 실제 카메라→서버 인수는 verifying이다.
+- UI: SPEC-006-WI-03 PR 리뷰 후 실제 PTT/ATC·카메라 생산자와 연결해 WI-04 전체 인수를 진행한다. SPEC-007-WI-02 실제 수정 입력 연결은 SPEC-003-WI-04·SPEC-004-WI-04가 더 필요하다.
+- 세현님: 태블릿용 MCP 화면과 Vision 영상/웹캠·상태 감시·안정화 구현. 다음은 태블릿 실제 프레임 저장→ROI 설정→정답 데이터→가림/끊김/재연결 검증. SPEC-003-WI-01~03은 실제 촬영/공통 계약 AC 미충족으로 implementing 유지. 서버 전송 WI-04는 pending.
 - 다른 파트의 작업은 역할 담당과 실제 별도 저장소/미공유 코드 존재 여부를 확인한다.
 
 ## 상태 변경 기록
+
+- 2026-10-18 PR #13 지적3건을 b09cf19에서 수정·재검증 후 ba2dc65로 squash merge, WI-02 done. WI-03 서버 단일 큐·브라우저 음성·교신/모의 구간 억제·발생 건별 완료 구현·backend454/frontend36/HTTP47/빌드 검증 후 cd1f895·[PR #14](https://github.com/kkyo1130/Boeing_RADAR/pull/14) reviewing. done10/reviewing1/implementing3/pending21. [WI-03 상세 기록](006-advisory-interface/workitem/wi-03.md).
+
+- 2026-10-18 PR #12 P2 세 건을 f741754에서 수정·frontend18/backend419/HTTP43/공통 계약 검증, 스레드3개 해결 후8c3a796에 squash merge. WI-01 done. WI-02 근거 패널/미디어·사용자 확인 구현, frontend22/backend436/HTTP45/빌드·실제 브라우저 인수 후 커밋f733140·[PR #13](https://github.com/kkyo1130/Boeing_RADAR/pull/13) reviewing. done9/reviewing1/implementing3/pending22. [WI-02 상세 기록](006-advisory-interface/workitem/wi-02.md).
+
+- 2026-10-18 PR #11 P1/P2를d671bf9에서 수정·backend418/HTTP43·공통 계약 통과, 스레드2개 해결 후45afa06으로 squash merge. SPEC-007-WI-01 done. SPEC-006-WI-01 서버 운영 화면·프런트15개/빌드·실제 브라우저 API 인수 후 커밋dc2a840·[PR #12](https://github.com/kkyo1130/Boeing_RADAR/pull/12) reviewing. done8/reviewing1/implementing3/pending23. [WI-01 상세 기록](006-advisory-interface/workitem/wi-01.md).
+
+- 2026-10-18 PR #10 자동 리뷰 완료·지적 없음·스레드0을 확인해 squash merge602a46e. SPEC-005-WI-03 done. SPEC-007-WI-01 발생 건·새 관측 해결·부분 대체·미해결 종료·원자 Trace 구현/검증 후 커밋74a85ae·[PR #11](https://github.com/kkyo1130/Boeing_RADAR/pull/11) reviewing. done7/reviewing1/implementing3/pending24. [WI-01 상세 기록](007-closed-loop/workitem/wi-01.md).
+
+- 2026-10-18 PR #9 문서 P2(상태 API 고정 UNVERIFIED 설명) 수정7066a08 후 squash mergeb3262cf. WI-02 done. WI-03의81개 혼합 조합·API/HTTP 회귀·실행 격리 검증을 추가해 backend393/HTTP37 통과 후 전용 커밋/PR reviewing. done6/reviewing1/implementing3/pending25. [WI-03 MD 상세 기록](005-safe-validation/workitem/wi-03.md).
+
+- 2026-10-18 PR #8 P2(raw ALT의 숨은 HDG 명령) 수정23a902c·backend254/HTTP24 통과 후 squash merge525f98a, WI-01 done. WI-02의3상태·소유권·정확5초/조기 완료/지속 감시·원자 타이머 구현. backend288/HTTP26 검증 후 전용 커밋/PR reviewing. done5/reviewing1/implementing3/pending26. [WI-02 상세 기록](005-safe-validation/workitem/wi-02.md).
+
+- 2026-10-18 [PR #7](https://github.com/kkyo1130/Boeing_RADAR/pull/7)은 head7bd3544에 대한 자동 리뷰 완료·지적 없음·미해결 스레드0을 확인하고 squash merge(`d46c3ac`). 다음 SPEC-005-WI-01 결정론적 구조 검사·수신 보류·원자 Trace·Schema/문형 fixture를 구현하고 커밋7a4a1b8·[PR #8](https://github.com/kkyo1130/Boeing_RADAR/pull/8) 제출. 상태 done4 / reviewing1 / implementing3 / pending27. 구현·검증·리뷰·인수인계는 [WI-01 상세 기록](005-safe-validation/workitem/wi-01.md)을 따른다.
+
+- 2026-10-18 사용자 요청으로 [PR #6](https://github.com/kkyo1130/Boeing_RADAR/pull/6)을 squash merge(`aae3113`)해 WI-02 done. WI-03 HTTP 통합21개·기존 backend174개·계약 Schema6종/fixture21개 검증 후 별도 커밋/PR 제출, reviewing. done3 / reviewing1 / implementing3 / pending28. 다른 WI와 기존 작업 디렉터리의 미커밋 변경은 보존.
 
 - 2026-10-10 사진 기반 MCP 개선: 기존 참고 사진을 재사용해 실제 조종석 배경·세 숫자 창 오버레이·MCP 확대/전체 보기를 제공. 최종 확대 화면 캡처 실제 OCR 3000/270/250, 변경 3500/0/250, ALT 가림 null 확인. 초기 7세그먼트 오인식 실험은 채택하지 않음. frontend 빌드/브라우저 검증, 실제 태블릿 촬영은 미실행. WI 상태 유지.
 
@@ -81,33 +97,18 @@
 
 - 2026-10-10 커밋 인수인계: `codex/tablet-mcp-stream`에 frontend·Vision 스트림·재현 안내를 함께 보존. 내장/대여 카메라로 촬영 가능 여부를 먼저 확인하고 필요하면 외장 웹캠을 준비한다. 실촬영 기록·검증 순서·서버 연동 선행 조건은 [태블릿 데모 안내](../../vision/docs/tablet-demo.md#6-다음-작업과-기록-방법)를 따른다. 원본 촬영물·출력 로그·빌드 산출물은 커밋에서 제외한다.
 
-- 2026-10-13: 사용자 요청으로 SPEC-002-WI-01 공통 계약·6개 예제·호환성 및 실패 경계 검사 완료. AC-01 근거는 해당 workitem 참조. 새 API/실장비 연동 완료를 뜻하지 않음.
+## SPEC-002-WI-01 PR 제출 · 2026-10-17
 
-- 2026-10-13: SPEC-002-WI-02 공통 계약 수신·추가 저장소·마이그레이션 완료. 기존 회귀 포함 70 passed. v1 판정은 UNVERIFIED/validation_pending이며 실제 생산자/실장비 연결과 SPEC-005 판정은 후속 범위. 근거는 해당 workitem 참조.
+공통 v2 DTO·JSON Schema6종·예제21개 검증 및 backend117개 테스트 통과. 계약 상세와 수행 근거는 [WI-01 기록](002-observation-contracts/workitem/wi-01.md)을 따른다. 상태는 PR 검토 중(reviewing)이다. 전체 스펙 문서 구조 변경·다른 WI는 이번 PR에서 갱신하지 않는다. 기존 PR #4에 같은 WI의 다른 계약안이 있어 정합성 검토 후 병합 방향을 결정해야 한다. 실제 v2 API 수신·DB 저장·실장비 연동은 미완료다.
 
-- 2026-10-13: SPEC-002-WI-03 Mock 생산자/서버 계약 통합 14개 완료. 기존 회귀 포함 84 passed. SPEC-002의 Mock 계약 AC 완료이며 실제 장비/모델 어댑터 성공과 최종 3상태 판정은 후속 범위. 근거는 해당 workitem 참조.
+## WI-01 병합·WI-02 검토 · 2026-10-18
 
-- 2026-10-13: SPEC-005-WI-01 PASS/INVALID/NEEDS_REVIEW 검사·모의 정책·31개 사례 완료. 기존 회귀/통합 포함 115 passed. v1 판정 연결·실장비 정책 검증은 후속 범위. 근거는 해당 workitem 참조.
+PR #5는 사용자의 최신 병합 지시에 따라 기존 지적2건 해결·123개 테스트 통과·충돌 없음 확인 후 squash merge(`5515878`)했다. GitHub 리뷰 상태 COMMENTED를 APPROVED로 보고하지 않는다.
 
-- 2026-10-14: SPEC-005-WI-02 명시 정책/문맥 등록·NORMAL/MISMATCH/UNVERIFIED·단계별 근거/해결 연결 완료. 기존 회귀·통합 포함 143 passed. 실제 입력/장비 검증은 미실행이며 전체 기능 검증 WI-03은 pending 유지. 근거는 해당 workitem 참조.
+WI-02는 이 dev 기준 별도 브랜치에서 수신/문맥/중복/시간/원자 저장·migration을 구현하고 backend172개 테스트를 통과했다. 실제 모델·실장비·최종 숫자 비교는 후속 범위이며 reviewing으로 PR을 제출한다. WI-03과 다른 WI 상태는 유지한다.
 
-- 2026-10-16: 사용자 요청으로 SPEC-001-WI-02/03 설치·설정·버전·공통 검증/CI와 SPEC-005-WI-03 안전 회귀 완료. 새 환경에서 Backend/계약/통합 195개·Vision 45개, 실제 로컬 HTTP·Frontend 빌드 통과. 네이티브 OCR 합성 기대 사례 5건 별도 통과. 원격 CI와 실장비는 미실행이며 상세 근거는 각 workitem 참조.
+## 2026-10-20 dev 병합
 
-- 2026-10-17: 전체 후속 구현 요청 및 로컬 Whisper·ATC WAV/Pilot 마이크 선택 반영. 운영 UI·서버 사건/근거/확인/음성 정책/종료 리포트·파일 출력, Vision/음성 공통 계약 전송, 오프라인 평가/동일 세트 버전 비교와 합성 HTTP 시연 구현. 후속 WI는 코드 검증과 필수 실제 입력 인수를 구분해 verifying으로 전환. 기존 Vision WI-01~03은 실촬영 AC 미충족 상태를 유지한다. 실제 장비/정답 데이터/발표일 인수는 실행하지 않았으므로 전체 done으로 표시하지 않는다. 상세 근거는 각 스펙의 2026-10-17 기록과 운영 안내 참조.
+사용자 요청으로 `python`에 `origin/dev` (`75e74ac`)를 병합했다. v1/v2 라우터·의존성·테스트를 함께 보존하고, v2 운영 화면은 `/operations`, 기존 v1 화면은 `/operations-v1`로 연결한다. v1 통합 fixture는 `contract_producer`로 구분한다. 기능 인수 상태는 이번 병합으로 새로 완료 처리하지 않았다.
 
-- 2026-10-17 최종 검증: Backend/계약/통합 215 passed + Vision 45 passed, Chromium 2 passed(응답 중단 및 5초 무응답 제한 포함), Frontend build, 실제 HTTP legacy/v1 네 합성 시나리오, 평가/export/동일 세트 비교 CLI 통과. 미커밋 유지. 실제 장비·독립 정답 평가·원격 CI·발표 인수는 미실행이며 자동 잡음/중첩 탐지는 제공하지 않는다. 해당 입력은 기본 미확인 품질로 보류한다.
-
-## 2026-10-17 단계별 커밋 기록
-
-사용자 요청으로 `python` 브랜치에서 변경을 기능별로 커밋했다. 앞선 미커밋 표기는 당시 작업 기록이다.
-
-| 커밋 | 범위 |
-| --- | --- |
-| `11d2f2f` | 개발 환경 버전·공통 설치 |
-| `2d4f391` | 안전 판정 회귀 테스트 |
-| `0c27569` | 사건·근거·리포트 서버 |
-| `0f694c5` | 로컬 Whisper·Vision 전송 |
-| `07ecbcf` | 평가·버전 비교·합성 시연 |
-| `3809223` | 운영 UI·브라우저 회귀·CI |
-
-커밋 전 `python3 scripts/verify.py --python /private/tmp/radar-fresh-validation/bin/python` 재실행: Backend/계약/통합 215개·Vision 45개 및 Frontend 빌드 통과. 실제 HTTP·Chromium 결과는 앞선 검증 기록을 유지하며 이번 커밋 분리에서 다시 실행하지 않았다. 실제 장비/독립 정답 평가 인수는 여전히 남아 있다.
+검증: `scripts/verify.py --component backend --component vision`의 backend 단계에서 653 passed와 localhost bind 제한 47 errors를 확인했다. Backend 경로에서 `../.venv/bin/python -m pytest ../tests/integration -q`를 권한 허용 후 재실행하여 통합 113 passed(앞선 66개 포함), 따라서 Backend/통합 전체 700개 통과를 확인했다. `contracts/check_v2.py` 통과. `PYTHONPATH=vision/src .venv/bin/python -m pytest vision/tests -q`: 44 passed, 1 skipped. Frontend `npm test`: 39 passed, `npm run build` 통과. Node 24.18.0으로 localhost 권한 허용 후 `npm run test:e2e`: 2 passed. `git diff --check` 통과. 실장비·모델 성능·원격 CI는 미실행. 충돌 해결은 이 병합 커밋에 포함하며 원격 push는 수행하지 않는다.

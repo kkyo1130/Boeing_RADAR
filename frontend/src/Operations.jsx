@@ -1,160 +1,199 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { request, SnapshotGate, dueRevalidations, POLL_MS, statusLabel, numberLabel, restartFlightState, readingFor, reconciledActionError } from './flight-client.js';
 import './operations.css';
-import demoPolicy from '../../contracts/rule-policy-demo.json';
+import VoicePanel from './VoicePanel.jsx';
+import EvidencePanel, { selectionFor, recordInteraction } from './EvidencePanel.jsx';
 
-async function api(path, body) {
-  const response = await fetch(path, { signal: AbortSignal.timeout(5000), ...(body === undefined ? {} : {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
-  }) });
-  const data = await response.json();
-  if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail));
-  return data;
+const STORAGE_KEY = 'radar.v2.flight-id';
+const readFlight = () => { if (typeof window === 'undefined') return ''; try { return window.localStorage.getItem(STORAGE_KEY) || ''; } catch { return ''; } };
+const phases = { WAITING_ATC: '관제 지시 대기', READBACK: '복명복창 확인', SETTING: '설정 확인',
+  MONITORING: '일치 · 계속 감시 중', ENDED: '비행 종료' };
+const fields = { ALT: '고도', HDG: '방위', CALLSIGN: '호출부호' };
+const reasons = {
+  ALL_REQUIRED_FIELDS_MATCH: '필수 복창과 설정 항목이 모두 일치합니다', READBACK_MISMATCH: '복명복창 내용을 확인하세요',
+  SETTING_MISMATCH: '표시된 설정 항목을 확인하세요', SETTING_UNVERIFIED: '설정 확인에 필요한 관측 대기',
+  READBACK_UNVERIFIED: '복명복창 확인에 필요한 입력 대기', FLIGHT_ENDED: '종료 시점의 기록입니다',
+  INPUT_NOT_AVAILABLE: '새 관측 대기', VALUE_MATCH: '지시와 일치', VALUE_MISMATCH: '재확인이 필요합니다',
+  INITIAL_ADJUSTMENT_WAIT: '설정 변경 대기 중', READBACK_NOT_CONFIRMED: '복명복창 확인 대기',
+  STALE_OBSERVATION: '관측이 오래되어 확인 불가', TARGET_NOT_AVAILABLE: '관제 지시 대기',
+  ADJUSTMENT_DEADLINE_MISMATCH: '설정을 확인하세요', SETTING_DEVIATED_AFTER_MATCH: '설정을 다시 확인하세요',
+  LATEST_READBACK_UNVERIFIED: '새 지시의 복명복창 대기', LATEST_ATC_NOT_ADOPTED: '새 관제 지시 확인 대기',
+  CHANNEL_UNAVAILABLE: '입력 장치를 사용할 수 없습니다', INPUT_QUALITY_UNVERIFIED: '입력 품질 확인 필요',
+};
+
+function useFlight(flightId, refresh) {
+  const [state, setState] = useState({ snapshot: null, connected: false, error: '', receivedAt: null });
+  const sessionRef = useRef(null);
+  useEffect(() => {
+    setState(previous => restartFlightState(previous, flightId));
+    if (!flightId) { sessionRef.current = null; return; }
+    const abort = new AbortController();
+    if (sessionRef.current?.gate.flightId !== flightId) sessionRef.current = { gate: new SnapshotGate(flightId), completed: new Set() };
+    const { gate, completed } = sessionRef.current;
+    let stopped = false, timer, serial = gate.serial;
+    async function poll() {
+      try {
+        let data = await request(`/api/v2/flights/${encodeURIComponent(flightId)}/state`, { signal: abort.signal });
+        if (stopped) return;
+        if (!gate.accept(data, ++serial)) throw new Error('이전 버전의 응답입니다. 최신 상태를 다시 확인합니다.');
+        const due = dueRevalidations(data, completed);
+        if (due.length) {
+          data = await request(`/api/v2/flights/${encodeURIComponent(flightId)}/revalidate`, { method: 'POST', signal: abort.signal });
+          if (stopped) return;
+          if (!gate.accept(data, ++serial)) throw new Error('재검증 응답의 버전을 확인할 수 없습니다.');
+          due.forEach(key => completed.add(key));
+        }
+        setState({ snapshot: data, connected: true, error: '', receivedAt: new Date().toISOString() });
+      } catch (error) {
+        if (stopped) return;
+        setState(previous => ({ ...previous, connected: false, error: error.message }));
+      }
+      if (!stopped) timer = setTimeout(poll, POLL_MS);
+    }
+    poll();
+    return () => { stopped = true; clearTimeout(timer); abort.abort(); };
+  }, [flightId, refresh]);
+  return { ...state, snapshot: state.snapshot?.flight_id === flightId ? state.snapshot : null };
+}
+
+function Badge({ result, connected = true, ended = false }) {
+  const effective = connected && !ended ? result : 'UNVERIFIED';
+  return <span className={`op-badge op-${effective}`}>{ended ? '종료 기록' : statusLabel(result, connected)}</span>;
+}
+
+function Stamp({ value }) { return value ? <time dateTime={value}>{value}</time> : <span>시각 미상</span>; }
+
+export function Verdicts({ title, group, source, snapshot, connected, ended = false, onEvidence, onAcknowledge }) {
+  return <section className="op-panel" aria-label={title}>
+    <div className="op-section-heading"><h2>{title}</h2><Badge result={group.result} connected={connected} ended={ended} /></div>
+    <div className="op-table-scroll"><table>
+      <thead><tr><th>항목</th><th>관제 지시</th><th>{source === 'COCKPIT' ? '카메라 관측' : '조종사 복창'}</th><th>서버 확인</th></tr></thead>
+      <tbody>{group.fields.map(row => {
+        const reading = readingFor(snapshot, source, row);
+        return <tr key={`${row.instruction_id}/${row.field}`}>
+          <th scope="row">{fields[row.field]}</th>
+          <td>{numberLabel(row.expected, row.field)}</td><td>{numberLabel(row.actual, row.field)}</td>
+          <td><Badge result={row.result} connected={connected} ended={ended} /><p>{ended ? '종료 시점의 관측 기록입니다' : connected ? reasons[row.reason] || '확인이 필요합니다' : '연결 복구 후 다시 확인합니다'}</p>
+            <small>관측 <Stamp value={reading?.observed_at} /></small>
+            {row.wait_until && <small>대기 종료 <Stamp value={row.wait_until} /></small>}
+            {row.instruction_id && row.observation_id && <div className="op-row-actions">
+              <button disabled={!connected} onClick={event => onEvidence?.(row, event.currentTarget)}>근거 보기</button>
+              {!ended && row.result !== 'NORMAL' && <button disabled={!connected} onClick={() => onAcknowledge?.(row)}>확인했음</button>}
+            </div>}
+            {source === 'READBACK' && row.result === 'MISMATCH' && !ended && <p>입력 채널의 PTT로 수정 복창을 시작하세요. 같은 지시의 필수 항목과 호출부호를 다시 말하세요. 확인 버튼을 누를 필요는 없습니다.</p>}
+            <details><summary>지시·관측 식별자</summary><p>서버 사유 {row.reason}</p><p>지시 {row.instruction_id || '없음'}</p><p>관측 {row.observation_id || '없음'}</p></details>
+          </td>
+        </tr>;
+      })}</tbody>
+    </table></div>
+    {!group.fields.length && <p className="op-muted">{ended ? '종료 시점에 확인된 항목이 없습니다.' : '관제 지시와 새 관측을 기다리고 있습니다.'}</p>}
+  </section>;
 }
 
 export default function Operations() {
-  const [flights, setFlights] = useState([]), [flight, setFlight] = useState('');
-  const [report, setReport] = useState(null), [connected, setConnected] = useState(false);
-  const [error, setError] = useState(''), [busy, setBusy] = useState(false);
-  const [voice, setVoice] = useState(false), [critical, setCritical] = useState(true);
-  const [manualRadio, setRadio] = useState(false), [actor, setActor] = useState('operator');
-  const [playing, setPlaying] = useState({});
-  const radio = manualRadio || Object.values(playing).some(Boolean) || Boolean(report?.input_active);
-  const [settings, setSettings] = useState(''), [evidenceErrors, setEvidenceErrors] = useState({});
-  const [callsign, setCallsign] = useState('RADAR1'), [targetAltitude, setTargetAltitude] = useState('3000');
-  const [targetHeading, setTargetHeading] = useState('270'), [score, setScore] = useState('0.5');
-  const [policyAcknowledged, setPolicyAcknowledged] = useState('');
-  const seen = useRef(new Set()), generation = useRef(0);
-  const policy = useRef(null);
-  policy.current = { voice, critical, radio, flight, connected };
-  const policyKey = JSON.stringify([flight, connected, voice, critical, radio, actor]);
-  useEffect(() => {
-    const token = ++generation.current;
-    let cancelled = false;
-    let refreshing = false;
-    async function refresh() {
-      if (refreshing) return;
-      refreshing = true;
-      try {
-        const list = await api('/api/v1/flights');
-        if (flight && list.find(f => f.flight_id === flight)?.status === 'ACTIVE')
-          await api(`/api/v1/flights/${flight}/refresh`, {});
-        const data = flight ? await api(`/api/v1/flights/${flight}/report`) : null;
-        if (!cancelled && token === generation.current) {
-          setFlights(list); setReport(data); setConnected(true);
-        }
-      } catch (e) {
-        if (!cancelled) { setConnected(false); setReport(null); setError(e.message); speechSynthesis.cancel(); }
-      } finally { refreshing = false; }
-    }
-    setReport(null); setConnected(false); refresh();
-    const timer = setInterval(refresh, 1500);
-    return () => { cancelled = true; clearInterval(timer); speechSynthesis.cancel(); };
-  }, [flight]);
-
-  async function perform(action) {
-    setBusy(true); setError('');
-    try { await action(); } catch (e) { setError(e.message); } finally { setBusy(false); }
+  const [flightId, setFlightId] = useState(readFlight);
+  const [callsign, setCallsign] = useState('');
+  const [resumeId, setResumeId] = useState('');
+  const [busy, setBusy] = useState(false), [error, setError] = useState(''), [refresh, setRefresh] = useState(0);
+  const actionRef = useRef(false), opener = useRef(null), ackIds = useRef(new Map()), ackBusy = useRef(false), generation = useRef(0);
+  const [selected, setSelected] = useState(null), [ackMessage, setAckMessage] = useState('');
+  const { snapshot, connected, error: connectionError, receivedAt } = useFlight(flightId, refresh);
+  const ended = snapshot?.status === 'ENDED';
+  useEffect(() => { setError(previous => reconciledActionError(previous, snapshot, connected)); }, [ended, connected]);
+  function attach(id) {
+    try { id ? localStorage.setItem(STORAGE_KEY, id) : localStorage.removeItem(STORAGE_KEY); } catch { /* Session works without browser storage. */ }
+    generation.current += 1; setError(''); setSelected(null); setAckMessage(''); ackIds.current.clear(); setFlightId(id);
   }
-  async function incidentAction(id, action, reason) {
-    return api(`/api/v1/incidents/${id}/actions`, { action, actor, reason });
+  function openEvidence(row, button) {
+    opener.current = button; setSelected(selectionFor(snapshot, row));
   }
-  useEffect(() => {
-    let cancelled = false;
-    setPolicyAcknowledged('');
-    if (!flight || !connected || !flights.some(f => f.flight_id === flight && f.status === 'ACTIVE') || !actor.trim()) return;
-    api(`/api/v1/flights/${flight}/advisory-policy`, {
-      voice_enabled: voice, critical_phase: critical, radio_active: radio, actor,
-    }).then(() => { if (!cancelled) setPolicyAcknowledged(policyKey); }).catch(e => setError(e.message));
-    return () => { cancelled = true; };
-  }, [flight, connected, voice, critical, radio, actor]);
-  useEffect(() => {
-    if (!connected || !report || report.terminal || policyAcknowledged !== policyKey) return;
-    for (const incident of report.incidents.filter(i => i.status === 'OPEN')) {
-      if (seen.current.has(incident.incident_id)) continue;
-      const clearance = report.clearances.find(c => c.clearance_id === incident.clearance_id);
-      // Never speak an old mismatch after inputs have become uncertain.
-      if (!clearance || clearance.stages[incident.stage].verdict !== 'MISMATCH') continue;
-      if (!voice || critical || radio || speechSynthesis.speaking) {
-        const reason = !voice ? 'voice_disabled' : critical ? 'critical_phase' : radio ? 'radio_active' : 'voice_busy';
-        incidentAction(incident.incident_id, 'VOICE_SUPPRESSED', reason).catch(() => {});
-        continue;
-      }
-      seen.current.add(incident.incident_id);
-      incidentAction(incident.incident_id, 'VOICE_REQUESTED', 'operator_enabled').then(result => {
-        if (!result.recorded) return;
-        const now = policy.current;
-        if (!now.voice || now.critical || now.radio || !now.connected || now.flight !== flight) return;
-        const utterance = new SpeechSynthesisUtterance('설정과 지시를 다시 확인해 주세요.');
-        utterance.onstart = () => incidentAction(incident.incident_id, 'VOICE_PLAYED', 'browser_started').catch(e => setError(e.message));
-        utterance.onerror = () => incidentAction(incident.incident_id, 'VOICE_SUPPRESSED', 'browser_playback_failed').catch(() => {});
-        utterance.lang = 'ko-KR'; speechSynthesis.speak(utterance);
-      }).catch(e => setError(e.message));
-    }
-  }, [report, connected, voice, critical, radio, actor, policyAcknowledged, policyKey]);
-  useEffect(() => { if (!voice || critical || radio) speechSynthesis.cancel(); }, [voice, critical, radio]);
-
-  const active = flights.find(f => f.flight_id === flight)?.status === 'ACTIVE';
+  async function acknowledge(row) {
+    if (ackBusy.current || !connected || ended) return;
+    const currentGeneration = generation.current;
+    const selection = selectionFor(snapshot, row), key = JSON.stringify(selection);
+    const eventId = ackIds.current.get(key) || crypto.randomUUID(); ackIds.current.set(key, eventId);
+    ackBusy.current = true; setAckMessage('확인 기록을 저장하고 있습니다');
+    try {
+      await recordInteraction(selection, 'ACKNOWLEDGED', eventId);
+      if (generation.current === currentGeneration) setAckMessage('확인 기록을 저장했습니다. 해결 여부는 새 유효 관측으로 확인합니다.');
+    } catch (e) { if (generation.current === currentGeneration) setAckMessage(`확인 기록 저장에 실패했습니다. ${e.message}`); }
+    finally { ackBusy.current = false; }
+  }
+  async function start(event) {
+    event.preventDefault();
+    if (!callsign.trim() || actionRef.current) return;
+    actionRef.current = true; setBusy(true); setError('');
+    try {
+      const session = await request('/api/v2/flights', { method: 'POST', body: { callsign: callsign.trim() } });
+      if (typeof session.flight_id !== 'string' || session.schema_version !== '2') throw new Error('비행 시작 응답을 확인할 수 없습니다.');
+      attach(session.flight_id);
+    } catch (e) { setError(e.message); }
+    finally { actionRef.current = false; setBusy(false); }
+  }
+  async function end() {
+    if (actionRef.current || !connected || ended) return;
+    actionRef.current = true; setBusy(true); setError('');
+    try {
+      await request(`/api/v2/flights/${encodeURIComponent(flightId)}/end`, { method: 'POST' });
+      setRefresh(value => value + 1);
+    } catch (e) { setError(e.message); setRefresh(value => value + 1); }
+    finally { actionRef.current = false; setBusy(false); }
+  }
   return <main className="operations">
-    <header><div><h1>RADAR 운영 화면</h1><p>모의 환경 · 조종사 재확인 보조 · 자동 설정 변경 없음</p></div><a href="/">태블릿 MCP</a></header>
-    <p role="status" className={connected ? 'connection' : 'hold'}>{connected ? '서버 연결됨' : '판단 보류 — 서버 연결 확인 중'}</p>
-    {error && <p role="alert" className="hold">{error}</p>}
-    <section className="toolbar">
-      <button disabled={busy || !connected} onClick={() => perform(async () => { const f = await api('/api/flights/start', {}); setFlight(f.flight_id); })}>START FLIGHT</button>
-      <label>비행 <select value={flight} onChange={e => setFlight(e.target.value)}><option value="">선택</option>{flights.map(f => <option key={f.flight_id}>{f.flight_id}</option>)}</select></label>
-      <button disabled={busy || !active || !connected} onClick={() => perform(() => api(`/api/v1/flights/${flight}/clearances`, {}))}>새 지시 준비</button>
-      <button disabled={busy || !active || !connected} onClick={() => perform(() => api(`/api/flights/${flight}/end`, {}))}>END FLIGHT</button>
-    </section>
-    <section className="toolbar"><label>확인자 <input value={actor} onChange={e => setActor(e.target.value)} /></label>
-      <label><input type="checkbox" checked={voice} onChange={e => setVoice(e.target.checked)} />보조 음성 허용</label>
-      <label><input type="checkbox" checked={critical} onChange={e => setCritical(e.target.checked)} />중요 비행 단계 — 음성 억제</label>
-      <label><input type="checkbox" checked={manualRadio} onChange={e => setRadio(e.target.checked)} />교신/마이크 사용 중 — 음성 억제</label>
-      {radio && <p>원본 음성 재생·마이크 입력 또는 교신 설정으로 보조 음성 억제 중</p>}</section>
-    {report && <>
-      <section><h2>{report.terminal ? '종료 시점 리포트' : '현재 비행'}</h2><p>{Object.entries(report.summary).map(([key, value]) => `${key}: ${value}`).join(' · ')}</p>
-        <a href={`/api/v1/flights/${flight}/report.json`} download>리포트 JSON 저장</a></section>
-      {report.clearances.map(c => <section key={c.clearance_id}>
-        <h2>{c.clearance_id}</h2><p className={c.verdict === 'NORMAL' ? 'normal' : c.verdict === 'MISMATCH' ? 'mismatch' : 'hold'}>{c.verdict} · {c.status}{!c.active && ' · 이전 지시'}</p>
-        <p>{c.reasons.join(' · ')}</p>
-        {!c.validation_context && c.active && active && <details><summary>검사 정책·호출부호·지시 문맥 확인</summary>
-          <p>관측을 보내기 전에 호출부호와 기대 지시를 확인합니다. 아래 기준은 모의 예시이며 운용 기준이 아닙니다. 조건부 지시는 고급 설정에서 문맥을 명시합니다.</p>
-          <label>호출부호 <input value={callsign} onChange={e => setCallsign(e.target.value)} /></label>
-          <label>지시 고도 (feet, 미지시 시 비움) <input type="number" min="0" max="60000" value={targetAltitude} onChange={e => setTargetAltitude(e.target.value)} /></label>
-          <label>지시 방위 (0–359, 미지시 시 비움) <input type="number" min="0" max="359" value={targetHeading} onChange={e => setTargetHeading(e.target.value)} /></label>
-          <label>최소 모델 점수 (정확도 아님) <input type="number" min="0" max="1" step="0.01" value={score} onChange={e => setScore(e.target.value)} /></label>
-          <p>순서: 고도 → 방위 · 최대 고도 {demoPolicy.max_altitude_feet}ft · {demoPolicy.change_window_seconds}초 내 고도 변화 {demoPolicy.max_altitude_change_feet}ft/방위 변화 {demoPolicy.max_heading_change_degrees}도 초과 시 보류</p>
-          <details><summary>고급 정책·조건·순서 설정</summary><textarea aria-label="검사 설정 JSON" rows={8} value={settings} onChange={e => setSettings(e.target.value)} /></details>
-          <button disabled={busy || !actor.trim()} onClick={() => perform(() => {
-            if (!settings.trim() && (!callsign.trim() || ![targetAltitude, targetHeading].some(v => v !== '') ||
-                ![targetAltitude, targetHeading].every(v => v === '' || /^\d+$/.test(v)) ||
-                Number(targetAltitude) > 60000 || Number(targetHeading) > 359 || score === '' || Number(score) < 0 || Number(score) > 1))
-              throw new Error('호출부호·지시 범위·모델 점수를 확인하세요.');
-            return api(`/api/v1/clearances/${c.clearance_id}/validation-settings`, settings.trim() ? JSON.parse(settings) : {
-              confirmed: true, confirmed_by: actor, rule_policy: demoPolicy, minimum_model_score: Number(score),
-              atc_context: { expected_callsign: callsign.trim(), expected_conditions: [], expected_ordered_actions:
-                [['altitude', targetAltitude], ['heading', targetHeading]].filter(([, value]) => value !== '').map(([key, value]) => `${key} ${Number(value)}`) },
-            });
-          })}>설정 확인</button></details>}
-        <div className="sources">{['ATC', 'READBACK', 'COCKPIT'].map(source => {
-          const o = c.observations[source]; const stage = c.stages[source.toLowerCase()];
-          return <article key={source}><h3>{source} · {stage.verdict}</h3><p>{stage.reasons.join(' · ')}</p>
-            {!o ? <p>입력 없음</p> : <><p>입력: {o.input_mode}<br />관측 {o.captured_at ?? '시각 불명'}<br />채널 {o.health.status} · {o.health.reason}</p>
-              {Object.entries(o.fields).map(([name, field]) => <p key={name}>{name}: {field?.value ?? '판독 불가'} {field?.unit}<br />{field?.reason} · 품질 {field?.quality.status} · 모델 점수 {field?.model_score ?? '없음'} (정확도 아님)</p>)}
-              {o.speech && <p>원문: {o.speech.transcript ?? '없음'}</p>}
-              {o.evidence.map(e => {
-                const safe = e.reference.startsWith(`/api/v1/clearances/${c.clearance_id}/evidence/`);
-                return <div key={e.evidence_id}>{!safe || e.availability !== 'available' || evidenceErrors[e.evidence_id] ? <p>근거 접근 불가: {e.evidence_id}</p> : e.kind === 'audio' ? <audio controls src={e.reference}
-                  onPlay={() => setPlaying(v => ({ ...v, [e.evidence_id]: true }))}
-                  onPause={() => setPlaying(v => ({ ...v, [e.evidence_id]: false }))}
-                  onEnded={() => setPlaying(v => ({ ...v, [e.evidence_id]: false }))}
-                  onError={() => setEvidenceErrors(v => ({ ...v, [e.evidence_id]: true }))} /> : <img alt={`${source} 관측 근거`} src={e.reference} onError={() => setEvidenceErrors(v => ({ ...v, [e.evidence_id]: true }))} />}<p>ROI: {e.roi?.join(', ') ?? '전체 원본'}</p></div>;
-              })}</>}
-          </article>;
-        })}</div>
-      </section>)}
-      <section><h2>사건·수정 이력</h2>{report.incidents.map(i => <article key={i.incident_id}><p>{i.stage} · {i.status} · {i.detected_at} → {i.resolved_at ?? '미해결'} {i.resolution_seconds !== null && `(${i.resolution_seconds}초)`}</p>
-        <pre>{JSON.stringify(i.errors, null, 2)}</pre>{active && i.status === 'OPEN' && <button disabled={busy || !actor.trim()} onClick={() => perform(() => incidentAction(i.incident_id, 'ACKNOWLEDGED', 'operator_reviewed'))}>근거 확인함</button>}</article>)}</section>
-      <section><h2>모의 세션 피드백</h2>{report.training_feedback.map(item => <p key={item.incident_id}>{item.stage} · {item.fields.join(', ')}: {item.message}<br />{item.limitation}</p>)}</section>
-      <details><summary>Safety Trace ({report.timeline.length})</summary>{report.timeline.map(e => <p key={e.id}>{e.timestamp} · {e.kind} · {JSON.stringify(e.data)}</p>)}</details>
+    <header className="op-header"><a className="brand" href="/operations">RADAR<span> / FLIGHT MONITOR</span></a>
+      <nav aria-label="화면 선택"><a href="/" target="_blank" rel="noreferrer">모의 MCP 열기 ↗</a></nav>
+      <span className="op-muted">모의 환경 · 설정은 직접 조작</span></header>
+    <div className="op-intro"><p className="eyebrow">FLIGHT OPERATIONS</p><h1>비행 상태 확인</h1><p>관제 지시와 복명복창, 카메라가 읽은 설정값을 함께 확인하세요.</p></div>
+    {ackMessage && <p className="op-notice" role="status">{ackMessage}</p>}
+    {error && <p className="op-error" role="alert">{error}</p>}
+    {!flightId ? <section className="op-panel op-start">
+      <h2>대상 항공기</h2><form onSubmit={start}><label htmlFor="callsign">등록된 호출부호</label>
+        <div className="op-inline"><input id="callsign" value={callsign} maxLength={160} required autoComplete="off" onChange={e => setCallsign(e.target.value)} disabled={busy} />
+          <button className="primary" disabled={!callsign.trim() || busy}>{busy ? '시작 확인 중…' : 'START FLIGHT'}</button></div>
+        <p className="op-muted">호출부호는 비행 중 고정됩니다. 등록 여부는 서버에서 확인합니다.</p></form>
+      <details><summary>기존 비행 다시 연결</summary><form onSubmit={e => { e.preventDefault(); if (resumeId.trim()) attach(resumeId.trim()); }}>
+        <label htmlFor="resume-id">비행 ID</label><div className="op-inline"><input id="resume-id" value={resumeId} required maxLength={160} onChange={e => setResumeId(e.target.value)} /><button>연결</button></div>
+      </form></details>
+    </section> : <>
+      <section className="op-panel op-session" aria-label="비행 세션">
+        <div><p className="eyebrow">{ended ? 'ENDED FLIGHT' : 'CURRENT FLIGHT'}</p><h2>{snapshot?.callsign || '세션 확인 중'}</h2><p className="op-id">{flightId}</p></div>
+        <div className="op-session-actions"><span className={`op-connection ${connected ? 'is-connected' : ''}`} role="status">{connected ? '서버 연결됨' : '서버 확인 불가 · 판단 보류'}</span>
+          <button onClick={() => setRefresh(value => value + 1)} disabled={busy}>다시 연결</button>
+          {!ended && <button className="op-end" onClick={end} disabled={!connected || busy || !snapshot}>{busy ? '종료 확인 중…' : 'END FLIGHT'}</button>}
+          {!connected && <button disabled={busy} onClick={() => attach('')}>비행 선택으로</button>}
+          {ended && <button onClick={() => attach('')}>새 비행 준비</button>}</div>
+      </section>
+      {connectionError && <div className="op-error" role="alert"><strong>서버 상태를 확인할 수 없습니다.</strong><p>{connectionError}</p><p>표시된 값은 마지막 수신 기록입니다. 현재 일치 여부는 판단 보류입니다.</p></div>}
+      {snapshot ? <>
+        <section className={`op-overview op-${connected ? snapshot.result : 'UNVERIFIED'}`} aria-label="전체 서버 판정">
+          <div><p className="eyebrow">{ended ? '비행이 종료되었습니다' : 'SERVER VALIDATION'}</p><h2>{connected ? phases[snapshot.validation.phase] || '상태 확인' : '연결 복구 후 재확인 필요'}</h2>
+            <p>{connected ? reasons[snapshot.reason] || '서버에서 상태를 확인하고 있습니다' : '이전 일치 상태를 현재 상태로 사용하지 않습니다.'}</p></div>
+          <Badge result={snapshot.result} connected={connected} ended={ended} />
+        </section>
+        <p className="op-meta">마지막 응답 <Stamp value={receivedAt} /> · 상태 버전 {snapshot.revision} · 시각 UTC</p>
+        <section className="op-panel" aria-label="현재 관제 지시"><div className="op-section-heading"><h2>현재 관제 지시</h2><span className="op-muted">항목별 유효 지시</span></div>
+          <div className="op-targets">{['ALT', 'HDG'].map(field => <article key={field}><h3>{fields[field]}</h3>
+            <strong>{numberLabel(snapshot.targets[field]?.value, field)}</strong><p className="op-id">{snapshot.targets[field]?.instruction_id || '지시 대기'}</p>
+            <small>채택 <Stamp value={snapshot.targets[field]?.adopted_at} /></small></article>)}</div>
+          <p>이번 복창 항목: {snapshot.readback_required ? `${snapshot.readback_required.fields.map(field => fields[field]).join(' · ')} · 호출부호` : '지시 확인 대기'}</p>
+        </section>
+        <VoicePanel snapshot={snapshot} connected={connected} />
+        <Verdicts title="복명복창" group={snapshot.validation.readback} source="READBACK" snapshot={snapshot} connected={connected} ended={ended} onEvidence={openEvidence} onAcknowledge={acknowledge} />
+        <Verdicts title="Cockpit 설정" group={snapshot.validation.setting} source="COCKPIT" snapshot={snapshot} connected={connected} ended={ended} onEvidence={openEvidence} onAcknowledge={acknowledge} />
+        {selected && <EvidencePanel key={JSON.stringify(selected)} selected={selected} snapshot={snapshot} connected={connected} onClose={() => { setSelected(null); opener.current?.focus(); }} />}
+        <section className="op-panel" aria-label="장치 상태"><h2>입력 장치</h2><div className="op-health">{[['CAMERA', '카메라'], ['MICROPHONE', '마이크'], ['SPEECH_API', '음성 처리']].map(([key, label]) => {
+          const health = snapshot.channels[key];
+          return <article key={key}><h3>{label}</h3><p>{!connected ? '서버 확인 불가' : { AVAILABLE: '사용 가능', DISCONNECTED: '연결 끊김', DEGRADED: '품질 저하', UNKNOWN: '확인 불가' }[health?.status] || '상태 수신 대기'}</p>
+            <small>{health?.reason ? reasons[health.reason] || '입력 장치 확인 필요' : '별도 장애 정보 없음'}</small><small><Stamp value={health?.observed_at} /></small></article>;
+        })}</div></section>
+        <section className="op-panel" aria-label="오류 발생 기록"><h2>오류 발생 기록</h2>
+          {(snapshot.incidents || []).length ? <ul className="op-incidents">{snapshot.incidents.map(item => <li key={item.occurrence_id}>
+            <strong>{fields[item.field]} · {item.stage === 'READBACK' ? '복명복창' : '설정'}</strong><span>{ { OPEN: '미해결', RESOLVED: '새 관측으로 해결', SUPERSEDED: '새 지시로 대체', ENDED_UNRESOLVED: '미해결 종료' }[item.status] || item.status }</span>
+            <small>최초 탐지 <Stamp value={item.detected_at} /></small>{item.status === 'OPEN' && <small>현재 확인: {statusLabel(item.current_check.result, connected && !ended)}</small>}
+          </li>)}</ul> : <p className="op-muted">저장된 오류 발생 기록이 없습니다.</p>}
+        </section>
+      </> : <p className="op-panel" role="status">비행 상태를 확인하고 있습니다. 아직 현재 판정을 표시할 수 없습니다.</p>}
     </>}
+    <footer>실제 항공기를 제어하지 않는 모의 환경 보조 화면입니다.</footer>
   </main>;
 }

@@ -1,0 +1,184 @@
+[
+  {
+    "name": "full-command",
+    "transcript": "Radar one two three climb and maintain three thousand feet heading two seven zero",
+    "fields": {
+      "ALT": 3000,
+      "HDG": 270
+    },
+    "result": "PASS",
+    "reason": null
+  },
+  {
+    "name": "north-zero",
+    "transcript": "Radar one two three heading zero zero zero",
+    "fields": {
+      "HDG": 0
+    },
+    "result": "PASS",
+    "reason": null
+  },
+  {
+    "name": "max-heading",
+    "transcript": "Radar one two three turn right heading three five niner",
+    "fields": {
+      "HDG": 359
+    },
+    "result": "PASS",
+    "reason": null
+  },
+  {
+    "name": "partial-alt",
+    "transcript": "Radar one two three climb and maintain four thousand feet",
+    "fields": {
+      "ALT": 4000
+    },
+    "result": "PASS",
+    "reason": null
+  },
+  {
+    "name": "flight-level",
+    "transcript": "Radar one two three maintain flight level zero four zero",
+    "fields": {
+      "ALT": 4000
+    },
+    "result": "PASS",
+    "reason": null
+  },
+  {
+    "name": "compact-fl",
+    "transcript": "Radar one two three maintain FL040",
+    "fields": {
+      "ALT": 4000
+    },
+    "result": "PASS",
+    "reason": null
+  },
+  {
+    "name": "ceiling-boundary",
+    "transcript": "Radar one two three maintain FL500",
+    "fields": {
+      "ALT": 50000
+    },
+    "result": "PASS",
+    "reason": null
+  },
+  {
+    "name": "feet-hundreds",
+    "transcript": "Radar one two three descend and maintain three thousand five hundred feet",
+    "fields": {
+      "ALT": 3500
+    },
+    "result": "PASS",
+    "reason": null
+  },
+  {
+    "name": "range-360",
+    "transcript": "Radar one two three heading three six zero",
+    "fields": {
+      "HDG": 360
+    },
+    "result": "INVALID",
+    "reason": "HEADING_OUT_OF_RANGE"
+  },
+  {
+    "name": "bad-fl-length",
+    "transcript": "Radar one two three maintain flight level four zero",
+    "fields": {
+      "ALT": 4000
+    },
+    "result": "INVALID",
+    "reason": "FL_REQUIRES_THREE_DIGITS"
+  },
+  {
+    "name": "exceeds-ceiling",
+    "transcript": "Radar one two three maintain FL501",
+    "fields": {
+      "ALT": 50100
+    },
+    "result": "INVALID",
+    "reason": "ALTITUDE_EXCEEDS_CONFIGURED_CEILING"
+  },
+  {
+    "name": "transcript-value-conflict",
+    "transcript": "Radar one two three maintain four thousand feet",
+    "fields": {
+      "ALT": 3000
+    },
+    "result": "INVALID",
+    "reason": "TRANSCRIPT_VALUE_CONFLICT"
+  },
+  {
+    "name": "missing-extracted-heading",
+    "transcript": "Radar one two three maintain three thousand feet heading two seven zero",
+    "fields": {
+      "ALT": 3000
+    },
+    "result": "INVALID",
+    "reason": "TRANSCRIPT_FIELD_SET_CONFLICT"
+  },
+  {
+    "name": "extra-extracted-heading",
+    "transcript": "Radar one two three maintain three thousand feet",
+    "fields": {
+      "ALT": 3000,
+      "HDG": 270
+    },
+    "result": "INVALID",
+    "reason": "TRANSCRIPT_FIELD_SET_CONFLICT"
+  },
+  {
+    "name": "condition-after",
+    "transcript": "Radar one two three after departure maintain three thousand feet",
+    "fields": {
+      "ALT": 3000
+    },
+    "result": "NEEDS_REVIEW",
+    "reason": "UNSUPPORTED_CONDITION_OR_SEQUENCE"
+  },
+  {
+    "name": "conditional-until",
+    "transcript": "Radar one two three maintain three thousand feet until cleared",
+    "fields": {
+      "ALT": 3000
+    },
+    "result": "NEEDS_REVIEW",
+    "reason": "UNSUPPORTED_CONDITION_OR_SEQUENCE"
+  },
+  {
+    "name": "unsupported-tail",
+    "transcript": "Radar one two three maintain three thousand feet reduce speed",
+    "fields": {
+      "ALT": 3000
+    },
+    "result": "NEEDS_REVIEW",
+    "reason": "ALTITUDE_UNIT_NOT_EXPLICIT"
+  },
+  {
+    "name": "unknown-unit",
+    "transcript": "Radar one two three maintain three thousand",
+    "fields": {
+      "ALT": 3000
+    },
+    "result": "NEEDS_REVIEW",
+    "reason": "ALTITUDE_UNIT_NOT_EXPLICIT"
+  },
+  {
+    "name": "negative-heading",
+    "transcript": "Radar one two three heading -1",
+    "fields": {
+      "HDG": 0
+    },
+    "result": "NEEDS_REVIEW",
+    "reason": "UNSUPPORTED_HEADING_NUMBER"
+  },
+  {
+    "name": "ambiguous-number",
+    "transcript": "Radar one two three maintain twenty five hundred feet",
+    "fields": {
+      "ALT": 2500
+    },
+    "result": "NEEDS_REVIEW",
+    "reason": "UNSUPPORTED_ALTITUDE_NUMBER"
+  }
+]

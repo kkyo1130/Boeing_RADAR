@@ -8,7 +8,7 @@ const template = JSON.parse(readFileSync(new URL('../../contracts/examples/obser
 test('서버 판정·수정·리포트와 연결 끊김 보류', async ({ page, request }) => {
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  await page.goto('/operations');
+  await page.goto('/operations-v1');
   await expect(page.getByText('서버 연결됨', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'START FLIGHT' }).click();
   await expect(page.getByRole('button', { name: '새 지시 준비' })).toBeEnabled();

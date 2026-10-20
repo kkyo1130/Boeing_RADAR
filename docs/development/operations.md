@@ -9,7 +9,7 @@
 Backend에서 `../.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000`, 별도 터미널 frontend에서 `npm run dev`를 실행한다. 기존 DB의 추가 테이블은 lifespan 또는 `python -m app.migrate_contract_storage`가 비파괴 생성한다.
 
 - `/`: 기존 수동 태블릿 MCP. Vision에 숫자를 직접 보내지 않는다.
-- `http://localhost:5173/operations`: 운영 화면. START FLIGHT → 새 지시 준비 → 검사 설정 JSON 확인 → 생산자 입력 → 근거/사건 확인 → END FLIGHT → 종료 리포트.
+- `http://localhost:5173/operations-v1`: 운영 화면. START FLIGHT → 새 지시 준비 → 검사 설정 JSON 확인 → 생산자 입력 → 근거/사건 확인 → END FLIGHT → 종료 리포트.
 - Vite의 `/api` 프록시 기본 대상은 `http://127.0.0.1:8000`이며 개발 시 `RADAR_API_TARGET`으로 변경할 수 있다.
 
 기본 폼에서 호출부호·고도/방위·모의 점수를 확인할 수 있으며, 조건·순서 변경은 고급 설정을 사용한다. 검사 설정 예시는 [모의 정책](../../contracts/rule-policy-demo.json)을 `rule_policy`로 넣고, 실제 확인한 호출부호·조건·행동 순서를 입력한다. 관측 후에는 같은 지시의 설정을 변경할 수 없다. 새 지시를 준비한다. 예:

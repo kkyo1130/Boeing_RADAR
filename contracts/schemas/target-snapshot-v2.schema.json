@@ -1,0 +1,200 @@
+{
+  "$defs": {
+    "AltitudeTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "minimum": 0,
+          "title": "Value",
+          "type": "integer"
+        },
+        "unit": {
+          "const": "ft",
+          "title": "Unit",
+          "type": "string"
+        },
+        "instruction_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Instruction Id",
+          "type": "string"
+        },
+        "source_observation_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Source Observation Id",
+          "type": "string"
+        },
+        "adopted_at": {
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$",
+          "title": "Adopted At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "unit",
+        "instruction_id",
+        "source_observation_id",
+        "adopted_at"
+      ],
+      "title": "AltitudeTarget",
+      "type": "object"
+    },
+    "HeadingTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "maximum": 359,
+          "minimum": 0,
+          "title": "Value",
+          "type": "integer"
+        },
+        "unit": {
+          "const": "deg",
+          "title": "Unit",
+          "type": "string"
+        },
+        "instruction_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Instruction Id",
+          "type": "string"
+        },
+        "source_observation_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Source Observation Id",
+          "type": "string"
+        },
+        "adopted_at": {
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$",
+          "title": "Adopted At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "unit",
+        "instruction_id",
+        "source_observation_id",
+        "adopted_at"
+      ],
+      "title": "HeadingTarget",
+      "type": "object"
+    },
+    "ReadbackRequired": {
+      "additionalProperties": false,
+      "properties": {
+        "instruction_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Instruction Id",
+          "type": "string"
+        },
+        "atc_input_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Atc Input Id",
+          "type": "string"
+        },
+        "fields": {
+          "items": {
+            "enum": [
+              "ALT",
+              "HDG"
+            ],
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 1,
+          "title": "Fields",
+          "type": "array",
+          "uniqueItems": true
+        },
+        "callsign_required": {
+          "const": true,
+          "title": "Callsign Required",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "instruction_id",
+        "atc_input_id",
+        "fields",
+        "callsign_required"
+      ],
+      "title": "ReadbackRequired",
+      "type": "object"
+    },
+    "Targets": {
+      "additionalProperties": false,
+      "properties": {
+        "ALT": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AltitudeTarget"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "HDG": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HeadingTarget"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "ALT",
+        "HDG"
+      ],
+      "title": "Targets",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "flight_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "title": "Flight Id",
+      "type": "string"
+    },
+    "revision": {
+      "minimum": 0,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "targets": {
+      "$ref": "#/$defs/Targets"
+    },
+    "readback_required": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ReadbackRequired"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "flight_id",
+    "revision",
+    "targets",
+    "readback_required"
+  ],
+  "title": "TargetSnapshotV2",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:radar:contracts:target-snapshot-v2"
+}

@@ -127,3 +127,7 @@ v2에서 `fields`는 altitude/heading/speed이며 speed evidence는 `speed.png`�
 | `ocr_preprocessing` | grayscale/scale의 적용값. 크기 변경에는 Lanczos 보간 사용 |
 
 `contrast_stddev`는 전처리 이전 원본 ROI에서 계산한다. 전처리 설정이 없으면 기존처럼 원본 ROI를 OCR에 전달하고 위 두 추가 항목은 없다. 이미지 확대는 새로운 정답 정보를 만드는 것이 아니며 원본 판독 실패/범위 검사는 유지한다.
+
+## 공통 v2 계약과의 연결 · 2026-10-17
+
+SPEC-002-WI-01의 [공통 관측 v2](observation-v2.md), [JSON Schema](schemas/observation-v2.schema.json), [예제 manifest](examples/v2/manifest.json)가 검증됐다. 이 문서의 로컬 출력은 그대로 유지하며 현재 v1 endpoint나 새 v2 DTO에 직접 호환되지 않는다. 변환 필드·단위·시각·health 차이는 공통 계약의 호환성 표를 따른다. 전송 어댑터와 실제 서버 연결은 SPEC-003-WI-04 / SPEC-002-WI-02·03에서 수행한다.

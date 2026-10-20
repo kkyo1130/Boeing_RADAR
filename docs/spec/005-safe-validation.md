@@ -2,26 +2,52 @@
 
 ## 기본 정보
 
-- 요구사항 버전: 1
+- 요구사항 버전: 3
 - 상태: draft (목표 초안; 현재 구현과 미정 사항은 별도 표시)
 - Priority: P0
 - 근거: [서비스 방향](../service/overview.md), [요구사항 매핑](../service/requirements-map.md)
-- 기능 전체 검증: SPEC-005-WI-03 (SPEC-010은 서로 독립된 두 선택 기능이므로 각 WI 자체 검증)
+- 기능 전체 검증: SPEC-005-WI-03
 
 ## 목적과 범위
 
 검증 가능한 입력으로 오류 단계를 판정하고 불확실하면 보류한다.
 
-포함 범위는 아래 workitem의 산출물이다. 실제 항공기 제어·QNH/Baro와 다른 기능의 소유 계약은 제외한다. 2026-10-13 후속 요청으로 WI-01 결정론적 검사 함수를 구현한다. 2026-10-14 WI-02에서 v1 API 최종 3상태 판정도 연결한다.
+포함 범위는 아래 workitem의 산출물이다. 실제 항공기 제어·QNH/Baro와 다른 기능의 소유 계약은 제외한다. 사용자가 지정한 WI-01의 결정론적 구조 검사를 구현했다. WI-02 필드별3상태·설정 변경 대기·지속 감시와 안내 후보를 구현했다. WI-03에서 mock/수신/API 범위의 전체 회귀와 거짓 정상 검증을 수행했다. 실제 화면/음성 재생·Incident·장비 E2E는 후속 범위다.
 
 ## 동작·계약·미정 사항
 
 공통 단위·ID·시각·null·품질·근거는 [SPEC-002](002-observation-contracts.md), 판정은 [SPEC-005](005-safe-validation.md)를 따른다. 해당 계약 확장 전 현재 API가 지원한다고 가정하지 않는다.
-미정 사항 Q-01~Q-05와 영향 범위는 [서비스 방향](../service/overview.md#결정이-필요한-항목)에 있다. workitem의 선행 결과와 필수 결정이 확보된 범위만 구현한다. fixture 성공과 실카메라·마이크·수신 성공을 구분한다.
+기술 설정의 영향 범위는 [서비스 방향](../service/overview.md#결정이-필요한-항목)에 있다. 이 스펙에 보존한 사용자 결정을 과거 Q 목록 때문에 다시 미정으로 돌리지 않는다. workitem의 선행 결과와 필수 결정이 확보된 범위만 구현한다. fixture 성공과 실카메라·마이크·수신 성공을 구분한다.
 
 ## 이미 구현된 기반
 
-validation_service.py의 ALT/HDG 정확 비교·Readback 우선·오류 단계와 스키마 범위 검증이 있다. SPEC-002 v1 경로는 UNVERIFIED와 품질/시각 정보를 보존한다. 이번 WI-01은 추출 후 결정론적 검사 함수를 추가하며 WI-02에서 명시 설정을 요구하는 3상태 판정·API 연결을 구현했다. 2026-10-16 WI-03의 모의 전체 회귀까지 완료했으며 실제 입력 인수는 후속 범위다. 상세 실행 근거는 [구현 현황](../IMPLEMENTATION_STATUS.md)을 참조한다. 아래 WI는 확장 요구까지 포함하므로 이 기반만으로 done 처리하지 않는다.
+validation_service.py의 ALT/HDG 정확 비교·Readback 우선·오류 단계와 스키마 범위 검증이 있다. 기존 v1 비교 경로를 유지한다. v2 수신은 SPEC-002의 품질·freshness·지시/시도 연결을 검사하며, WI-01은 원문·명시 FL·호출부호·문맥·정책 기반 구조 검사를 추가한다. v2 3상태 비교는 WI-02에서 추가했고 실제 장비/모델 및 전체 E2E는 별도다. 상세 실행 근거는 [구현 현황](../IMPLEMENTATION_STATUS.md)을 참조한다. 아래 WI는 확장 요구까지 포함하므로 이 기반만으로 done 처리하지 않는다.
+
+## 설정 변경 대기와 불일치 알림
+
+- D-005-01 · 2026-10-17 사용자 결정: 복명복창이 일치한 뒤 조종사가 MCP 설정을 바꿀 시간을 주고, 대기 시간이 지난 뒤에도 지시값과 설정값이 다르면 설정 불일치 알림을 제공한다. 조작을 시작하는 순간의 차이만으로 즉시 알리지 않는다.
+- 예: ATC ALT 3000ft에 복명복창이 일치하고 MCP가 아직 2000ft이면 설정 변경을 기다린다. 대기 종료 후 유효하고 최신인 관측에서도 2000ft이면 설정 불일치를 알린다.
+- 기다리는 동안 설정 검증이 끝나지 않았다는 이유로 전체 NORMAL/VERIFIED를 만들지 않는다. 대기 종료 후에도 판독 불가·누락·오래된 관측은 기존 원칙대로 판단 보류이며 수치 불일치로 단정하지 않는다.
+- D-005-02 · 2026-10-17 사용자 결정: 시연용 최초 설정 변경 대기 시간은 5초로 한다. 서버가 해당 지시의 복명복창 일치를 확인한 시점을 시작으로 측정한다. 실제 시연에서 조작 시간을 확인한 뒤 조정할 수 있는 초기값이며 검증된 운항 기준을 뜻하지 않는다.
+- D-005-03 · 2026-10-17 사용자 결정: 5초 대기 중이라도 해당 지시의 설정 대상 항목이 모두 일치한다고 최신·유효한 카메라 관측으로 서버가 확인하면 남은 시간을 기다리지 않고 설정 일치로 전환한다. 예: 일치 확인 기준을 충족한 관측이 t0+2초에 확보되면 그때 설정 일치를 표시한다. 한 항목만 일치하거나 판독 불가·누락·오래된 관측이면 전체 설정 일치로 처리하지 않는다.
+- 설정 일치와 전체 NORMAL/VERIFIED는 구분한다. 전체 완료는 다른 필수 검증 조건도 충족해야 한다. 관측 안정화·freshness 기준은 관련 계약을 따르며 이 결정으로 단일 프레임만으로 충분하다고 확정하지 않는다.
+- D-005-04 · 2026-10-17 사용자 결정: 설정 일치 후에도 현재 유효한 지시의 MCP 설정값을 계속 감시한다. 새 관제 지시 없이 최신·유효 관측이 지시값과 달라지면 다시 설정 확인을 요청한다. 예: ALT 3000ft 일치 후 MCP가 2900ft로 바뀌면 재확인 대상이다. 판독 불가·누락·오래된 관측은 수치 변경으로 단정하지 않고 판단 보류로 처리한다.
+- D-005-05 · 2026-10-17 사용자 결정: 설정 일치 이후 새 지시 없이 값이 다시 달라지면 서버가 최신·유효 관측으로 재불일치를 확인하는 즉시 알림 대상으로 삼는다. 최초 설정 변경에 주는 5초를 다시 적용하거나 별도 대기 타이머를 시작하지 않는다. 관측 안정화·품질·최신성 검사는 유지하며, 즉시는 재불일치 확인 이후 의도적인 대기가 없다는 뜻이다. 단일 불확실 프레임으로 알리거나 처리·전송 지연이 0임을 보장하지 않는다.
+- 새 지시 채택 시 안내 전환은 SPEC-007 D-007-03을 따른다. 일부 항목만 변경한 새 지시에서는 SPEC-007 D-007-04에 따라 미변경 항목의 기존 기준·감시를 유지한다. 같은 설정 오류의 반복 음성은 SPEC-006 D-006-11을 따른다. 최초 설정의 5초 대기는 유지한다.
+- 대기·불일치 화면 문구는 [SPEC-006](006-advisory-interface.md)을 따른다.
+- 영향: AC-02, SPEC-005-WI-02, SPEC-006-WI-03.
+
+## WI-01 구현 계약
+
+실행 원본은 [결정론적 규칙 계약](../../contracts/structure-rules.md)과 backend `structure_rules.py`다. 모델의 instruction_check와 서버 규칙 결과를 분리하고, 원문 transcript/필드 raw_text·등록 구간/별칭·비행별 정책을 대조한다. INVALID/NEEDS_REVIEW면 목표/현재값에 적용하지 않으며 입력/상태/Trace를 기존 트랜잭션으로 저장한다. PASS는 최종 운항 정상이나 독립된 센서 검증이 아니다.
+
+상한·급변은 구조화된 명시 정책을 비행 시작 때 고정하고, 미설정 값은 NEEDS_REVIEW로 남긴다. 임의 운용 기준을 추가하지 않는다. 공개 결과·정책 Schema, 문형 fixture, 설정/배포 시 기존 비행의 보류 처리와 지원 문법은 계약 문서를 따른다. 구현·검증·리뷰·인수인계의 상세 원본은 [WI-01 기록](005-safe-validation/workitem/wi-01.md)이다.
+
+## WI-02 구현 계약
+
+[3상태 비교 계약](../../contracts/validation-v2.md)과 state.validation이 판정 원본이다. READBACK/SETTING별 expected/actual·3상태·관측/지시 ID·사유와 대표 단계·안내 후보를 반환한다. 최신 지시/복창 대기 때 과거 정상/안내를 재사용하지 않고 부분 지시의 미변경 항목 감시를 유지한다. 최초5초·조기 일치·재불일치 즉시 확인은 서버 시각과 지시별 기록으로 처리한다. GET은 DB/Trace를 쓰지 않고 기한/만료를 재평가한다.
+
+기존 current의 수신 적격성 표시는 유지하며 최종 비교는 validation을 사용한다. v1 VERIFIED/RESOLVED는 변경하지 않는다. 구현·검증·리뷰·인수인계는 [WI-02 MD 하단 결과 항목](005-safe-validation/workitem/wi-02.md)을 따른다.
 
 ## 완료 조건
 
@@ -50,10 +76,10 @@ validation_service.py의 ALT/HDG 정확 비교·Readback 우선·오류 단계�
 
 #### 결과·검증·리뷰·인수인계
 
-- 구현: 2026-10-13 후속 요청으로 `backend/app/services/validation/__init__.py`, `rules.py`, `backend/tests/test_extraction_rules.py`, [검사 계약](../../contracts/extraction-rules.md), [모의 정책](../../contracts/rule-policy-demo.json) 추가. `python` 브랜치 `2e75703`로 커밋·푸시하고 PR #4에 반영한 선행 구현. 기존 비교 서비스·API·원본 관측을 수정하지 않고 결과·문제 목록 반환.
-- 검증: backend에서 `/private/tmp/radar-contract-venv/bin/python -m pytest tests ../tests/integration -q`: **115 passed, 1 warning**(Starlette/httpx deprecation). 기존 84개+새 31개: HDG 0/359/360·raw 충돌/O 문자·FL 형식/줄바꿈/변환/상한·부분 지시·누락·호출부호/조건/순서·시각/원본/지시 연결·급변 임계값과 359→0·잘못된 정책·입력 불변 확인. `git diff --check`와 문서 로컬 링크 검사 통과. 실제 카메라/마이크/STT/OCR·외부 HTTP 및 운용 임계값 검증은 미실행.
-- 리뷰: 단일 에이전트가 역할 지침 적용. 숫자 추측·자동 보정 없음, 시각/원문/확인된 문맥 부족은 NEEDS_REVIEW, 명시적 계약/구조 충돌은 INVALID, 급변은 불일치로 단정하지 않음. 고도 상한은 raw 누락 시에도 검사함. 같은 추출 기반 검사를 완전히 독립된 안전 채널로 표현하지 않음. PASS는 최종 정상/정확도 보장이 아니며 정책·확인 문맥 없이 음성 PASS를 만들지 않음.
-- 인수인계: 다음 WI-02에서 rules 결과·freshness·health/quality를 v1 서버의 NORMAL/MISMATCH/UNVERIFIED와 오류 단계에 연결. 시연 정책 mock-demo/1은 60000ft/6000ft/90°/10초 경계 fixture용 명시 정책이며 실장비 인수 Q-04는 미정. 호출부호/조건/행동 문맥은 확인된 지시에서 전달하고 같은 추출에서 복사하지 않음. 자유 발화 의미 해석은 SPEC-004 범위. 커밋·푸시·PR 갱신 미실행, 사용자 `.gitignore` 변경 보존.
+- 구현: 원문/필드 추출값·등록 문맥·명시 정책 검사와 수신 보류·원자 Trace 연결을 구현했다. 파일별 책임과 처리 순서는 [구현 기록](005-safe-validation/workitem/wi-01.md#구현)을 따른다.
+- 검증: 순수 규칙·설정/저장/API 회귀와 실제 임시 HTTP 검증을 실행했다. 명령·기대/실제·미실행은 [검증 기록](005-safe-validation/workitem/wi-01.md#검증)을 따른다.
+- 리뷰: 원문 불일치·정책 미설정·재사용 근거·범위·회귀를 자체 검토했고 외부 PR 리뷰와 구분했다. [리뷰 기록](005-safe-validation/workitem/wi-01.md#리뷰)을 따른다.
+- 인수인계: 공개 Schema/계약·실행 방법·WI-02 연결점·남은 검증 범위를 [인수인계](005-safe-validation/workitem/wi-01.md#인수인계)에 남겼다.
 
 <a id="wi-02"></a>
 
@@ -70,10 +96,10 @@ validation_service.py의 ALT/HDG 정확 비교·Readback 우선·오류 단계�
 
 #### 결과·검증·리뷰·인수인계
 
-- 구현: 2026-10-14 후속 요청으로 `services/validation/decision.py`, `schemas/validation_settings.py`, `schemas/validation_result.py`, `tests/test_three_state_decision.py` 추가. `services/contract_service.py`, `api/contract_observations.py`, `models/contract_observation.py`, `app/migrate_contract_storage.py` 및 계약/구현 안내 갱신. 정책·확인 문맥 1회 등록, 단계/필드별 검사·NORMAL/MISMATCH/UNVERIFIED·오류 우선순위·새 관측 해결·규칙/비교/설정 근거 조회 구현. [판정 계약](../../contracts/three-state-validation.md) 참조. `python` 브랜치 `2e75703` 기준 미커밋.
-- 검증: backend에서 `/private/tmp/radar-contract-venv/bin/python -m pytest tests ../tests/integration -q`: **143 passed, 1 warning**(Starlette/httpx deprecation), 기존 115개+신규 28개. 정상/두 오류/혼합 오류·Readback 우선·부분 지시/0·null/stale/미상/낮은 점수·품질·규칙/호출부호/조건/순서 충돌·근거 누락·score 임계값·급변·장애/복구 새 프레임·거부된 최신 입력·새 지시·종료·중간 보류 수정 후 해결 검증. 기존 v1 DB 보존과 설정 테이블 마이그레이션 2회 확인. 중간 마이그레이션 테스트의 Flight PK 조회 혼동은 올바른 flight_id 조회로 수정했고 최종 전체 검사 통과. OpenAPI 설정 요청·3상태/확인 문맥 응답 스키마, `git diff --check`, 로컬 링크 검사 통과.
-- 리뷰: 단일 에이전트가 역할 지침 적용. 설정/확인 문맥 없는 관측은 계속 UNVERIFIED, Readback 자체 action 목록을 기대값으로 복사하지 않음. 확인 가능한 숫자 불일치만 errors, 불확실한 규칙/시각/품질 문제는 해당 필드/단계 보류. 장치 available health만으로 이전 VERIFIED를 복원하지 않고 새 관측 요구. 수신 accepted·규칙 PASS·전체 NORMAL·단계 RESOLVED를 구분하며 Readback만 해결된 경우 verdict=UNVERIFIED/status=RESOLVED 보존. 이전 Mock API·규칙 서비스 유지.
-- 인수인계: 다음 WI-03에서 완료 조건 전체와 거짓 정상 경계를 별도 회귀 검증. 실제 카메라/음성/SDR/모델 어댑터·외부 HTTP·다른 DB 검증은 미실행. 명시 모의 정책/모델 점수 기준은 Q-04 실장비 인수 기준이 아니며 실제 확률/정확도로 표현하지 않음. 확인 주체는 표시용이며 인증 구현 아님. Incident/최종 판정 이벤트 수명주기는 SPEC-007/008 범위. 커밋·푸시·PR 갱신 미실행, 사용자 `.gitignore` 변경 보존.
+- 구현: 필드별3상태·대표 오류·지시별 최초5초/조기 일치/재불일치 감시·원자 타이머를 구현했다. 상세 근거는 [WI-02 MD](005-safe-validation/workitem/wi-02.md)의 해당 항목을 따른다.
+- 검증: backend288개·실제 HTTP26개·공통 계약/판정 Schema 검증을 수행했다. 상세 근거는 [WI-02 MD](005-safe-validation/workitem/wi-02.md)의 해당 항목을 따른다.
+- 리뷰: 문맥·보류/불일치·부분 지시·타이머·회귀 자체 검토와 외부 PR 리뷰 대기를 구분했다. 상세 근거는 [WI-02 MD](005-safe-validation/workitem/wi-02.md)의 해당 항목을 따른다.
+- 인수인계: 계약/설정·재현·WI-03 회귀 및 후속 UI/Incident 연결점을 남겼다. 상세 근거는 [WI-02 MD](005-safe-validation/workitem/wi-02.md)의 해당 항목을 따른다.
 
 <a id="wi-03"></a>
 
@@ -90,12 +116,18 @@ validation_service.py의 ALT/HDG 정확 비교·Readback 우선·오류 단계�
 
 #### 결과·검증·리뷰·인수인계
 
-- 구현: 2026-10-16 사용자 요청으로 `contracts/examples/validation-safety-cases.json`, `tests/integration/test_validation_safety_matrix.py`, [AC 대응표](../../tests/integration/validation-coverage.md) 추가. 기존 판정 제품 코드는 변경하지 않음. 정상 대조 후 source별 실패 주입 48개+복구 3개+혼합 오류 1개로 고정 기대 결과 검증. `python` 브랜치 `7c95feb` 기준 미커밋.
-- 검증: 새 Python 3.13 환경의 공통 명령 `python3 scripts/verify.py --python /private/tmp/radar-fresh-validation/bin/python --http-smoke`: Backend/계약/통합 **195 passed, 1 warning**, Vision **45 passed**, HTTP 시연·Frontend 빌드 통과. 이 중 기존 143개와 새 52개로 AC-01~03 전체 fixture/API 대조. ATC/Readback/Cockpit의 null·낮은/미상 점수·품질·근거·원문·시각·정책·문맥 실패가 이전 VERIFIED를 유지하거나 거짓 RESOLVED를 만들지 않고 사유·원본·확인 주체가 조회됨. 확인 가능한 Readback 불일치와 Cockpit 장애의 오류 우선순위도 확인.
-- 리뷰: 단일 에이전트가 역할 지침 적용. 테스트는 먼저 정상 상태를 증명해 항상 보류하는 구현도 통과하지 못하게 구성. 정답 사유 목록은 추론 입력으로 제공하지 않고 기존 Mock 생산자가 서버 모델을 직접 import하지 않음. 실제 장애/모델 성능·위험 0으로 일반화하지 않음. 단계별 해결과 전체 정상의 의미 보존 확인.
-- 인수인계: SPEC-005의 모의 범위 AC 전체 검증 완료. 실카메라·음성·SDR·실제 모델/생산자 어댑터·다른 DB·실제 입력 E2E는 미실행이며 SPEC-003/004/009에서 검증. 모델 점수/정책은 실장비 안전 기준이 아님. 다음은 SPEC-006-WI-01 운영 화면과 SPEC-008-WI-01 Trace 확장 등 선행 충족 작업. 커밋·푸시·PR 갱신 미실행.
+- 구현: 81개 혼합 필드 조합과 API 설정9개·불확실성12개·혼합 복창/legacy/지연 입력 회귀, HTTP11개를 추가했다. 제품 코드는 변경하지 않았다. 상세는 [WI-03 MD 하단 해당 항목](005-safe-validation/workitem/wi-03.md)을 따른다.
+- 검증: backend393개·실제 HTTP37개·공통 계약/공개 판정 Schema 및 실행 ID 격리를 검증했다. 상세는 [WI-03 MD 하단 해당 항목](005-safe-validation/workitem/wi-03.md)을 따른다.
+- 리뷰: 테스트 기대값을 인수 표에서 독립 정의하고 최신 유효 값과 오래된 지연 입력의 차이·freshness·원본/Trace를 대조했다. 외부 PR 리뷰는 별도다. 상세는 [WI-03 MD 하단 해당 항목](005-safe-validation/workitem/wi-03.md)을 따른다.
+- 인수인계: 범위 내 전체 AC의 실행 근거와 미실행 장비/모델·후속 UI/Incident/Report 연결점을 남겼다. 상세는 [WI-03 MD 하단 해당 항목](005-safe-validation/workitem/wi-03.md)을 따른다.
 
 ## 변경 기록
+
+- 2026-10-18 수행 기록: WI-03이 WI-01/02의 전체 mock/규칙·수신/API 인수를 대조했다. backend393/HTTP37·81개 필드 조합·실행 격리/원본 Trace 회귀 근거를 남겼다. 요구사항 버전 변경 없이 실행 결과만 갱신한다. 실제 장비/모델 전체 인수로 확대하지 않는다.
+
+- v3 · 2026-10-18: WI-02 3상태·복창/설정 단계·최초5초/조기 일치/재불일치·부분 지시 감시 및 안내 후보 구현. 타이머/판정 원자 저장·조회 재평가와 구체 인수 기록 추가. 실제 재생·Incident·장비 통합과 전체 회귀 WI-03은 후속 범위.
+
+- v2 · 2026-10-18: WI-01 원문/구조/문맥/정책 검사 구현, 수신 보류·상태/Trace 연결 및 공개 정책/결과 Schema 추가. 누적 사용자 결정인 최초5초 대기·조기 일치·지속 감시·재불일치 즉시 안내를 WI-02 후속 기준으로 보존했다. 이번 WI에서 해당 최종 비교/타이머를 구현했다고 표시하지 않는다.
 
 - v1 · 2026-10-10: 사용자 제공 기획·Priority·자문과 현재 코드로 최초 작업 초안 작성. 문서 작성 권한과 기능 구현 권한은 구분한다.
 

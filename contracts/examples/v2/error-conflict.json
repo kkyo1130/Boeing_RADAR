@@ -1,0 +1,7 @@
+{
+  "schema_version": "2",
+  "code": "ID_CONTENT_CONFLICT",
+  "message": "Same observation ID with different content",
+  "input_id": "obs-camera-001",
+  "field_path": null
+}

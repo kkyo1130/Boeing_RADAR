@@ -1,0 +1,214 @@
+{
+  "$defs": {
+    "FieldVerdict": {
+      "additionalProperties": false,
+      "properties": {
+        "stage": {
+          "enum": [
+            "READBACK",
+            "SETTING"
+          ],
+          "title": "Stage",
+          "type": "string"
+        },
+        "field": {
+          "enum": [
+            "ALT",
+            "HDG",
+            "CALLSIGN"
+          ],
+          "title": "Field",
+          "type": "string"
+        },
+        "instruction_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Instruction Id"
+        },
+        "observation_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Observation Id"
+        },
+        "expected": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expected"
+        },
+        "actual": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Actual"
+        },
+        "result": {
+          "enum": [
+            "NORMAL",
+            "MISMATCH",
+            "UNVERIFIED"
+          ],
+          "title": "Result",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "wait_until": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Wait Until"
+        }
+      },
+      "required": [
+        "stage",
+        "field",
+        "instruction_id",
+        "observation_id",
+        "expected",
+        "actual",
+        "result",
+        "reason"
+      ],
+      "title": "FieldVerdict",
+      "type": "object"
+    },
+    "StageVerdict": {
+      "additionalProperties": false,
+      "properties": {
+        "result": {
+          "enum": [
+            "NORMAL",
+            "MISMATCH",
+            "UNVERIFIED"
+          ],
+          "title": "Result",
+          "type": "string"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/FieldVerdict"
+          },
+          "title": "Fields",
+          "type": "array"
+        }
+      },
+      "required": [
+        "result",
+        "fields"
+      ],
+      "title": "StageVerdict",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "validation_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Validation Version",
+      "type": "string"
+    },
+    "result": {
+      "enum": [
+        "NORMAL",
+        "MISMATCH",
+        "UNVERIFIED"
+      ],
+      "title": "Result",
+      "type": "string"
+    },
+    "phase": {
+      "enum": [
+        "WAITING_ATC",
+        "READBACK",
+        "SETTING",
+        "MONITORING",
+        "ENDED"
+      ],
+      "title": "Phase",
+      "type": "string"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    },
+    "representative_stage": {
+      "anyOf": [
+        {
+          "enum": [
+            "READBACK",
+            "SETTING"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Representative Stage"
+    },
+    "readback": {
+      "$ref": "#/$defs/StageVerdict"
+    },
+    "setting": {
+      "$ref": "#/$defs/StageVerdict"
+    },
+    "advisory_candidates": {
+      "items": {
+        "$ref": "#/$defs/FieldVerdict"
+      },
+      "title": "Advisory Candidates",
+      "type": "array"
+    }
+  },
+  "required": [
+    "result",
+    "phase",
+    "reason",
+    "representative_stage",
+    "readback",
+    "setting",
+    "advisory_candidates"
+  ],
+  "title": "ValidationSnapshot",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:radar:contracts:validation-snapshot-v1"
+}

@@ -111,3 +111,29 @@ SPEC-001-WI-02/03에서 [공통 설치·실행·설정·검증 안내](developme
 Backend/계약/통합 215개·Vision 45개, Frontend 빌드·Chromium 2개, 실제 HTTP legacy/v1 네 합성 시나리오·리포트 출력 통과. 브라우저는 즉시 연결 실패 및 응답이 멈춘 경우(5초 제한) 모두 기존 정상 배지를 제거하고 재연결을 확인했다. 평가 CLI의 12개 합성 all-hold 예측/두 fixture 버전 비교는 도구 동작 확인이며 실제 모델 성능 평가가 아니다. 전체 변경 미커밋. 실행/제약은 운영 안내 참조.
 
 2026-10-17: 후속 구현을 기능별 6개 코드/테스트 커밋과 별도 문서 커밋으로 보존했다. 앞선 미커밋 표기는 당시 기록이다. [커밋 인수인계](spec/todo.md#2026-10-17-단계별-커밋-기록)를 따른다.
+
+## SPEC-002-WI-01 계약 구현·PR 검토 · 2026-10-17
+
+공통 v2 DTO, JSON Schema6종, fixture21개·manifest, 계약 검사 도구를 작성했다. backend 전체117개 테스트와 Schema/DTO 예제 검사를 통과했다. 현재 v1 OpenAPI/라우터는 유지한다. 작업은 PR 검토 중이며 v2 수신·DB·중복/시간 기반 상태 검사는 다음 WI 범위다. [검증 기록](spec/002-observation-contracts/workitem/wi-01.md)에 범위·명령·미실행 항목을 남겼다. 이 상태는 dev 기반 현재 PR의 검증 범위이며 다른 열린 PR의 구현 완료를 판정하지 않는다.
+
+## v2 수신·저장·문맥 검사 · 2026-10-18
+
+PR #5의 계약이 dev에 squash merge(`5515878`)됐다. 후속 SPEC-002-WI-02는 별도 브랜치에서 v2 세션·구간 등록/취소·관측/health·현재 상태·입력/Trace 조회를 구현했다. 설정은 비행별 snapshot으로 고정하며 미설정·stale·미상·저품질·이전 시도는 현재 정상 근거로 쓰지 않는다. 부분 목표의 출처, 늦은 Pilot의 동일 ATC 연결, 장애 복구 후 새 관측을 검사한다.
+
+SQLite 추가 migration·기존 DB 보존·동시 중복·commit 실패 원자성 테스트를 포함해 backend172 passed, 경고1개. 계약 스키마6종·fixture21개 검사 통과. 기존 Mock 경로와 그 Trace 형태는 유지한다. v2 Trace는 별도 경로로 조회하며 최종 숫자 비교·규칙 판정·모델/실장비·통합 리포트는 아직 구현/검증하지 않았다. 상세 결과와 제약은 [WI-02](spec/002-observation-contracts/workitem/wi-02.md), 실행/API 계약은 [v2 수신 안내](../contracts/receiving-v2.md)를 따른다.
+
+## 2026-10-18 SPEC-002-WI-03 계약 HTTP 통합
+
+PR #6을 `aae3113`로 squash merge한 dev를 기준으로 독립 JSON 생산자와 실제 임시 uvicorn/SQLite를 연결했다. 통합21개·기존 backend174개·Schema6종/fixture21개 검사 통과. 0/null·부분 지시 출처·미인식·장애 복구·새 목표/프레임·잘못된 버전/단위/연결·중복·시도 순서·실행 격리와 원본/Trace 대응을 검증했다. 상세 근거·실행 안내·미실행 범위는 [WI-03](spec/002-observation-contracts/workitem/wi-03.md)을 따른다. 실제 카메라·STT/OCR·최종 판정·알림·리포트 연동 성공을 뜻하지 않는다.
+
+## 2026-10-18 SPEC-005-WI-01 결정론적 구조화 검사
+
+PR #7의 자동 리뷰가 head7bd3544에 대해 지적 없이 완료된 것을 확인하고 d46c3ac로 squash merge한 dev에서 진행했다. 모델 PASS와 서버 규칙 결과를 분리해 원문/필드 raw_text·HDG/명시 FL·등록 호출부호/구간·시각 순서·명시 상한/급변 정책을 검사한다. 비PASS 입력은 목표/현재 숫자에 적용하지 않고 원본과 해당 관측의 규칙 근거를 같은 수신 트랜잭션으로 저장한다. 새 정책·결과 Schema2종과 문형 fixture20개, backend251개·실제 HTTP24개 검증 근거를 추가했다. 실제 모델/장비·최종 3상태/타이머/알림/Incident는 미검증/후속 범위이며 v2 전체 결과는 계속 UNVERIFIED다. 상세 구현·검증·리뷰·인수인계는 [WI-01](spec/005-safe-validation/workitem/wi-01.md)을 따른다.
+
+## 2026-10-18 SPEC-005-WI-02 3상태·오류 단계
+
+PR #8 리뷰 P2를 수정·검증해525f98a로 병합한 기준에서 READBACK/SETTING별 NORMAL/MISMATCH/UNVERIFIED·대표 단계·안내 후보를 구현했다. 복창 확인 최초5초·조기 전체 일치·이후 재불일치 즉시 확인, ALT 부분 변경 시 기존 HDG 감시와 최신 지시/복창 대기 전환을 분리한다. 판정·타이머/완료 기록·Trace는 수신과 원자 저장하고 GET은 사본에서 기한/만료를 재평가한다. backend288/HTTP26·계약 검사·미실행 범위는 [WI-02 MD 하단 결과](spec/005-safe-validation/workitem/wi-02.md)를 따른다. 실제 음성·Incident 해결·장비/모델/전체 E2E는 후속 범위다.
+
+## 2026-10-18 SPEC-005-WI-03 판정 전체 회귀·거짓 정상 검증
+
+PR #9 문서 리뷰 P2 수정·병합b3262cf를 기준으로 순수3상태 필드 조합81개와 수신/API 설정9개·불확실성12개·혼합 복창·legacy RESOLVED 격리·지연 입력 회귀를 추가했다. 실제 HTTP11개를 추가해 backend393/HTTP37·공통 계약 검사와 반복 실행 ID 격리를 확인했다. 이 WI에서 제품 코드·정책·Schema는 변경하지 않았다. 유한한 합성 회귀 범위의 결과이며 실제 모델 정확도·장비 E2E 성공으로 표현하지 않는다. 상세 AC별 근거·초기 실패 수정·리뷰·인수인계는 [WI-03 MD 하단 결과](spec/005-safe-validation/workitem/wi-03.md)를 따른다.
