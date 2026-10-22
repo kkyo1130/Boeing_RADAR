@@ -41,3 +41,6 @@ app.include_router(clearances.router)
 
 app.include_router(receiving_v2.router)
 receiving_v2.install_handlers(app)
+
+from app.api import operations_v2
+app.include_router(operations_v2.router)

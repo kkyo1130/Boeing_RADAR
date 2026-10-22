@@ -1,3 +1,7 @@
+# 2026-10-22 PR #4 통합
+
+v2 화면·API·판정으로 통합했다. 최신 변경/검증은 [통합 기록](development/pr4-v2-integration.md), 실행은 [운영 안내](development/operations.md)를 따른다. 아래는 각 시점의 과거 검증 기록이다.
+
 # RADAR 구현 현황
 
 확인일: 2026-10-10. 현재 dev는 `9d1d561`이며 MCP 정지 이미지 PoC와 공유 문서가 병합됐다. 이번 태블릿 화면·Vision 스트림 작업은 `codex/tablet-mcp-stream`에 포함한 변경이다. 아래 backend 결과는 초기 기준선 검증이며 최신 Vision 검증은 문서 끝의 태블릿 작업 기록을 따른다.

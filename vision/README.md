@@ -4,6 +4,8 @@
 
 태블릿 화면 → 촬영 프레임 저장 → ROI 설정 → 스트림 실행은 [태블릿 데모 안내](docs/tablet-demo.md)를 따른다.
 
+공통 설치는 [개발 환경 안내](../docs/development/README.md)를 따른다. 루트 `.venv` 설치는 test/capture를 포함하며 아래의 Vision 전용 `.venv` 설치와 둘 중 하나를 선택한다.
+
 ## 실행 (저장소 루트)
 
 Python 3.11 이상, macOS Command Line Tools가 필요하다. Python은 입력·ROI·결과 처리를 담당하며 초기 OCR 어댑터는 macOS Vision이다. 다른 OS의 OCR 엔진은 아직 제공하지 않는다.
@@ -87,3 +89,5 @@ MCP 설정의 `heading.ocr_preprocessing`으로 방위 ROI만 흑백·4배 확�
 상태 사유: camera_starting/camera_unavailable/camera_disconnected/camera_error/frame_timeout/stale_frame/stale_observation/camera_reconnected/capture_stopped/input_error/video_ended/video_no_frames/playback_stopped. 필드 reason은 기존 OCR 사유와 unstable_reading 또는 입력 장애 사유다. 별도 감시 스레드가 OCR 처리 중에도 이전 관측 만료/프레임 중단을 감시한다.
 
 입력/설정 오류는 종료 코드 2, 정상 종료 및 Ctrl-C는 0이다. 종료 코드 0은 숫자 판독 성공을 뜻하지 않는다. Ctrl-C는 진행 중인 네이티브 OCR 호출 종료까지 지연될 수 있으며, 그동안 상태 감시는 계속된다. 카메라 장애 시 수신을 재시도하므로 카메라 모드는 duration 또는 Ctrl-C까지 실행된다.
+
+공통 계약으로 ROI 근거·프레임 ID·원래 시각·health를 서버에 보내는 어댑터는 [운영 안내](../docs/development/operations.md)의 Vision 절을 따릅니다. 영상 파일의 시각 미상은 보류를 유지합니다.

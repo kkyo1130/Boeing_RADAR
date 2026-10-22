@@ -128,6 +128,11 @@ def end(db, flight_id):
     now = utc_now()
     with atomic(db):
         flight, profile = context(db, flight_id, active=True, lock=True)
+        # Persist timer-driven incidents before freezing the last live verdict.
+        live = deepcopy(profile.state)
+        refresh_validation(db, profile, live, now)
+        profile.state = live
+        final_snapshot = get_state(db, flight_id)
         flight.status, flight.ended_at = FlightStatus.ENDED, stamp(now)
         state = deepcopy(profile.state)
         profile.revision += 1
@@ -135,6 +140,8 @@ def end(db, flight_id):
         profile.state = state
         record(db, flight_id, EventType.FLIGHT_ENDED)
         trace(db, profile, "FLIGHT_ENDED", {"unverified": True}, now)
+        from app.services.reports.v2 import report
+        report(db, flight_id, final_snapshot=final_snapshot)
     return session_response(flight, profile)
 
 
