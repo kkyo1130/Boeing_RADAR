@@ -2,7 +2,7 @@
 
 작성일: 2026-10-04 · 앱 버전: 0.1.0
 
-이 문서는 현재 소스 코드에 구현된 P0 Mock 기능을 설명합니다. 저장소 루트는 `Boeing_RADAR/`이며 Python 서버와 해당 테스트는 `backend/`에 있습니다. 이 문서는 백엔드 Mock 기준선입니다. 2026-10-13 추가된 공통 계약 수신은 별도 [v1 API 안내](../contracts/observation-api-v1.md)를 참조합니다. v1 경로의 [3상태 판정](../contracts/three-state-validation.md)은 명시적인 정책·확인 문맥과 새 유효 관측을 요구하며, 부족한 입력은 UNVERIFIED로 표시합니다. 이후 태블릿 MCP 화면과 Vision 스트림 구현은 [구현 현황](IMPLEMENTATION_STATUS.md) 및 [태블릿 데모 안내](../vision/docs/tablet-demo.md)에 기록합니다.
+이 문서는 현재 소스 코드에 구현된 P0 Mock 기능을 설명합니다. 저장소 루트는 `Boeing_RADAR/`이며 Python 서버와 해당 테스트는 `backend/`에 있습니다. 이 문서는 백엔드 Mock 기준선입니다. 이후 태블릿 MCP 화면과 Vision 스트림 구현은 [구현 현황](IMPLEMENTATION_STATUS.md) 및 [태블릿 데모 안내](../vision/docs/tablet-demo.md)에 기록합니다.
 
 ## 1. 목적과 구현 범위
 

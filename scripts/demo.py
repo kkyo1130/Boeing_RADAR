@@ -1,73 +1,57 @@
-"""Synthetic HTTP rehearsal; creates labelled fixture flights, never real sensor evidence."""
+"""Synthetic v2 HTTP rehearsal, using the existing independent mock producer."""
 import argparse
-from datetime import datetime, timezone
 import json
 from pathlib import Path
-from uuid import uuid4
-from urllib.request import Request, urlopen
+import sys
+from tempfile import TemporaryDirectory
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT/'tests/integration'))
+from mock_producer import MockProducer
 
 
 def run(server):
-    def request(path, data=None):
-        request = Request(server.rstrip('/') + path,
-            data=json.dumps(data).encode() if data is not None else None,
-            headers={"Content-Type": "application/json"})
-        with urlopen(request, timeout=30) as response:
-            return json.load(response)
     reports = []
-    for scenario in ("normal", "readback_error", "setting_error", "unreadable"):
-        flight = request('/api/flights/start', {})['flight_id']
-        c = request(f'/api/v1/flights/{flight}/clearances', {})['clearance_id']
-        request(f'/api/v1/clearances/{c}/validation-settings', {
-            "confirmed": True, "confirmed_by": "synthetic-rehearsal", "minimum_model_score": .5,
-            "rule_policy": json.loads((ROOT / 'contracts/rule-policy-demo.json').read_text()),
-            "atc_context": {"expected_callsign": "RADAR1", "expected_conditions": [], "expected_ordered_actions": []}})
-        def send(source, previous=None, uncertain=False):
-            body = json.loads((ROOT / 'contracts/examples/observation-v1/normal.json').read_text())
-            stamp = datetime.now(timezone.utc).isoformat()
-            token = str(uuid4())
-            body.update(event_id=f'event-{token}', observation_id=f'obs-{token}', sample_id=f'synthetic-{token}',
-                flight_id=flight, clearance_id=c, channel_id=f'synthetic-{source}', source=source,
-                captured_at=stamp, processed_at=stamp, input_mode='fixture')
-            if source != 'COCKPIT':
-                body['speech'] = {"transcript": "synthetic rehearsal", "callsign": "RADAR1",
-                    "callsign_reason": None, "role_basis": "labelled_fixture", "conditions": [], "ordered_actions": []}
-                for evidence in body['evidence']:
-                    evidence.update(kind='audio', roi=None)
-            if previous:
-                body.update(intent='correction', supersedes_observation_id=previous['observation_id'])
-            elif scenario == 'readback_error' and source == 'READBACK':
-                body['fields']['heading'].update(value=290, raw_text='290')
-            elif scenario == 'setting_error' and source == 'COCKPIT':
-                body['fields']['altitude'].update(value=3500, raw_text='3500')
-            if uncertain or scenario == 'unreadable' and source == 'COCKPIT':
-                body['fields']['altitude'].update(value=None, reason='unreadable', raw_text=None)
-            receipt = request('/api/v1/observations', body)
-            if not receipt['accepted']:
-                raise AssertionError(receipt)
-            return body
-        send('ATC')
-        rb = send('READBACK')
-        cp = send('COCKPIT')
-        initial = request(f'/api/v1/clearances/{c}')
-        expected = 'NORMAL' if scenario == 'normal' else 'UNVERIFIED' if scenario == 'unreadable' else 'MISMATCH'
-        assert initial['verdict'] == expected, initial
-        if expected == 'MISMATCH':
-            current = request(f'/api/v1/flights/{flight}/report')
-            incident = current['incidents'][0]
-            request(f'/api/v1/incidents/{incident["incident_id"]}/actions', {
-                'action': 'ACKNOWLEDGED', 'actor': 'synthetic-rehearsal', 'reason': 'fixture_reviewed'})
-            source, previous = ('READBACK', rb) if scenario == 'readback_error' else ('COCKPIT', cp)
-            uncertain = send(source, previous, uncertain=True)
-            assert request(f'/api/v1/flights/{flight}/report')['incidents'][0]['status'] == 'OPEN'
-            send(source, uncertain)
-            assert request(f'/api/v1/clearances/{c}')['verdict'] == 'NORMAL'
-        request(f'/api/flights/{flight}/end', {})
-        report = request(f'/api/v1/flights/{flight}/report.json')
-        assert report['terminal']
-        reports.append({'scenario': scenario, 'input_kind': 'synthetic_fixture', 'report': report})
+    with TemporaryDirectory(prefix='radar-demo-') as folder:
+        for name in ('normal', 'readback_error', 'setting_error', 'unreadable'):
+            p = MockProducer(server, Path(folder)/f'{name}.json')
+            try:
+                p.start()
+                atc = p.segment()
+                p.send(p.speech(atc))
+                pilot = p.segment(atc)
+                rb = p.speech(pilot)
+                if name == 'readback_error':
+                    rb['fields']['ALT'].update(value=4000, raw_text='4000')
+                    rb['transcript'] = rb['transcript'].replace('three thousand', 'four thousand').replace('three zero zero zero', 'four zero zero zero')
+                p.send(rb)
+                camera = p.camera()
+                camera['fields']['HDG'].update(value=270, raw_text='270')
+                p.send(camera)
+                if name == 'setting_error':
+                    camera = p.camera()
+                    camera['fields']['HDG'].update(value=90, raw_text='90')
+                    p.send(camera)
+                if name == 'unreadable':
+                    camera = p.camera('cockpit-unreadable.json')
+                    p.send(camera)
+                expected = 'NORMAL' if name == 'normal' else 'UNVERIFIED' if name == 'unreadable' else 'MISMATCH'
+                assert p.state()['result'] == expected, p.state()
+                if expected == 'MISMATCH':
+                    if name == 'readback_error':
+                        p.send(p.speech(p.segment(atc)))
+                    else:
+                        fixed = p.camera()
+                        fixed['fields']['HDG'].update(value=270, raw_text='270')
+                        p.send(fixed)
+                    assert p.state()['result'] == 'NORMAL', p.state()
+                    assert any(i['status'] == 'RESOLVED' for i in p.state()['incidents'])
+                p.request('POST', p.path+'/end', {})
+                report = p.request('GET', p.path+'/report.json')
+                assert report['terminal']
+                reports.append(dict(scenario=name, input_kind='synthetic_fixture', report=report))
+            finally:
+                p.client.close()
     return reports
 
 
@@ -76,6 +60,5 @@ if __name__ == '__main__':
     parser.add_argument('--server', default='http://127.0.0.1:8000')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
-    result = run(args.server)
-    args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
-    print('PASS: 4 synthetic scenarios, uncertain corrections, fresh resolution and report export')
+    args.output.write_text(json.dumps(run(args.server), ensure_ascii=False, indent=2)+'\n')
+    print('PASS: four v2 synthetic scenarios, fresh resolution and report export')

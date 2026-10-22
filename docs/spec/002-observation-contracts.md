@@ -67,7 +67,7 @@ SPEC-007 D-007-04에 따라 현재 적용하는 ALT·HDG의 목표값과 원본 
 
 ## 이미 구현된 기반
 
-기존 Mock 경로에는 기본 Observation DTO, endpoint별 source, clearance_id 연결, 입력 순서/중복 거부가 있다. WI-01/02로 별도 v1 경로에 null·부분 지시·quality/health/evidence·버전·시각 검사를 추가했다. 상세 실행 근거는 [구현 현황](../IMPLEMENTATION_STATUS.md)을 참조한다. 아래 WI는 확장 요구까지 포함하므로 이 기반만으로 done 처리하지 않는다.
+기본 Observation DTO, endpoint별 source, clearance_id 연결, 입력 순서/중복 거부가 있다. null·부분 지시·quality/health/evidence·버전·freshness 확장은 없다. 상세 실행 근거는 [구현 현황](../IMPLEMENTATION_STATUS.md)을 참조한다. 아래 WI는 확장 요구까지 포함하므로 이 기반만으로 done 처리하지 않는다.
 
 ## 구현 계약과 처리 기준
 

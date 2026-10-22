@@ -74,9 +74,17 @@ def metadata(db, flight_id, instruction_id, stage, field, observation_id):
         assets = []
         for ref in refs(row, field):
             path, reason = media_path(ref["ref"])
+            stored = None
+            if ref["ref"].startswith("stored:"):
+                from app.services.media_v2 import lookup
+                try:
+                    stored = lookup(db, flight_id, ref["ref"])
+                    path, reason = True, None
+                except intake.ReceivingError as exc:
+                    path, reason = None, exc.message
             if ref["kind"] == "TRANSCRIPT":
                 path, reason = None, "TRANSCRIPT_SHOWN_AS_TEXT"
-            elif path and ((ref["kind"] == "AUDIO") != MIME[path.suffix.lower()].startswith("audio/")):
+            elif path and ((ref["kind"] == "AUDIO") != (stored.media_type if stored else MIME[path.suffix.lower()]).startswith("audio/")):
                 path, reason = None, "MEDIA_KIND_CONFLICT"
             assets.append({**{key: value for key, value in ref.items() if key != "ref"},
                 "url": (f"/api/v2/flights/{quote(flight_id, safe='')}/evidence/{quote(observation_id, safe='')}/media/{role}/{quote(ref['evidence_id'], safe='')}?{query}" if path else None),
@@ -95,7 +103,12 @@ def content(db, flight_id, instruction_id, stage, field, observation_id, role, e
     ref = next((ref for ref in refs(observations[role], field) if ref["evidence_id"] == evidence_id), None)
     if not ref or ref["kind"] == "TRANSCRIPT":
         raise intake.ReceivingError(404, "NOT_FOUND", "Media is not available for this selection")
-    data, mime = read_media(ref["ref"])
+    if ref["ref"].startswith("stored:"):
+        from app.services.media_v2 import lookup
+        item = lookup(db, flight_id, ref["ref"])
+        data, mime = item.content, item.media_type
+    else:
+        data, mime = read_media(ref["ref"])
     if (ref["kind"] == "AUDIO") != mime.startswith("audio/"):
         raise intake.ReceivingError(404, "NOT_FOUND", "MEDIA_KIND_CONFLICT")
     return data, mime

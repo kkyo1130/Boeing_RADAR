@@ -21,7 +21,7 @@ Python 3.13·Node 24가 기준입니다. 자동 검증은 실장비 성공을 �
 
 ## 설치 및 실행
 
-저장소 루트에서 `backend/`로 이동해 Python 3.11 이상으로 실행합니다. 통신은 골격입니다. 태블릿 MCP 화면은 [frontend 안내](frontend/README.md), Vision 촬영/ROI·스트림은 [태블릿 데모 안내](vision/docs/tablet-demo.md)를 따릅니다.
+저장소 루트에서 `backend/`로 이동해 Python 3.11 이상으로 실행합니다. 로컬 Whisper·마이크 입력은 별도 선택 설치입니다. 태블릿 MCP 화면은 [frontend 안내](frontend/README.md), Vision 촬영/ROI·스트림은 [태블릿 데모 안내](vision/docs/tablet-demo.md)를 따릅니다.
 
 ```sh
 cd backend
@@ -158,4 +158,4 @@ python -m pytest -q
 
 향후 STT·Vision·통신 어댑터, 판단 보류·입력 건전성·근거 제공·재검증 및 리포트를 구현합니다. 상세 범위는 [스펙](spec.md)을 따릅니다. 자문 반영으로 QNH/Baro와 기압 센서 Sensor Cross-Check는 이번 범위에서 제외합니다. 백엔드는 P0 Mock 흐름이며 Vision은 정지 이미지·영상/웹캠 OCR·상태 감시·안정화, frontend는 태블릿 MCP 수동 화면까지 구현했습니다. 서버 통합과 실제 태블릿 촬영 검증은 남아 있습니다. 운영 도입에는 인증, 마이그레이션, 병렬 변경의 충돌 제어가 추가로 필요합니다. 항공 운용 판정용으로 검증된 시스템은 아닙니다.
 
-운영 화면·로컬 Whisper·ATC WAV/Pilot 마이크·Vision 전송·리포트·평가 실행은 [운영 안내](docs/development/operations.md)를 따릅니다. `/operations`는 v2 비행 운영 화면, `/operations-v1`는 기존 v1 운영·리포트 화면이며 기본 `/` 태블릿 MCP와 구분합니다.
+운영 화면·로컬 Whisper·ATC WAV/Pilot 마이크·Vision 전송·리포트·평가 실행은 [운영 안내](docs/development/operations.md)를 따릅니다. `/operations` 하나에서 v2 비행 운영·근거·종료 리포트를 제공합니다. 기본 `/`는 태블릿 MCP입니다.

@@ -84,6 +84,6 @@ PC에서는 `http://localhost:5173/`, 같은 Wi-Fi의 태블릿에서는 Vite가
 
 설치/배포 시 public/voice의 WAV6개도 함께 제공한다. 실행 중 TTS 서비스/비밀 키가 필요하지 않다. 생성 방법·서버 API·입력 어댑터·실장비 미검증 범위는 [음성 실행 계약](../contracts/advisory-v2.md)을 따른다. 실제 입력 어댑터는 audioFocus.begin을 통해 안내/근거 음성을 먼저 중단하고 서버 허가 뒤 입력을 시작해야 한다. SIMULATION token은 중요한 모의 조종 구간 전체에 적용한다. 원본 근거 음성도 안내와 겹치지 않는다.
 
-## 병합 후 v1 화면
+## 종료 리포트
 
-`/operations`는 dev의 v2 운영 화면이며, 기존 v1 검사·리포트 화면은 `/operations-v1`에서 사용할 수 있다. 두 세션/API는 서로 변환하지 않는다.
+END FLIGHT 후 같은 `/operations` 화면에서 v2 종료 요약과 JSON 다운로드를 제공한다. 별도 v1 운영 화면은 제거했다. [통합 운영 안내](../docs/development/operations.md)를 따른다.

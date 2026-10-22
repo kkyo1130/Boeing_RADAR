@@ -26,13 +26,7 @@ def start(db):
     return flight
 
 def end(db, flight_id):
-    from app.services.contract_service import lock_writes
-    lock_writes(db, flight_id)
     flight = get_flight(db, flight_id, active=True)
-    from app.services.operations import report, record as operation_record
-    operation_record(db, flight_id, None, "FLIGHT_ENDED", now())
-    db.flush()
-    report(db, flight_id, terminal=True)
     flight.status = FlightStatus.ENDED
     flight.ended_at = now()
     record(db, flight_id, EventType.FLIGHT_ENDED)

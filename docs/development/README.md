@@ -1,6 +1,6 @@
 # 개발 환경과 공통 검증
 
-SPEC-001-WI-02/03의 설치·설정·실행 기준이다. 실제 구현된 Backend, 태블릿 MCP Frontend, Vision만 설치한다. communication은 골격이며 실행 프로그램·장치 연동 명령을 제공하지 않는다.
+SPEC-001-WI-02/03의 설치·설정·실행 기준이다. 실제 구현된 Backend, 태블릿 MCP Frontend, Vision만 설치한다. 로컬 음성은 --speech로 선택 설치한다. v2 입력/운영은 [운영 안내](operations.md)를 따른다.
 
 ## 버전과 설치
 
@@ -38,13 +38,13 @@ python3 scripts/verify.py --python /tmp/radar-dev/bin/python
 ```sh
 cd backend
 export RADAR_DATABASE_URL=sqlite:///./radar.db
-export RADAR_OBSERVATION_MAX_AGE_SECONDS=30
+export RADAR_V2_CONFIG="$PWD/../contracts/examples/integration/config.json"
 ../.venv/bin/uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Swagger: http://127.0.0.1:8000/docs . DB 상대 경로는 실행 디렉터리 기준이다. backend/.env.example은 값의 예시이며 앱이 .env를 자동으로 읽지 않는다. 환경변수를 직접 export하거나 신뢰할 수 있는 로컬 파일을 셸에서 명시적으로 로드한다. age 30초는 모의 기본값이며 안전/운용 기준이 아니다.
+Swagger: http://127.0.0.1:8000/docs . DB 상대 경로는 실행 디렉터리 기준이다. backend/.env.example은 값의 예시이며 앱이 .env를 자동으로 읽지 않는다. 환경변수를 직접 export하거나 신뢰할 수 있는 로컬 파일을 셸에서 명시적으로 로드한다. 예시 config는 합성 검증용이며 안전/운용 기준이 아니다.
 
-기존 DB 추가 마이그레이션: backend에서 `../.venv/bin/python -m app.migrate_contract_storage`. v1 판정 정책·확인 문맥은 환경변수나 AI 추출 값으로 자동 채우지 않고 [판정 API](../../contracts/three-state-validation.md)로 명시 등록한다.
+기존 DB는 앱 시작 시 v2 테이블을 추가한다. 명시 실행: backend에서 `../.venv/bin/python -m app.migrate_observation_v2 --database-url sqlite:///./radar.db`. 기존 테이블은 삭제하지 않는다.
 
 실제 loopback HTTP와 임시 DB를 사용한 재현:
 
@@ -61,7 +61,7 @@ cd frontend
 npm run dev
 ```
 
-주소는 http://localhost:5173/ . 기본 화면은 수동 태블릿 MCP, `/operations`는 v2 비행 운영 화면, `/operations-v1`는 기존 v1 운영·근거·리포트 화면이다. [운영·실입력 안내](operations.md)를 따른다. Vite는 LAN 접속을 위해 0.0.0.0:5173을 사용한다. 태블릿에는 PC의 LAN 주소를 입력한다. Node 엔진 범위를 벗어나면 설치가 실패한다. 빌드는 `npm run build`다. Vite `/api` 프록시 기본 대상은 127.0.0.1:8000이며 `RADAR_API_TARGET`으로 변경할 수 있다.
+주소는 http://localhost:5173/ . 기본 화면은 수동 태블릿 MCP, `/operations`는 v2 비행 운영 화면, 근거·종료 리포트도 같은 v2 화면에 포함한다. [운영·실입력 안내](operations.md)를 따른다. Vite는 LAN 접속을 위해 0.0.0.0:5173을 사용한다. 태블릿에는 PC의 LAN 주소를 입력한다. Node 엔진 범위를 벗어나면 설치가 실패한다. 빌드는 `npm run build`다. Vite `/api` 프록시 기본 대상은 127.0.0.1:8000이며 `RADAR_API_TARGET`으로 변경할 수 있다.
 
 ## Vision 실행
 

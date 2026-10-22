@@ -1,85 +1,73 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
+const example = name => JSON.parse(readFileSync(new URL(`../../contracts/examples/v2/${name}.json`, import.meta.url)));
+const quality = { model_score: .9, input_quality: 'SUFFICIENT', reason: null, score_calibrated: false, calibration_ref: null };
+const stamp = offset => new Date(Date.now()+(offset || 0)).toISOString();
 
-const policy = JSON.parse(readFileSync(new URL('../../contracts/rule-policy-demo.json', import.meta.url)));
-const template = JSON.parse(readFileSync(new URL('../../contracts/examples/observation-v1/normal.json', import.meta.url)));
-
-test('서버 판정·수정·리포트와 연결 끊김 보류', async ({ page, request }) => {
-  const errors = [];
-  page.on('pageerror', e => errors.push(e.message));
-  await page.goto('/operations-v1');
-  await expect(page.getByText('서버 연결됨', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'START FLIGHT' }).click();
-  await expect(page.getByRole('button', { name: '새 지시 준비' })).toBeEnabled();
-  await page.getByRole('button', { name: '새 지시 준비' }).click();
-  await expect(page.getByText('검사 정책·호출부호·지시 문맥 확인')).toBeVisible();
-  const flight = await page.getByRole('combobox').inputValue();
-  const clearances = await (await request.get(`/api/v1/flights/${flight}/clearances`)).json();
-  const c = clearances[0].clearance_id;
-  await page.getByText('검사 정책·호출부호·지시 문맥 확인').click();
-  await page.getByText('고급 정책·조건·순서 설정', { exact: true }).click();
-  await page.getByLabel('검사 설정 JSON').fill(JSON.stringify({ confirmed: true, confirmed_by: 'browser-test',
-    rule_policy: policy, minimum_model_score: .5, atc_context: { expected_callsign: 'RADAR1',
-      expected_conditions: [], expected_ordered_actions: [] } }));
-  await page.getByRole('button', { name: '설정 확인', exact: true }).click();
-  await expect(page.getByLabel('검사 설정 JSON')).toHaveCount(0);
-  async function send(source, altitude = 3000, previous = null) {
-    const body = structuredClone(template), token = randomUUID(), stamp = new Date().toISOString();
-    Object.assign(body, { flight_id: flight, clearance_id: c, source, channel_id: source,
-      input_mode: 'fixture', event_id: `event-${token}`, observation_id: `obs-${token}`,
-      sample_id: `sample-${token}`, captured_at: stamp, processed_at: stamp });
-    body.fields.altitude.value = altitude; body.fields.altitude.raw_text = `${altitude}`;
-    if (source !== 'COCKPIT') body.speech = { transcript: 'synthetic browser fixture', callsign: 'RADAR1',
-      callsign_reason: null, role_basis: 'labelled_fixture', conditions: [], ordered_actions: [] };
-    if (source !== 'COCKPIT') for (const e of body.evidence) { e.kind = 'audio'; e.roi = null; }
-    let content, media;
-    if (source === 'COCKPIT') {
-      content = readFileSync(new URL('../../docs/vision/assets/mcp-reference.png', import.meta.url));
-      media = 'image/png';
-    } else {
-      content = Buffer.alloc(32044);
-      content.write('RIFF'); content.writeUInt32LE(32036, 4); content.write('WAVEfmt ', 8);
-      content.writeUInt32LE(16, 16); content.writeUInt16LE(1, 20); content.writeUInt16LE(1, 22);
-      content.writeUInt32LE(16000, 24); content.writeUInt32LE(32000, 28);
-      content.writeUInt16LE(2, 32); content.writeUInt16LE(16, 34);
-      content.write('data', 36); content.writeUInt32LE(32000, 40); media = 'audio/wav';
-    }
-    const upload = await request.post(`/api/v1/clearances/${c}/evidence`, { data: content, headers: { 'Content-Type': media } });
-    expect(upload.ok()).toBeTruthy();
-    const evidence = await upload.json(); body.evidence = [evidence];
-    for (const field of Object.values(body.fields)) field.evidence_ids = [evidence.evidence_id];
-    if (previous) Object.assign(body, { intent: 'correction', supersedes_observation_id: previous.observation_id });
-    const response = await request.post('/api/v1/observations', { data: body });
-    expect(response.ok()).toBeTruthy(); expect((await response.json()).accepted).toBe(true);
-    return body;
+test('v2 운영 화면에서 근거·수정·연결 복구·종료 리포트', async ({ page, request }) => {
+  const errors=[]; page.on('pageerror', e => errors.push(e.message));
+  await page.goto('/operations');
+  await page.getByLabel('등록된 호출부호').fill('RADAR123');
+  const started=page.waitForResponse(r => r.url().endsWith('/api/v2/flights') && r.request().method()==='POST');
+  await page.getByRole('button',{name:'START FLIGHT',exact:true}).click();
+  const flight=(await (await started).json()).flight_id;
+  const base=`/api/v2/flights/${flight}`;
+  async function post(path,data) {
+    const r=await request.post(path,{data}); expect(r.ok(),await r.text()).toBeTruthy(); return r.json();
   }
-  await send('ATC'); await send('READBACK'); const bad = await send('COCKPIT', 3500);
-  await expect(page.getByText('MISMATCH · SETTING_ERROR', { exact: true })).toBeVisible();
-  await expect(page.getByRole('img', { name: 'COCKPIT 관측 근거' })).toBeVisible();
-  await expect(page.locator('audio')).toHaveCount(2);
-  await page.getByRole('button', { name: '근거 확인함' }).click();
-  await send('COCKPIT', 3000, bad);
-  await expect(page.getByText('NORMAL · RESOLVED', { exact: true })).toBeVisible();
-  await page.route('**/api/v1/flights**', route => route.abort());
-  await expect(page.getByText('판단 보류 — 서버 연결 확인 중')).toBeVisible();
-  await expect(page.getByText('NORMAL · RESOLVED', { exact: true })).toHaveCount(0);
-  await page.unroute('**/api/v1/flights**');
-  await expect(page.getByText('NORMAL · RESOLVED', { exact: true })).toBeVisible();
-  await page.route('**/api/v1/flights**', () => {}); // Stalled transport must also expire.
-  await expect(page.getByText('판단 보류 — 서버 연결 확인 중')).toBeVisible({ timeout: 10000 });
-  await expect(page.getByText('NORMAL · RESOLVED', { exact: true })).toHaveCount(0);
-  await page.unroute('**/api/v1/flights**');
-  await expect(page.getByText('NORMAL · RESOLVED', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'END FLIGHT' }).click();
-  await expect(page.getByRole('heading', { name: '종료 시점 리포트' })).toBeVisible();
-  const report = await (await request.get(`/api/v1/flights/${flight}/report.json`)).json();
-  expect(report.summary).toMatchObject({ incidents: 1, resolved: 1, normal: 1 });
+  async function speech(atc) {
+    const segment={...example('speech-complete'),flight_id:flight,segment_id:randomUUID(),attempt_id:randomUUID(),
+      atc_input_id:atc?.atc_input_id || randomUUID(),role:atc?'PILOT':'ATC',role_basis:atc?'PILOT_PTT':'ATC_PLAYBACK',
+      started_at:stamp(-20),ended_at:stamp(-10)};
+    const receipt=await post(base+'/speech-segments',segment);
+    const data={...example('atc-full'),flight_id:flight,observation_id:randomUUID(),
+      segment_id:segment.segment_id,attempt_id:segment.attempt_id,atc_input_id:segment.atc_input_id,
+      observed_at:segment.started_at,processed_at:stamp()};
+    for(const value of Object.values(data.fields)) value.quality=quality;
+    data.callsign.quality=quality;
+    if(atc) Object.assign(data,{source:'READBACK',instruction_id:receipt.instruction_id});
+    await post(base+'/observations',data); return receipt;
+  }
+  const atc=await speech(); await speech(atc);
+  // Use repository's verified image bytes rather than browser-generated evidence.
+  const image=readFileSync(new URL('../../vision/evaluation/fixtures/normal.png',import.meta.url));
+  const upload=await request.post(base+'/media',{data:image,headers:{'Content-Type':'image/png'}});
+  expect(upload.ok(),await upload.text()).toBeTruthy();
+  const asset=await upload.json();
+  async function camera(hdg=270) {
+    const state=await (await request.get(base+'/state')).json();
+    const data={...example('cockpit-readable'),flight_id:flight,observation_id:randomUUID(),frame_id:randomUUID(),
+      observed_at:stamp(),processed_at:stamp(),target_revision:state.revision,
+      evidence_refs:[{...asset,kind:'FRAME',field:null,roi:null}],evidence_unavailable_reason:null};
+    for(const value of Object.values(data.fields)) value.quality=quality;
+    data.fields.HDG.value=hdg; data.fields.HDG.raw_text=String(hdg);
+    await post(base+'/observations',data);
+  }
+  await camera();
+  await expect(page.getByRole('region',{name:'Cockpit 설정',exact:true}).locator('.op-section-heading .op-badge')).toHaveText('일치');
+  await camera(90);
+  const setting=page.getByRole('region',{name:'Cockpit 설정',exact:true});
+  await expect(setting.locator('.op-section-heading .op-badge')).toHaveText('불일치');
+  await setting.getByRole('button',{name:'근거 보기'}).last().click();
+  await expect(page.locator('.op-evidence img')).toBeVisible();
+  await setting.getByRole('button',{name:'확인했음'}).click();
+  await expect(page.getByText('확인 기록을 저장했습니다. 해결 여부는 새 유효 관측으로 확인합니다.')).toBeVisible();
+  await camera();
+  await expect(page.getByRole('region',{name:'Cockpit 설정',exact:true}).locator('.op-section-heading .op-badge')).toHaveText('일치');
+  await page.route('**/api/v2/flights/**/state',route=>route.abort());
+  await expect(page.getByRole('region',{name:'Cockpit 설정',exact:true}).locator('.op-section-heading .op-badge')).toHaveText('판단 보류');
+  await page.unroute('**/api/v2/flights/**/state');
+  await expect(page.getByRole('region',{name:'Cockpit 설정',exact:true}).locator('.op-section-heading .op-badge')).toHaveText('일치');
+  await page.getByRole('button',{name:'END FLIGHT',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'비행 종료 리포트'})).toBeVisible();
+  await expect(page.getByRole('link',{name:'리포트 JSON 저장'})).toBeVisible();
+  const report=await (await request.get(base+'/report.json')).json();
+  expect(report.summary).toMatchObject({incidents:1,resolved:1,open:0});
+  expect(report.snapshot.result).toBe('NORMAL');
   expect(errors).toEqual([]);
 });
 
-test('기존 태블릿 화면 유지', async ({ page }) => {
-  await page.goto('/');
-  await expect(page.getByText('ALTITUDE', { exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'RADAR 운영 화면' })).toHaveCount(0);
+test('태블릿 MCP 유지',async({page})=>{
+  await page.goto('/'); await expect(page.getByText('ALTITUDE',{exact:true})).toBeVisible();
 });

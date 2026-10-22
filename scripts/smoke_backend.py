@@ -23,7 +23,7 @@ def main():
         port = listener.getsockname()[1]
     base = f"http://127.0.0.1:{port}"
     with TemporaryDirectory(prefix="radar-http-smoke-") as directory:
-        env = dict(os.environ, RADAR_DATABASE_URL=f"sqlite:///{Path(directory) / 'smoke.db'}")
+        env = dict(os.environ, RADAR_V2_CONFIG=str(ROOT / "contracts/examples/integration/config.json"), RADAR_DATABASE_URL=f"sqlite:///{Path(directory) / 'smoke.db'}")
         with open(Path(directory) / "server.log", "w+") as log:
             process = subprocess.Popen([str(args.python.absolute()), "-m", "uvicorn", "app.main:app",
                                         "--host", "127.0.0.1", "--port", str(port)],
@@ -72,7 +72,7 @@ def main():
                 from demo import run
                 reports = run(base)
                 assert len(reports) == 4
-                print("PASS: v1 real HTTP synthetic rehearsal, incidents/uncertainty/corrections/frozen report/export.")
+                print("PASS: v2 real HTTP synthetic rehearsal, incidents/uncertainty/corrections/frozen report/export.")
             finally:
                 process.terminate()
                 try:

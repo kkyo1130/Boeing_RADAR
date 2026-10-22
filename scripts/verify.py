@@ -34,6 +34,7 @@ def main():
             elif component == "vision":
                 subprocess.run([python, "-m", "pytest", "vision/tests", "-q"], cwd=ROOT, env=env, check=True)
             else:
+                subprocess.run(["npm", "test"], cwd=ROOT / "frontend", check=True)
                 subprocess.run(["npm", "run", "build"], cwd=ROOT / "frontend", check=True)
     print("PASS: all selected automated checks completed.", flush=True)
 

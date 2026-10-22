@@ -2,7 +2,7 @@
 import argparse
 from sqlalchemy import select
 from app.db import Base, make_engine, now
-from app.models import flight, clearance, safety_event, observation_v2  # noqa: F401
+from app.models import flight, clearance, safety_event, observation_v2, operations_v2  # noqa: F401
 from app.models.observation_v2 import V2Migration
 
 
