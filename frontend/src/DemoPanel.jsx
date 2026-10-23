@@ -70,8 +70,10 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
   async function stopRecording(){const item=capture.current;if(!item||item.kind!=='PILOT')return;clearTimeout(item.timer);setRecording(false);setMessage('로컬 Whisper로 음성을 인식하고 있습니다…');
     try{const audio=base64(mic.current.stop());const data=await api('readback',{audio,started_at:item.started_at,ended_at:new Date().toISOString(),atc_input_id:item.atc_input_id},120000);if(!alive.current)return;setTranscript(data.transcript||'(인식된 발화 없음)');setMessage(data.quality_reason?`복창 판단 보류: ${data.quality_reason}`:'복창 처리 완료 · 상단의 복명복창 결과와 인식 문장을 확인하세요.');}
     finally{capture.current=null;await audioFocus.end(item.focus);}}
-  return <section className="op-panel demo-panel" aria-label="중간 시연 콘솔">
-    <div className="demo-live-status"><span>{running?'● 카메라 수신 중':'○ 카메라 중지 · 아래 장치 설정에서 연결'}</span><span>{micReady?'● 마이크 연결됨':'○ 마이크 미연결'}</span></div>
+  return <div className="demo-console-layout"><section className="op-panel demo-panel" aria-label="중간 시연 콘솔">
+    <div className="demo-device-toolbar">
+      <div className="demo-live-status"><span>{running?'● 카메라 수신 중':'○ 카메라 중지 · 장치 설정에서 연결'}</span><span>{micReady?'● 마이크 연결됨':'○ 마이크 미연결'}</span></div>
+    </div>
     <div id="demo-speech" className="demo-speech"><h2>① 관제 듣기 → ② 복창 녹음 → ③ 아이패드 값 변경</h2><label>사전 등록 관제<select value={scenario} disabled={busy||recording} onChange={e=>setScenario(e.target.value)}><option value="baseline">ALT 3000 / HDG 270</option><option value="altitude">ALT 3500 / HDG 270</option><option value="heading">ALT 3000 / HDG 290</option></select></label>
       <p lang="en">{status?.scenarios?.[scenario]}</p>
       <div className="op-row-actions"><button disabled={disabled||busy||recording} onClick={()=>action(playScenario)}>관제 재생 및 지시 등록</button><button className="primary" disabled={disabled||busy||!micReady||recording||!status?.speech_ready||!snapshot.readback_required} onClick={()=>action(startRecording)}>복창 녹음 시작</button><button disabled={!recording||busy} onClick={()=>action(stopRecording)}>녹음 종료 · 검증</button><button disabled={!recording} onClick={()=>action(cancelInput)}>녹음 취소</button></div>
@@ -80,7 +82,10 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
     {error&&<p className="op-error" role="alert">{error}</p>}
     <p className="demo-progress" role="status">{message}</p>
     <DemoResults snapshot={snapshot} connected={connected} transcript={transcript} pending={recording || (busy && capture.current?.kind==='PILOT')} />
-    <details className="demo-setup"><summary>장치 설정 · 카메라 미리보기 / 숫자 영역 지정</summary>
+
+  </section>
+    <section id="demo-device-setup" className="op-panel demo-panel demo-device-panel" aria-label="장치 설정">
+    <h2>장치 설정</h2><p className="op-muted">카메라 미리보기 / 숫자 영역 지정</p>
     <div id="demo-camera" className="demo-devices"><label>카메라<select value={cameraId} disabled={running||busy} onChange={e=>setCameraId(e.target.value)}><option value="">기본 카메라</option>{devices.filter(d=>d.kind==='videoinput').map(d=><option key={d.deviceId} value={d.deviceId}>{d.label||'카메라 (권한 허용 후 이름 표시)'}</option>)}</select></label><button disabled={disabled||busy||running} onClick={()=>action(connectCamera)}>카메라 연결</button>
     <label>마이크<select value={micId} disabled={recording||busy} onChange={e=>{setMicId(e.target.value);setMicReady(false);}}><option value="">기본 마이크</option>{devices.filter(d=>d.kind==='audioinput').map(d=><option key={d.deviceId} value={d.deviceId}>{d.label||'마이크'}</option>)}</select></label><button disabled={disabled||busy||recording} onClick={()=>action(connectMic)}>마이크 연결</button><meter min="0" max="1" value={level} aria-label="마이크 입력 크기"/></div>
     <div className="demo-preview"><video ref={video} autoPlay muted playsInline style={{display:frozen?'none':'block'}}/><canvas ref={canvas} style={{display:frozen?'block':'none'}} onPointerDown={e=>{drag.current=point(e);e.currentTarget.setPointerCapture(e.pointerId);}} onPointerUp={selectEnd}/></div>
@@ -89,6 +94,6 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
     <p className="op-muted">카메라·아이패드를 고정하세요. 작은 위치 변화는 주변 패널 영상으로 추적합니다. 추적 실패·크기 변화 때는 영역을 다시 지정하세요. 600프레임마다 재시작합니다.</p>
     {result&&<p>최근 OCR: ALT {result.fields.altitude.value??'판독 보류'} / HDG {result.fields.heading.value??'판독 보류'} · {result.fields.altitude.reason||result.fields.heading.reason||'안정화됨'} · {result.captured_at}</p>}
 
-    </details>
-  </section>;
+    </section>
+  </div>;
 }
