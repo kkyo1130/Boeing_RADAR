@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 
-test('GLB loads, 3D picking edits shared values and photo view preserves them',async({page})=>{
+test('GLB loads and supports 3D picking, controls and capture without photo toggle',async({page})=>{
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('/');
  await expect(page.locator('.cockpit-3d')).toHaveAttribute('data-state','ready');
@@ -27,13 +27,11 @@ test('GLB loads, 3D picking edits shared values and photo view preserves them',a
  const knobBox=await page.locator('.cockpit-3d canvas').boundingBox();
  await page.mouse.click(knobBox.x+knobBox.width/2+(-.35+.15)*1.05*scale,knobBox.y+knobBox.height/2+.48*.52*scale);
  await expect(page.getByRole('button',{name:'HEADING 선택값 입력',exact:true})).toHaveText('001');
- await page.getByRole('button',{name:'사진 보기',exact:true}).click();
- await expect(page.getByRole('button',{name:'HEADING 1, 값 입력',exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'사진 보기',exact:true})).toHaveCount(0);
  const headingControls=page.locator('.instrument').filter({has:page.getByRole('heading',{name:'HEADING',exact:true})});
  await headingControls.getByRole('button',{name:'숫자 창 가리기',exact:true}).click();
- await expect(page.getByRole('button',{name:'HEADING 가림, 값 입력',exact:true})).toBeVisible();
+ await expect(headingControls.getByRole('button',{name:'가림 해제',exact:true})).toHaveAttribute('aria-pressed','true');
  await headingControls.getByRole('button',{name:'가림 해제',exact:true}).click();
- await page.getByRole('button',{name:'3D 보기',exact:true}).click();
  await expect(page.locator('.cockpit-3d')).toHaveAttribute('data-state','ready');
  await page.getByRole('button',{name:'촬영 모드',exact:true}).click();
  await expect(page.locator('main')).toHaveClass('capture-mode');
