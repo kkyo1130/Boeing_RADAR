@@ -16,31 +16,49 @@ function textPlane(text,width,height,color,size=64){
 export default function Cockpit3D({values,hidden,onEdit,onChange,capture}){
  const host=useRef(null),runtime=useRef(null),latest=useRef({values,hidden,onEdit,onChange});latest.current={values,hidden,onEdit,onChange};
  const [status,setStatus]=useState('loading');
+ const [view,setView]=useState('cabin');
  useEffect(()=>{
   let renderer;try{renderer=new T.WebGLRenderer({antialias:true,alpha:false});}catch{setStatus('error');return;}
-  let disposed=false;const element=host.current;renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.setClearColor(0x10191e);renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.65;element.appendChild(renderer.domElement);
-  renderer.domElement.setAttribute('aria-label','3D MCP 조종석. 드래그로 회전, 스크롤로 확대. 숫자를 누르면 값 입력.');
-  const scene=new T.Scene(),camera=new T.PerspectiveCamera(32,1,.1,100);camera.position.set(1.1,1.6,13);
+  let disposed=false;const element=host.current;renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.setClearColor(0x111d29);renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.65;element.appendChild(renderer.domElement);
+  renderer.domElement.setAttribute('aria-label','전체 3D 메시 조종석. 드래그로 회전, 스크롤로 확대. 숫자를 누르면 값 입력.');
+  const scene=new T.Scene(),camera=new T.PerspectiveCamera(32,1,.1,100);camera.position.set(19,13,25);
   scene.add(new T.HemisphereLight(0xd6e5f0,0x29241a,3));const key=new T.DirectionalLight(0xffe2b7,4);key.position.set(-3,6,8);scene.add(key);const fill=new T.DirectionalLight(0x9bcfff,2);fill.position.set(5,1,4);scene.add(fill);
-  const controls=new OrbitControls(camera,renderer.domElement);controls.enablePan=false;controls.enableDamping=true;controls.minDistance=7;controls.maxDistance=23;controls.minPolarAngle=Math.PI*.28;controls.maxPolarAngle=Math.PI*.65;controls.minAzimuthAngle=-.65;controls.maxAzimuthAngle=.65;
-  const resize=()=>{const w=element.clientWidth,h=element.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();const distance=Math.max(13,6.3/(Math.tan(16*Math.PI/180)*camera.aspect));camera.position.setLength(distance);controls.maxDistance=Math.max(23,distance*1.5);};const observer=new ResizeObserver(resize);observer.observe(element);resize();
-  const displays={},knobs={};runtime.current={camera,controls,displays,knobs,front:()=>{camera.position.set(0,0,Math.max(13,6.3/(Math.tan(16*Math.PI/180)*camera.aspect)));controls.target.set(0,0,0);controls.update();}};
+  const controls=new OrbitControls(camera,renderer.domElement);controls.enablePan=false;controls.enableDamping=true;controls.minDistance=5;controls.maxDistance=90;controls.minPolarAngle=.12;controls.maxPolarAngle=Math.PI*.76;controls.minAzimuthAngle=-Math.PI;controls.maxAzimuthAngle=Math.PI;
+  let currentView='cabin';
+  function cameraView(next){
+   currentView=next;
+   const aspect=camera.aspect;camera.fov=next==='pilot'?58:32;camera.updateProjectionMatrix();
+   if(next==='mcp'){
+    controls.target.set(0,2.6,0);camera.position.set(0,2.6,Math.max(13,6.3/(Math.tan(16*Math.PI/180)*aspect)));
+   }else if(next==='pilot'){
+    controls.target.set(-1,.3,-1);camera.position.set(-6.6,.4,12.5);
+   }else{
+    controls.target.set(0,.6,1);const direction=new T.Vector3(19,13,25).normalize();
+    const distance=Math.max(48,15/(Math.tan(16*Math.PI/180)*aspect));camera.position.copy(controls.target).addScaledVector(direction,distance);
+   }
+   controls.update();
+  }
+  const resize=()=>{const w=element.clientWidth,h=element.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();cameraView(currentView);};
+  const observer=new ResizeObserver(resize);observer.observe(element);resize();
+  const displays={},knobs={};runtime.current={camera,controls,displays,knobs,front:()=>cameraView('mcp'),cameraView};
   new GLTFLoader().load('/models/cockpit.glb',gltf=>{
    if(disposed){disposeScene(gltf.scene);return;}scene.add(gltf.scene);
+   const mcp=gltf.scene.getObjectByName('mcp_root');
    for(const [name,x,width,digits,title,knobTitle] of slots){
-    const display=textPlane('',width*.94,.5,'#ffba69',190);display.position.set(x,.58,.208);display.name=`${name}_display_text`;display.userData.field=name;display.userData.edit=true;scene.add(display);displays[name]=display;
-    const label=textPlane(title,2.4,.26,'#ebd6aa',185);label.position.set(x,1.08,.09);scene.add(label);
-    const bottom=textPlane(knobTitle,1.1,.18,'#ddceac',175);bottom.position.set(x,-1.045,.18);scene.add(bottom);
-    const turnLabel=textPlane('−     +',1.9,.22,'#bdc6c8',76);turnLabel.position.set(x,-.88,.5);scene.add(turnLabel);
+    const display=textPlane('',width*.94,.5,'#ffba69',190);display.position.set(x,.58,.208);display.name=`${name}_display_text`;display.userData.field=name;display.userData.edit=true;mcp.add(display);displays[name]=display;
+    const label=textPlane(title,2.4,.26,'#ebd6aa',185);label.position.set(x,1.08,.09);mcp.add(label);
+    const bottom=textPlane(knobTitle,1.1,.18,'#ddceac',175);bottom.position.set(x,-1.045,.18);mcp.add(bottom);
+    const turnLabel=textPlane('−     +',1.9,.22,'#bdc6c8',76);turnLabel.position.set(x,-.88,.5);mcp.add(turnLabel);
     const knob=gltf.scene.getObjectByName(`${name}_knob`);if(knob){knob.userData.field=name;knob.userData.knob=true;knobs[name]=knob;}
     const screen=gltf.scene.getObjectByName(`${name}_display`);screen.userData.field=name;screen.userData.edit=true;
    }
+   const title=textPlane('RADAR / FLIGHT DECK',8,.6,'#9eb6c3',185);title.position.set(0,-6.52,9.4);title.rotation.x=-Math.PI/2;scene.add(title);
    setStatus('ready');update();
   },undefined,()=>!disposed&&setStatus('error'));
   function update(){for(const [name,,,digits] of slots){displays[name]?.userData.paint(latest.current.hidden[name]?'':String(latest.current.values[name]).padStart(digits,'0'));if(knobs[name])knobs[name].rotation.z=-latest.current.values[name]*(name==='altitude'?.0008:.025);}}
   runtime.current.update=update;
   const raycaster=new T.Raycaster(),pointer=new T.Vector2();let down=null;
-  function hit(e){const rect=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);for(const h of raycaster.intersectObjects(scene.children,true)){let object=h.object;while(object){if(object.userData.field)return {object,point:h.point};object=object.parent;}}return null;}
+  function hit(e){const rect=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);for(const h of raycaster.intersectObjects(scene.children,true)){let object=h.object;while(object){if(object.userData.field)return {object,point:h.point};object=object.parent;}const material=h.object.material;if(material&&!material.transparent)return null;}return null;}
   const pointerDown=e=>{down=[e.clientX,e.clientY];};
   const pointerUp=e=>{if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>5)return;down=null;const h=hit(e);if(!h)return;const {field,edit}=h.object.userData;if(edit)latest.current.onEdit(field);else latest.current.onChange(field,h.point.x<h.object.position.x?-1:1);};
   const move=e=>{renderer.domElement.style.cursor=hit(e)?'pointer':'grab';};
@@ -49,8 +67,8 @@ export default function Cockpit3D({values,hidden,onEdit,onChange,capture}){
   return()=>{disposed=true;observer.disconnect();renderer.setAnimationLoop(null);controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointermove',move);disposeScene(scene);renderer.dispose();renderer.domElement.remove();runtime.current=null;};
  },[]);
  useEffect(()=>{runtime.current?.update?.();},[values,hidden]);
- useEffect(()=>{const r=runtime.current;if(!r)return;r.controls.enabled=!capture;if(capture){r.front();}},[capture,status]);
- function reset(){const r=runtime.current;if(r){r.front();}}
- return <section className="cockpit-3d" data-state={status} aria-label="GLB 기반 3D MCP 조종석"><div ref={host} className="cockpit-3d-canvas"/>{status==='loading'&&<p className="cockpit-3d-message" role="status">3D 조종석 불러오는 중…</p>}{status==='error'&&<p className="cockpit-3d-message" role="alert">3D 화면을 열 수 없습니다. 사진 보기로 전환하거나 WebGL을 지원하는 브라우저를 사용하세요.</p>}{!capture&&<div className="cockpit-3d-toolbar"><span>3D MCP · 드래그 회전 / 스크롤 확대 / 숫자 클릭 / 노브 좌우 − +</span><button onClick={reset}>정면 보기</button></div>}</section>;
+ useEffect(()=>{const r=runtime.current;if(!r)return;r.controls.enabled=!capture;if(capture){r.front();setView('mcp');}},[capture,status]);
+ function chooseView(next){setView(next);runtime.current?.cameraView(next);}
+ return <section className="cockpit-3d" data-state={status} aria-label="GLB 메시 기반 전체 조종석"><div ref={host} className="cockpit-3d-canvas"/>{status==='loading'&&<p className="cockpit-3d-message" role="status">3D 조종석 불러오는 중…</p>}{status==='error'&&<p className="cockpit-3d-message" role="alert">3D 화면을 열 수 없습니다. 사진 보기로 전환하거나 WebGL을 지원하는 브라우저를 사용하세요.</p>}{!capture&&<div className="cockpit-3d-toolbar"><span>드래그 회전 · 스크롤 확대<br/>MCP만 수동 조작 · 주변 계기는 모의 고정 표시</span><div className="cockpit-camera-presets"><button aria-pressed={view==='cabin'} onClick={()=>chooseView('cabin')}>전체 조종석</button><button aria-pressed={view==='pilot'} onClick={()=>chooseView('pilot')}>조종석 시점</button><button aria-pressed={view==='mcp'} onClick={()=>chooseView('mcp')}>MCP 정면</button></div></div>}</section>;
 }
 function disposeScene(scene){const textures=new Set(),materials=new Set(),geometries=new Set();scene.traverse(o=>{if(o.geometry)geometries.add(o.geometry);for(const m of o.material?(Array.isArray(o.material)?o.material:[o.material]):[]){materials.add(m);if(m.map)textures.add(m.map);}});textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());}

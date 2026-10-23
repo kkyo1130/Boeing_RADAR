@@ -6,8 +6,15 @@ test('GLB loads, 3D picking edits shared values and photo view preserves them',a
  await expect(page.locator('.cockpit-3d')).toHaveAttribute('data-state','ready');
  const response=await page.request.get('/models/cockpit.glb');
  expect(response.status()).toBe(200);
- expect((await response.body()).subarray(0,4).toString()).toBe('glTF');
- await page.getByRole('button',{name:'정면 보기',exact:true}).click();
+ const bytes=await response.body();
+ expect(bytes.subarray(0,4).toString()).toBe('glTF');
+ const model=JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)).toString());
+ const names=model.nodes.map(node=>node.name);
+ for(const name of ['mcp_root','flight_deck_floor','seat_back_-1','seat_back_1','windshield_center_post','center_pedestal','overhead_console'])expect(names).toContain(name);
+ await page.getByRole('button',{name:'조종석 시점',exact:true}).click();
+ await expect(page.getByRole('button',{name:'조종석 시점',exact:true})).toHaveAttribute('aria-pressed','true');
+ await page.getByRole('button',{name:'전체 조종석',exact:true}).click();
+ await page.getByRole('button',{name:'MCP 정면',exact:true}).click();
  const box=await page.locator('.cockpit-3d canvas').boundingBox();
  const scale=box.height/(2*13*Math.tan(16*Math.PI/180));
  await page.mouse.click(box.x+box.width/2,box.y+box.height/2-.58*scale);
