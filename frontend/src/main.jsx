@@ -94,7 +94,7 @@ function App() {
     <section className="intro">
       <p className="eyebrow">TABLET CAMERA DEMO</p>
       <h1>Cockpit을 화면에,<br />선택값은 직접 조작.</h1>
-      <p>좌우 계기판·조종간·좌석을 메시로 만든 모의 조종석입니다. MCP 정면 보기에서 숫자를 눌러 선택값을 바꾸세요.</p>
+      <p>실제 Boeing 737-800 사진을 참고한 모의 조종석입니다. MCP 정면 보기에서 숫자를 눌러 선택값을 바꾸세요.</p>
     </section>
     <div className="view-toolbar">
       <span>{threeD ? '3D COCKPIT / MANUAL MCP' : 'COCKPIT REFERENCE / MANUAL MCP'}</span>

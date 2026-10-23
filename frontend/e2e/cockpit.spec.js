@@ -16,8 +16,8 @@ test('GLB loads, 3D picking edits shared values and photo view preserves them',a
  await page.getByRole('button',{name:'전체 조종석',exact:true}).click();
  await page.getByRole('button',{name:'MCP 정면',exact:true}).click();
  const box=await page.locator('.cockpit-3d canvas').boundingBox();
- const scale=box.height/(2*13*Math.tan(16*Math.PI/180));
- await page.mouse.click(box.x+box.width/2,box.y+box.height/2-.58*scale);
+ const scale=box.height/(2*16*Math.tan(16*Math.PI/180));
+ await page.mouse.click(box.x+box.width/2,box.y+box.height/2-.58*.52*scale);
  await expect(page.getByRole('dialog')).toBeVisible();
  await page.getByLabel('DEGREES · 0~359').fill('359');
  await page.getByRole('button',{name:'적용',exact:true}).click();
@@ -25,10 +25,14 @@ test('GLB loads, 3D picking edits shared values and photo view preserves them',a
  await expect(page.getByRole('button',{name:'HEADING 선택값 입력',exact:true})).toHaveText('000');
  await page.locator('.cockpit-3d canvas').scrollIntoViewIfNeeded();
  const knobBox=await page.locator('.cockpit-3d canvas').boundingBox();
- await page.mouse.click(knobBox.x+knobBox.width/2+.15*scale,knobBox.y+knobBox.height/2+.48*scale);
+ await page.mouse.click(knobBox.x+knobBox.width/2+(-.35+.15)*1.05*scale,knobBox.y+knobBox.height/2+.48*.52*scale);
  await expect(page.getByRole('button',{name:'HEADING 선택값 입력',exact:true})).toHaveText('001');
  await page.getByRole('button',{name:'사진 보기',exact:true}).click();
  await expect(page.getByRole('button',{name:'HEADING 1, 값 입력',exact:true})).toBeVisible();
+ const headingControls=page.locator('.instrument').filter({has:page.getByRole('heading',{name:'HEADING',exact:true})});
+ await headingControls.getByRole('button',{name:'숫자 창 가리기',exact:true}).click();
+ await expect(page.getByRole('button',{name:'HEADING 가림, 값 입력',exact:true})).toBeVisible();
+ await headingControls.getByRole('button',{name:'가림 해제',exact:true}).click();
  await page.getByRole('button',{name:'3D 보기',exact:true}).click();
  await expect(page.locator('.cockpit-3d')).toHaveAttribute('data-state','ready');
  await page.getByRole('button',{name:'촬영 모드',exact:true}).click();

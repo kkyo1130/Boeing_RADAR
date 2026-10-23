@@ -2,11 +2,11 @@
 import * as T from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
-import { writeFile, mkdir } from 'node:fs/promises';
+import { writeFile, mkdir, readFile } from 'node:fs/promises';
 // GLTFExporter uses the browser FileReader API when packing binary buffers.
 globalThis.FileReader=class {readAsArrayBuffer(blob){blob.arrayBuffer().then(data=>{this.result=data;this.onloadend?.();});}};
 const scene=new T.Scene();
-const materials={panel:new T.MeshStandardMaterial({color:0x554d40,roughness:.72,metalness:.35}),edge:new T.MeshStandardMaterial({color:0x20272b,roughness:.55,metalness:.6}),black:new T.MeshStandardMaterial({color:0x080d0e,roughness:.4}),knob:new T.MeshStandardMaterial({color:0xa19a85,roughness:.52,metalness:.45}),screw:new T.MeshStandardMaterial({color:0x9b9e9a,metalness:.85,roughness:.3}),green:new T.MeshStandardMaterial({color:0x92dd66,emissive:0x5a9c37,emissiveIntensity:.6})};
+const materials={panel:new T.MeshStandardMaterial({color:0x424d52,roughness:.72,metalness:.35}),edge:new T.MeshStandardMaterial({color:0x20272b,roughness:.55,metalness:.6}),black:new T.MeshStandardMaterial({color:0x080d0e,roughness:.4}),knob:new T.MeshStandardMaterial({color:0xa7aa9d,roughness:.52,metalness:.45}),screw:new T.MeshStandardMaterial({color:0x9b9e9a,metalness:.85,roughness:.3}),green:new T.MeshStandardMaterial({color:0x92dd66,emissive:0x5a9c37,emissiveIntensity:.6})};
 function mesh(name,geo,mat,x,y,z){const m=new T.Mesh(geo,materials[mat]);m.name=name;m.position.set(x,y,z);scene.add(m);return m;}
 function box(name,w,h,d,mat,x,y,z){return mesh(name,new T.BoxGeometry(w,h,d),mat,x,y,z);}
 function cylinder(name,r,d,mat,x,y,z){const m=mesh(name,new T.CylinderGeometry(r,r,d,48),mat,x,y,z);m.rotation.x=Math.PI/2;return m;}
@@ -32,10 +32,10 @@ const mcp=new T.Group();mcp.name='mcp_root';
 for(const child of [...scene.children])mcp.add(child);
 mcp.position.y=2.6;scene.add(mcp);
 Object.assign(materials,{
- cabin:new T.MeshStandardMaterial({color:0x5e625e,roughness:.9}),
+ cabin:new T.MeshStandardMaterial({color:0x95968c,roughness:.9}),
  trim:new T.MeshStandardMaterial({color:0x171f24,roughness:.8}),
- upholstery:new T.MeshStandardMaterial({color:0x374b54,roughness:1}),
- cushion:new T.MeshStandardMaterial({color:0x506873,roughness:1}),
+ upholstery:new T.MeshStandardMaterial({color:0x777d7b,roughness:1}),
+ cushion:new T.MeshStandardMaterial({color:0xb4b5ad,roughness:1}),
  blue:new T.MeshBasicMaterial({color:0x257fc4}),
  earth:new T.MeshBasicMaterial({color:0x88512d}),
  white:new T.MeshBasicMaterial({color:0xc8e3dd}),
@@ -167,5 +167,143 @@ for(let row=0;row<7;row++)for(let col=0;col<7;col++){
 }
 // Model metadata is also available when opening the GLB in a DCC tool.
 scene.userData={title:'RADAR Flight Deck',description:'Original simulated twin-seat cockpit mesh. MCP values are the only live instruments.',units:'arbitrary visualization units'};
-const glb=await new GLTFExporter().parseAsync(scene,{binary:true});
-const target=new URL('../public/models/cockpit.glb',import.meta.url);await mkdir(new URL('.',target),{recursive:true});await writeFile(target,Buffer.from(glb));console.log(`cockpit.glb: ${glb.byteLength} bytes`);
+// Reference-led 737 NG proportions and original printed instrument artwork.
+const textureMaterials={};
+function artwork(name,unlit=true){
+ if(!textureMaterials[name]){const mat=unlit?new T.MeshBasicMaterial({color:0xffffff}):new T.MeshStandardMaterial({color:0xffffff,roughness:1});mat.name=`artwork_${name}`;textureMaterials[name]=mat;}
+ return textureMaterials[name];
+}
+for(const object of [...scene.children]){
+ if(/^(pfd_(sky|ground|horizon|pitch|tape|aircraft|speed|alt)_|nd_(ring|tick|route|heading|aircraft)_|engine_(gauge|needle|value)_)/.test(object.name))scene.remove(object);
+ if(object.name.startsWith('pfd_screen_'))object.material=artwork('pfd');
+ if(object.name.startsWith('nd_screen_'))object.material=artwork('nd');
+ if(object.name==='engine_display')object.material=artwork('engine');
+}
+for(const unit of scene.children.filter(o=>o.name.startsWith('fmc_'))){
+ unit.children[1].material=artwork('fmc');
+ for(let row=0;row<5;row++)for(let col=0;col<2;col++){
+  const sideKey=new T.Mesh(new T.BoxGeometry(.1,.055,.06),materials.knob);sideKey.position.set(col? .77:-.77,.85-row*.16,.14);unit.add(sideKey);
+ }
+}
+// Slim, grey MCP on the full-width black glareshield.
+for(const o of mcp.children){for(const [key,shift] of [['speed',.8],['heading',-.35],['altitude',-1.45]])if(o.name.startsWith(key+'_'))o.position.x+=shift;}
+mcp.scale.set(1.05,.52,1);mcp.position.y=2.18;
+for(const side of [-1,1]){
+ const wing=round(`efis_panel_${side}`,3.6,1.42,.23,'panel',side*8.05,2.16,.08,.045);
+ for(const dx of [-1.18,-.4,.4,1.18]){
+  cylinder(`efis_dial_${side}_${dx}`,.16,.16,'knob',side*8.05+dx,2.25,.26);
+  for(const dy of [-.28,.28])box(`efis_key_${side}_${dx}_${dy}`,.25,.16,.09,'edge',side*8.05+dx,1.86+dy,.22);
+ }
+ cylinder(`efis_range_${side}`,.24,.2,'edge',side*8.05+.4,2.62,.26);
+ box(`master_caution_${side}`,.65,.32,.2,'black',side*10,2.23,.12);
+ const lamp=box(`master_caution_lamp_${side}`,.45,.17,.02,'knob',side*10,2.23,.23);
+}
+// Two course windows, vertical speed window and a bank of mode keys.
+for(const side of [-1,1]){
+ const b=box(`course_window_${side}`,.7,.56,.04,'black',side*5,.58,.205);scene.remove(b);mcp.add(b);
+}
+const vs=box('vertical_speed_window',1.15,.5,.04,'black',4.12,.58,.205);scene.remove(vs);mcp.add(vs);
+// Add center standby instruments and gear selector, offset above the display row.
+for(const [x,y,r] of [[-1.45,.87,.26],[-1.45,.25,.24],[1.45,.85,.24]]){
+ cylinder(`standby_bezel_${x}_${y}`,r+.06,.12,'edge',x,y,.18);cylinder(`standby_face_${x}_${y}`,r,.02,'black',x,y,.25);
+ line(`standby_needle_${x}_${y}`,[[x,y,.28],[x+r*.6,y+r*.2,.28]],.012,'white');
+}
+line('gear_selector',[[2.35,.75,.24],[2.35,.52,.65]],.055,'screw');cylinder('gear_selector_handle',.14,.22,'knob',2.35,.52,.7);
+// Real columns are substantial and the U-shaped yokes carry chart clips.
+for(const side of [-1,1]){
+ const x=side*6.6;
+ round(`control_column_cover_${side}`,.48,2.6,.5,'edge',x,-4.9,2.95,.12);
+ const board=round(`yoke_clipboard_${side}`,1.12,1.74,.045,'edge',x,-2.8,3.99,.04);
+ const paper=mesh(`yoke_checklist_${side}`,new T.PlaneGeometry(1,1.57),'white',x,-2.8,4.02);paper.material=artwork('checklist');
+ box(`yoke_chart_clip_${side}`,.48,.11,.1,'screw',x,-1.98,4.05);
+ for(const name of [`seat_cushion_${side}`,`headrest_${side}`]){const cushion=scene.getObjectByName(name);cushion.material=artwork('fabric',false);}
+ // Sheepskin-like top pad with rounded edging rather than a blue plastic cushion.
+ round(`seat_fleece_pad_${side}`,3.1,.16,3.36,'cushion',x,-4.87,6,.1).material=artwork('fabric',false);
+}
+// White throttle handles, reverse levers, red start levers and trim wheels.
+for(const x of [-.62,.62]){
+ scene.getObjectByName(`throttle_handle_${x}`).material=materials.cushion;
+ box(`throttle_reverse_${x}`,.24,.43,.14,'edge',x,-2.64,2.7);
+ round(`start_lever_${x}`,.32,.19,.4,'edge',x,-4.04,4.35,.05);
+}
+materials.red=new T.MeshStandardMaterial({color:0x9a2724,roughness:.6});
+for(const x of [-.62,.62])box(`start_handle_${x}`,.3,.26,.18,'red',x,-3.93,4.4);
+for(const side of [-1,1]){
+ const wheel=mesh(`stabilizer_trim_wheel_${side}`,new T.TorusGeometry(.53,.065,10,48),'edge',side*1.88,-4.3,3.7);wheel.rotation.y=Math.PI/2;
+ for(let i=0;i<8;i++){const a=i/8*Math.PI*2;line(`trim_spoke_${side}_${i}`,[[side*1.88,-4.3,3.7],[side*1.88,-4.3+Math.cos(a)*.5,3.7+Math.sin(a)*.5]],.025,'knob');}
+}
+// Break overhead into labelled system bays, with groups of actual toggle meshes.
+const overheadFace=new T.Mesh(new T.PlaneGeometry(5.1,4.9),artwork('overhead'));overheadFace.rotation.x=Math.PI/2;overheadFace.position.y=-.15;overhead.add(overheadFace);
+// Straight structural extrusions, not round decorative pipes.
+for(const o of [...scene.children])if(/^(windshield_(center_post|corner_|header_|sill_)|side_window_(lower_frame_|upper_frame_|pillar_))/.test(o.name)){
+ o.material=materials.cabin;
+}
+for(const side of [-1,1]){
+ quad(`window_surround_${side}`,[[side*.22,8.55,-6.34],[side*8.9,8.1,-5.98],[side*9.2,8.5,-6.02],[side*.22,9.02,-6.38]],'cabin');
+ quad(`front_sidewall_${side}`,[[side*9.6,-3,-1],[side*9.6,3.6,-.3],[side*10.15,3.9,1],[side*10.15,-3,1]],'cabin');
+}
+// Further reference details: a lower center DU, dark CDU keys, trim markings and radios.
+round('lower_center_display_bezel',1.65,1.2,.18,'edge',0,-3.17,.56,.06);
+const lowerDU=box('lower_center_display',1.45,.98,.025,'black',0,-3.17,.67);lowerDU.material=artwork('engine');
+for(const unit of scene.children.filter(o=>o.name.startsWith('fmc_'))){
+ for(const key of unit.children.slice(2))key.material=materials.edge;
+}
+scene.getObjectByName('throttle_quadrant').material=artwork('quadrant',false);
+for(let j=0;j<3;j++){
+ const old=scene.getObjectByName(`radio_screen_${j}`);scene.remove(old);
+ const panel=new T.Mesh(new T.PlaneGeometry(3.3,.99),artwork('radio',false));panel.name=`radio_placard_${j}`;panel.rotation.x=-Math.PI/2;panel.position.set(0,-4.448,4.8+j*1.15);scene.add(panel);
+}
+for(const side of [-1,1]){
+ const x=side*6.6;
+ const yoke=scene.getObjectByName(`yoke_${side}`);yoke.geometry.scale(1.5,1.1,1); // move the original world-space path back around its own column
+ yoke.geometry.translate(-x*.5,.33,0);
+ for(const dx of [-1,1]){const grip=scene.getObjectByName(`yoke_grip_${side}_${dx}`);grip.position.x=x+dx*1.5;const button=scene.getObjectByName(`yoke_button_${side}_${dx}`);button.position.x=x+dx*1.5;}
+}
+// Printed placards and fine panel divisions are embedded, not runtime photo overlays.
+scene.getObjectByName('instrument_panel_body').material=artwork('mainpanel',false);
+scene.getObjectByName('mcp_face').material=artwork('mcp',false);
+for(const side of [-1,1])scene.getObjectByName(`efis_panel_${side}`).material=artwork('efis',false);
+// Replace curved pipe-like frames with straight structural box extrusions.
+function frame(name,points,width=.24){
+ const old=scene.getObjectByName(name);if(old)scene.remove(old);
+ const group=new T.Group();group.name=name;scene.add(group);
+ for(let i=1;i<points.length;i++){
+  const a=new T.Vector3(...points[i-1]),b=new T.Vector3(...points[i]);const beam=new T.Mesh(new T.BoxGeometry(width,width,a.distanceTo(b)),materials.cabin);
+  beam.position.copy(a).add(b).multiplyScalar(.5);beam.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),b.clone().sub(a).normalize());group.add(beam);
+ }
+}
+for(const side of [-1,1]){
+ frame(`side_window_lower_frame_${side}`,[[side*10,-.6,5],[side*10,3.9,0],[side*8.9,4.3,-4.4]],.32);
+ frame(`side_window_upper_frame_${side}`,[[side*10,4.7,6],[side*10,8,0],[side*8.9,8.2,-4.4]],.32);
+ frame(`side_window_pillar_${side}`,[[side*10,3.9,0],[side*10,8,0]],.22);
+ frame(`windshield_corner_${side}`,[[side*8.9,4.3,-4.4],[side*8.9,8.2,-6]],.34);
+ frame(`windshield_header_${side}`,[[0,8.65,-6.4],[side*8.9,8.2,-6]],.34);
+ frame(`windshield_sill_${side}`,[[0,4.2,-4.55],[side*8.9,4.3,-4.4]],.32);
+}
+frame('windshield_center_post',[[0,4.2,-4.4],[0,8.65,-6.25]],.3);
+// GLB textures use top-left image origin. Flip mesh UVs once when embedding PNGs.
+const flipped=new Set();scene.traverse(object=>{
+ if(!object.material?.name?.startsWith('artwork_')||flipped.has(object.geometry))return;
+ const uv=object.geometry?.attributes.uv;if(uv){for(let i=0;i<uv.count;i++)uv.setY(i,1-uv.getY(i));flipped.add(object.geometry);}
+});
+// Export mesh/material structure, then pack our original PNGs into the GLB binary.
+const raw=Buffer.from(await new GLTFExporter().parseAsync(scene,{binary:true}));
+const jsonLength=raw.readUInt32LE(12);const document=JSON.parse(raw.subarray(20,20+jsonLength).toString());
+const binStart=20+jsonLength;const originalBin=raw.subarray(binStart+8,binStart+8+raw.readUInt32LE(binStart));
+const chunks=[originalBin];let binaryLength=originalBin.length;
+document.images=[];document.textures=[];document.samplers=[{magFilter:9729,minFilter:9987,wrapS:10497,wrapT:10497}];
+for(const name of Object.keys(textureMaterials)){
+ const png=await readFile(new URL(`./textures/${name}.png`,import.meta.url));
+ const view=document.bufferViews.length;document.bufferViews.push({buffer:0,byteOffset:binaryLength,byteLength:png.length});
+ document.images.push({name,bufferView:view,mimeType:'image/png'});
+ const index=document.textures.length;document.textures.push({source:index,sampler:0});
+ for(const material of document.materials)if(material.name===`artwork_${name}`)material.pbrMetallicRoughness.baseColorTexture={index};
+ chunks.push(png);binaryLength+=png.length;const padding=(4-binaryLength%4)%4;if(padding){chunks.push(Buffer.alloc(padding));binaryLength+=padding;}
+}
+document.buffers[0].byteLength=binaryLength;
+let jsonBuffer=Buffer.from(JSON.stringify(document));jsonBuffer=Buffer.concat([jsonBuffer,Buffer.alloc((4-jsonBuffer.length%4)%4,32)]);
+const header=Buffer.alloc(12);header.writeUInt32LE(0x46546c67);header.writeUInt32LE(2,4);header.writeUInt32LE(12+8+jsonBuffer.length+8+binaryLength,8);
+const jsonHeader=Buffer.alloc(8);jsonHeader.writeUInt32LE(jsonBuffer.length);jsonHeader.writeUInt32LE(0x4e4f534a,4);
+const binHeader=Buffer.alloc(8);binHeader.writeUInt32LE(binaryLength);binHeader.writeUInt32LE(0x004e4942,4);
+const glb=Buffer.concat([header,jsonHeader,jsonBuffer,binHeader,...chunks]);
+const target=new URL('../public/models/cockpit.glb',import.meta.url);await mkdir(new URL('.',target),{recursive:true});await writeFile(target,glb);console.log(`cockpit.glb: ${glb.byteLength} bytes, embedded textures: ${document.images.length}`);
