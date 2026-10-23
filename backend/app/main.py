@@ -44,3 +44,6 @@ receiving_v2.install_handlers(app)
 
 from app.api import operations_v2
 app.include_router(operations_v2.router)
+
+from app.api import demo
+app.include_router(demo.router)

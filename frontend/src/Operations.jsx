@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { request, SnapshotGate, dueRevalidations, POLL_MS, statusLabel, numberLabel, restartFlightState, readingFor, reconciledActionError } from './flight-client.js';
 import './operations.css';
 import VoicePanel from './VoicePanel.jsx';
+import DemoPanel from './DemoPanel.jsx';
 import EvidencePanel, { selectionFor, recordInteraction } from './EvidencePanel.jsx';
 
 const STORAGE_KEY = 'radar.v2.flight-id';
@@ -180,6 +181,7 @@ export default function Operations() {
         </section>
         <ReportPanel flightId={flightId} ended={ended} connected={connected} />
         <VoicePanel snapshot={snapshot} connected={connected} />
+        {!ended && <DemoPanel key={flightId} snapshot={snapshot} connected={connected} />}
         <Verdicts title="복명복창" group={snapshot.validation.readback} source="READBACK" snapshot={snapshot} connected={connected} ended={ended} onEvidence={openEvidence} onAcknowledge={acknowledge} />
         <Verdicts title="Cockpit 설정" group={snapshot.validation.setting} source="COCKPIT" snapshot={snapshot} connected={connected} ended={ended} onEvidence={openEvidence} onAcknowledge={acknowledge} />
         {selected && <EvidencePanel key={JSON.stringify(selected)} selected={selected} snapshot={snapshot} connected={connected} onClose={() => { setSelected(null); opener.current?.focus(); }} />}
