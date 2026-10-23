@@ -1,7 +1,0 @@
-Pillow<13,>=10
-
-[capture]
-opencv-python<5,>=4.10
-
-[test]
-pytest<10,>=8
