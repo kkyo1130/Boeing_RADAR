@@ -1,0 +1,35 @@
+{
+  "generator": "macOS say Yuna 185wpm / afconvert PCM16 WAV",
+  "assets": [
+    {
+      "asset": "alt.wav",
+      "duration_seconds": 1.509,
+      "sha256": "d3c39d54f5e38de02c0d82fa690580d85e13caefa606e46c8cdf2ae2dbee1051"
+    },
+    {
+      "asset": "both.wav",
+      "duration_seconds": 1.939,
+      "sha256": "f123a3f53e519108c11f9529f0c78b9f1a224b2185577b79b6bd5d838cee774f"
+    },
+    {
+      "asset": "camera.wav",
+      "duration_seconds": 1.534,
+      "sha256": "e2c1ba72e3e28853fd8b66bf0e7c436067d76d36311a55d6cad9911e59834d52"
+    },
+    {
+      "asset": "hdg.wav",
+      "duration_seconds": 1.53,
+      "sha256": "27992dc38cb8961e5e7926c3d2fc18a62b3a9fe9d7071486173373ccae4fb9c5"
+    },
+    {
+      "asset": "readback.wav",
+      "duration_seconds": 1.89,
+      "sha256": "5a46aca83575f15b586fa8234c98410477ba404b7ff161d3d1da3409989cdcce"
+    },
+    {
+      "asset": "visibility.wav",
+      "duration_seconds": 1.672,
+      "sha256": "a050b1489c414aff29f252dea1220cb2b2da92b83dbf7a5c0ba01aa988e93c8c"
+    }
+  ]
+}

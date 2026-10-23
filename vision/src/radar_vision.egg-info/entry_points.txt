@@ -1,0 +1,4 @@
+[console_scripts]
+radar-vision = radar_vision.cli:main
+radar-vision-setup = radar_vision.setup:main
+radar-vision-stream = radar_vision.stream:main
