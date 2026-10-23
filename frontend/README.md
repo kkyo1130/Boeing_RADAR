@@ -91,3 +91,44 @@ END FLIGHT 후 같은 `/operations` 화면에서 v2 종료 요약과 JSON 다운
 ## 노트북 중간시연 콘솔
 
 카메라·마이크·ROI·등록 ATC·복창 입력을 화면에서 조작하는 로컬 시연은 [실행 안내](../docs/demo/console.md)를 따른다. 기존 서버만 실행하면 `/api/demo`는 비활성화된다. `sh scripts/run-demo.sh`의 별도 설정과 모델을 사용한다.
+
+## GLB 전체 조종석 메시
+
+기본 `/` 화면은 `public/models/cockpit.glb`를 Three.js GLTFLoader로 불러온다.
+현재 MCP를 중심으로 좌우 계기판, 두 조종간/페달, 중앙 엔진 계기, FMC,
+스로틀/무선 콘솔, 두 좌석과 벨트/레일, 바닥/측면 콘솔, 창문 프레임/유리/와이퍼,
+오버헤드 콘솔을 입체 메시로 만든 원본 모의 모델이다. 제조사 정밀 CAD나 비행 시뮬레이터가 아니다.
+PFD 수평선·ND 나침반/항로·엔진 게이지도 사진이 아닌 입체 도형으로 들어 있다.
+
+- `전체 조종석`: 뒤쪽에서 전체를 보는 절개 모형 시점. 드래그 회전, 스크롤/핀치 확대.
+- `조종석 시점`: 좌석 사이 눈높이에서 계기판을 보는 넓은 시야(기본).
+- `MCP 정면`: 기존 ALT/HDG/IAS 수동 조작과 카메라 촬영을 위한 정면.
+
+MCP 숫자 클릭은 기존 입력창을 열고 노브 왼쪽/오른쪽 클릭은 값을 감소/증가시킨다.
+키보드 사용자는 아래의 기존 숫자 입력 및 증감 버튼을 사용할 수 있다.
+ALT/HDG/IAS·가림·프리셋은 3D 표시와 같은 React 상태를 사용한다. 사진 보기 전환 버튼은 제거했다.
+MCP 외 주변 계기·버튼·스로틀·조종간은 고정된 모의 외형이며 실제 비행 상태나
+서버 검증 결과를 표시하지 않는다. 촬영 모드는 MCP 정면으로 고정하고 회전을 잠근다.
+시점 전환 뒤에는 Vision ROI를 다시 지정해야 한다.
+WebGL 미지원/모델 로딩 실패 시 오류 안내가 표시된다.
+선택값을 Vision/서버 관측으로 직접 전송하지 않는다.
+
+GLB의 노드/메시는 개별 편집 가능하며 Blender 등에서 파일을 가져와 수정할 수 있다.
+런타임 MCP 숫자는 추가 평면으로 표시한다. 파일에는 전체 형상·재질 및 직접 그린 계기/라벨 PNG 12개를 포함한다.
+외부 모델/텍스처 의존성은 없다. 재생성은 frontend에서 `npm run model:build`.
+소스는 `scripts/build-cockpit.mjs`, 뷰어는 `src/Cockpit3D.jsx`다.
+
+### 실제 737-800 사진 레퍼런스
+
+- [AA 737-800 Flight Deck (Cory W. Watts, 2009)](https://commons.wikimedia.org/wiki/File:AA_737-800_Flight_Deck_(4013528378).jpg)
+- [N734MA / Miami Air 737-800 (Cory W. Watts, 2008)](https://commons.wikimedia.org/wiki/File:The_Flight_Deck_of_the_Boeing_737-800._(2956276002).jpg)
+
+두 사진의 회색 패널, 얇은 MCP, EFIS 날개, 좌우 PFD/ND와 중앙 표시부,
+조종간의 차트 클립, 흰색 스로틀 손잡이/트림 휠, FMC/무선 패널 배치를 비교했다.
+사진 픽셀은 텍스처나 배포 파일에 포함하지 않았다. 사진의 원저작자와 라이선스는
+각 Commons 파일 페이지에 있다. 모델은 실측 CAD가 아닌 사진을 보고 작성한 근사 형상이다.
+
+PFD/ND/엔진/FMC·패널 라벨·체크리스트·오버헤드·라디오·좌석 직물은
+`scripts/build-cockpit-textures.py`로 직접 그린 원본 도안이다. 수정 후 Pillow가 설치된
+Python으로 `python3 scripts/build-cockpit-textures.py`를 실행한 다음 `npm run model:build`한다.
+PNG 소스는 `scripts/textures/`에 추적하며, 생성한 GLB는 모든 이미지를 내장하여 단독으로 열 수 있다.

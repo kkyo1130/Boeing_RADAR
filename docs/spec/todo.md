@@ -118,3 +118,5 @@ WI-02는 이 dev 기준 별도 브랜치에서 수신/문맥/중복/시간/원�
 | WI | 작업 | 선행 기반 | 상태 |
 | --- | --- | --- | --- |
 | [SPEC-009-WI-05](009-evaluation-demo/workitem/wi-05.md) | 노트북 장치·ROI·복창·등록 관제를 조작하는 로컬 시연 콘솔 | 기존 v2 운영·근거·음성 우선순위, 로컬 Whisper, Vision OCR | reviewing |
+
+| [SPEC-009-WI-06](009-evaluation-demo/workitem/wi-06.md) | GLB 전체 조종석 메시·MCP 수동 조작·시점 전환 | 기존 MCP UI | reviewing |

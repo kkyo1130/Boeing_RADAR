@@ -1,8 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { lazy, Suspense, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './style.css';
 import Operations from './Operations.jsx';
-import cockpitReference from '../../docs/vision/assets/mcp-reference.png';
+const Cockpit3D = lazy(() => import('./Cockpit3D.jsx'));
 
 const initial = { speed: 250, heading: 270, altitude: 3000 };
 const instruments = [
@@ -11,12 +11,6 @@ const instruments = [
   { key: 'altitude', title: 'ALTITUDE', unit: 'FEET', step: 100, min: 0, max: 99900, digits: 5, roi: [864, 282, 968, 314] },
 ];
 
-function NumericDisplay({ text }) {
-  return <svg className="digital-numbers" viewBox={`0 0 ${text.length * 32} 50`} aria-hidden="true">
-    <text x={text.length * 16} y="39" textAnchor="middle" fontFamily="Courier New, monospace" fontSize="48" fontWeight="700">{text}</text>
-  </svg>;
-}
-
 function App() {
   const [values, setValues] = useState(initial);
   const [hidden, setHidden] = useState({});
@@ -24,7 +18,6 @@ function App() {
   const [draft, setDraft] = useState('');
   const [error, setError] = useState('');
   const [capture, setCapture] = useState(false);
-  const [zoom, setZoom] = useState(true);
   const [fullscreenError, setFullscreenError] = useState('');
   const editorOpener = useRef(null);
 
@@ -92,27 +85,10 @@ function App() {
     <section className="intro">
       <p className="eyebrow">TABLET CAMERA DEMO</p>
       <h1>Cockpit을 화면에,<br />선택값은 직접 조작.</h1>
-      <p>사진 위 세 숫자 창을 터치해 값을 바꾸세요. 아래 계기 화면은 고정된 참고 이미지입니다.</p>
+      <p>실제 Boeing 737-800 사진을 참고한 모의 조종석입니다. MCP 정면 보기에서 숫자를 눌러 선택값을 바꾸세요.</p>
     </section>
-    <div className="view-toolbar">
-      <span>COCKPIT REFERENCE / MANUAL MCP</span>
-      <button aria-pressed={zoom} onClick={() => setZoom(!zoom)}>{zoom ? '전체 조종석 보기' : 'MCP 확대 보기'}</button>
-    </div>
-    <section className={`cockpit-scene ${zoom ? 'mcp-closeup' : ''}`} aria-label="사진 기반 모의 MCP 선택 설정값">
-      <div className="cockpit-photo">
-        <img src={cockpitReference} alt="MCP와 주변 계기·조종간이 보이는 참고 Cockpit 사진" draggable="false" />
-        {instruments.map(item => {
-          const [left, top, right, bottom] = item.roi;
-          return <button key={item.key} className={`readout photo-readout ${hidden[item.key] ? 'covered' : ''}`}
-            style={{ left: `${left / 1672 * 100}%`, top: `${top / 941 * 100}%`, width: `${(right - left) / 1672 * 100}%`, height: `${(bottom - top) / 941 * 100}%` }}
-            aria-label={`${item.title} ${hidden[item.key] ? '가림' : values[item.key]}, 값 입력`}
-            onClick={() => openEditor(item)}>
-            {!hidden[item.key] && <NumericDisplay text={String(values[item.key]).padStart(item.digits, '0')} />}
-          </button>;
-        })}
-      </div>
-      <span className="scene-label">RADAR · SIMULATED MCP</span>
-    </section>
+    <div className="view-toolbar"><span>3D COCKPIT / MANUAL MCP</span></div>
+    <Suspense fallback={<p role="status">3D 화면 준비 중…</p>}><Cockpit3D values={values} hidden={hidden} capture={capture} onEdit={key => openEditor(instruments.find(item => item.key === key))} onChange={(key, direction) => change(instruments.find(item => item.key === key), direction)} /></Suspense>
     <section className="instrument-controls" aria-label="MCP 값 수동 조작">
       {instruments.map(item => <article className="instrument" key={item.key}>
           <div className="instrument-label"><h2>{item.title}</h2><span>{item.unit}</span></div>
