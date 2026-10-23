@@ -13,7 +13,11 @@ class LocalWhisper:
 
     def transcribe(self, path):
         segments, info = self.model.transcribe(str(path), language="en", beam_size=5,
-                                               condition_on_previous_text=False, vad_filter=True)
+                                               condition_on_previous_text=False, vad_filter=True,
+                                               initial_prompt=("Air traffic control phraseology: climb and maintain, "
+                                                   "descend and maintain, feet, flight level, turn left, turn right, "
+                                                   "heading. Numbers: zero, one, two, three, four, five, six, "
+                                                   "seven, eight, nine, thousand, hundred."))
         rows = list(segments)
         speech = [s for s in rows if math.isfinite(s.no_speech_prob) and 0 <= s.no_speech_prob < .6]
         score = (min(math.exp(min(0., s.avg_logprob)) for s in speech)

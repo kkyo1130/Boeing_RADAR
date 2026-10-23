@@ -11,6 +11,15 @@ from app.schemas.structure_rules import RuleCheck, StructurePolicy, StructureRes
 DIGITS = dict(zip(("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"), range(10)))
 DIGITS.update(oh=0, niner=9)
 
+# Only used inside numeric grammar slots, never on the whole transcript.
+NUMBER_HOMOPHONES = {"to": "two", "too": "two", "for": "four",
+                     "fore": "four", "ate": "eight", "tree": "three",
+                     "fife": "five", "o": "zero"}
+
+
+def number_words(value):
+    return " ".join(NUMBER_HOMOPHONES.get(word, word) for word in value.split())
+
 
 def normalize(value):
     value = re.sub(r"\b[0-9]{1,3}(?:,[0-9]{3})+\b", lambda match: match[0].replace(",", ""), value)
@@ -20,13 +29,14 @@ def normalize(value):
 def digits(value):
     if re.fullmatch(r"[0-9]+", value):
         return value
-    words = value.split()
-    if words and all(word in DIGITS for word in words):
-        return "".join(str(DIGITS[word]) for word in words)
+    words = number_words(value).split()
+    if words and all(word in DIGITS or re.fullmatch(r"[0-9]", word) for word in words):
+        return "".join(str(DIGITS[word]) if word in DIGITS else word for word in words)
     return None
 
 
 def feet(value):
+    value = number_words(value)
     direct = digits(value)
     if direct is not None:
         return int(direct)

@@ -214,3 +214,26 @@ def test_altitude_raw_field_cannot_hide_an_extra_heading_command(raw):
     result = check_structure(data, **context)
     assert result.result == "INVALID"
     assert "RAW_FIELD_SET_CONFLICT" in {check.reason for check in result.checks}
+
+@pytest.mark.parametrize('command,expected', [
+    ('heading to seven zero', {'HDG':270}),
+    ('heading too seven zero', {'HDG':270}),
+    ('heading two ate zero', {'HDG':280}),
+    ('heading to for fore', {'HDG':244}),
+    ('heading 2 seven 0', {'HDG':270}),
+    ('heading o tree fife', {'HDG':35}),
+    ('maintain tree thousand feet heading to seven zero', {'ALT':3000,'HDG':270}),
+    ('maintain flight level to for zero', {'ALT':24000}),
+])
+def test_contextual_number_homophones(command,expected):
+    from app.services.structure_rules import parse_command
+    assert parse_command(command)==(expected, [])
+
+@pytest.mark.parametrize('command', [
+    'heading for clearance', 'heading to seven zero if able',
+    'heading ate zero zero', 'maintain 3 sound feet',
+    'turn to heading two seven zero', 'maintain tree thousand',
+])
+def test_homophones_do_not_guess_unknown_or_out_of_range_commands(command):
+    from app.services.structure_rules import parse_command
+    assert parse_command(command)[1]

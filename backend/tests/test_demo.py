@@ -74,3 +74,22 @@ def test_real_asr_numeric_format_preserves_transcript():
     assert p['fields']['ALT']['value']==3000
     assert p['fields']['HDG']['value']==270
     assert p['instruction_check']=='PASS'
+
+@pytest.mark.parametrize('heading,expected', [('to seven zero',270),('to ate zero',280)])
+def test_homophone_readback_preserves_raw_and_compares_actual(client,flight,monkeypatch,heading,expected):
+    now=intake.utc_now()
+    r=client.post(f'/api/demo/{flight}/scenario/baseline',json={'started_at':intake.stamp(now-timedelta(seconds=4)),'ended_at':intake.stamp(now-timedelta(seconds=3))})
+    assert r.status_code==200,r.text
+    state=client.get(f'/api/v2/flights/{flight}/state').json()
+    text=f'Radar one, two, three, climb and maintain 3,000 feet, heading {heading}.'
+    class Model:
+        def transcribe(self,path): return {'transcript':text,'model_score':.9}
+    monkeypatch.setattr(demo,'MODEL',Model())
+    r=client.post(f'/api/demo/{flight}/readback',json={'started_at':intake.stamp(now-timedelta(seconds=2)),'ended_at':intake.stamp(now-timedelta(seconds=1)),'atc_input_id':state['readback_required']['atc_input_id'],'audio':base64.b64encode(wav_bytes()).decode()})
+    assert r.status_code==200,r.text
+    assert r.json()['transcript']==text
+    state=client.get(f'/api/v2/flights/{flight}/state').json()
+    assert state['structure_checks']['READBACK']['result']=='PASS'
+    row=next(row for row in state['validation']['readback']['fields'] if row['field']=='HDG')
+    assert row['actual']==expected
+    assert row['result']==('NORMAL' if expected==270 else 'MISMATCH')

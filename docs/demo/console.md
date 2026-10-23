@@ -41,3 +41,14 @@ macOS, Python 3.12, Node 22.20+ 또는 24.12+, Xcode command line tools가 필�
 - 합성 ATC WAV를 실제 로컬 Whisper와 HTTP API에 입력: `Radar 1-2-3 climb and maintain 3,000 feet heading 270.` 인식, 모델 점수 약.666, warm 실행 약1.69초, 복창 세 항목 NORMAL. 이는 파일 시험이며 실제 사용자 마이크 복창 성공으로 계산하지 않는다.
 - 실제 촬영의 Safari 주소창 펼침/접힘 이미지로 패널 이동 확인. 자동 추적의 일반 성능 평가가 아니다.
 - 실제 사용자의 복창→설정 변경→해결까지 전체 시연은 인수 시험으로 남는다. ROI·장비 상태를 먼저 확인하고 위 순서를 수행한다.
+
+## 숫자 동음어 해석
+
+숫자를 받는 문법 구간(heading, feet, flight level)에서만 `to/too → two`,
+`for/fore → four`, `ate → eight`, `tree → three`, `fife → five`, `o → zero`를
+해석한다. 기존 `oh`, `niner`와 한 자리 숫자/단어 혼용도 지원한다.
+호출부호나 문장 전체를 무조건 치환하지 않는다. 원본 transcript/녹음은
+그대로 저장하며 추출한 ALT/HDG만 숫자화한다. 관제 목표값은 보정에 사용하지 않는다.
+지원하지 않는 단어·조건·단위 누락·범위 밖 방위와 저품질 입력은 기존 보류/거부를 유지한다.
+Whisper에는 특정 호출부호/목표 숫자가 없는 일반 관제 용어 힌트를 제공한다.
+이 규칙은 전사 표기를 해석하는 기능이며 실제 음성 인식 정확도 보장이 아니다.
