@@ -87,3 +87,7 @@ PC에서는 `http://localhost:5173/`, 같은 Wi-Fi의 태블릿에서는 Vite가
 ## 종료 리포트
 
 END FLIGHT 후 같은 `/operations` 화면에서 v2 종료 요약과 JSON 다운로드를 제공한다. 별도 v1 운영 화면은 제거했다. [통합 운영 안내](../docs/development/operations.md)를 따른다.
+
+## 노트북 중간시연 콘솔
+
+카메라·마이크·ROI·등록 ATC·복창 입력을 화면에서 조작하는 로컬 시연은 [실행 안내](../docs/demo/console.md)를 따른다. 기존 서버만 실행하면 `/api/demo`는 비활성화된다. `sh scripts/run-demo.sh`의 별도 설정과 모델을 사용한다.

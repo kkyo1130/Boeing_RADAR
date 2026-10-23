@@ -45,6 +45,7 @@ test('v2 운영 화면에서 근거·수정·연결 복구·종료 리포트', a
     await post(base+'/observations',data);
   }
   await camera();
+  await page.getByText('상세 검증 · 관제 이력 · 음성 안내 · 근거와 장치 상태',{exact:true}).click();
   await expect(page.getByRole('region',{name:'Cockpit 설정',exact:true}).locator('.op-section-heading .op-badge')).toHaveText('일치');
   await camera(90);
   const setting=page.getByRole('region',{name:'Cockpit 설정',exact:true});

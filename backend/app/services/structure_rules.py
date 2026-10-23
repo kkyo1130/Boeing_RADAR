@@ -13,6 +13,7 @@ DIGITS.update(oh=0, niner=9)
 
 
 def normalize(value):
+    value = re.sub(r"\b[0-9]{1,3}(?:,[0-9]{3})+\b", lambda match: match[0].replace(",", ""), value)
     return " ".join(re.sub(r"[,.]", " ", value.casefold()).split())
 
 

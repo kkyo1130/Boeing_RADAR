@@ -1,0 +1,5 @@
+-r requirements.txt
+faster-whisper>=1.2,<2
+# Also install ../vision[capture] in the same virtual environment.
+
+av>=11,<16

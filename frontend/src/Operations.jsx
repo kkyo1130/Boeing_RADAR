@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { request, SnapshotGate, dueRevalidations, POLL_MS, statusLabel, numberLabel, restartFlightState, readingFor, reconciledActionError } from './flight-client.js';
 import './operations.css';
 import VoicePanel from './VoicePanel.jsx';
+import DemoPanel from './DemoPanel.jsx';
 import EvidencePanel, { selectionFor, recordInteraction } from './EvidencePanel.jsx';
 
 const STORAGE_KEY = 'radar.v2.flight-id';
@@ -94,6 +95,7 @@ export function Verdicts({ title, group, source, snapshot, connected, ended = fa
 export default function Operations() {
   const [flightId, setFlightId] = useState(readFlight);
   const [callsign, setCallsign] = useState('');
+  const [demoSpeech, setDemoSpeech] = useState({transcript:'', pending:false});
   const [resumeId, setResumeId] = useState('');
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [refresh, setRefresh] = useState(0);
   const actionRef = useRef(false), opener = useRef(null), ackIds = useRef(new Map()), ackBusy = useRef(false), generation = useRef(0);
@@ -103,7 +105,7 @@ export default function Operations() {
   useEffect(() => { setError(previous => reconciledActionError(previous, snapshot, connected)); }, [ended, connected]);
   function attach(id) {
     try { id ? localStorage.setItem(STORAGE_KEY, id) : localStorage.removeItem(STORAGE_KEY); } catch { /* Session works without browser storage. */ }
-    generation.current += 1; setError(''); setSelected(null); setAckMessage(''); ackIds.current.clear(); setFlightId(id);
+    generation.current += 1; setDemoSpeech({transcript:'',pending:false}); setError(''); setSelected(null); setAckMessage(''); ackIds.current.clear(); setFlightId(id);
   }
   function openEvidence(row, button) {
     opener.current = button; setSelected(selectionFor(snapshot, row));
@@ -140,7 +142,7 @@ export default function Operations() {
     } catch (e) { setError(e.message); setRefresh(value => value + 1); }
     finally { actionRef.current = false; setBusy(false); }
   }
-  return <main className="operations">
+  return <main className={`operations ${snapshot && !ended ? 'op-demo-active' : ''}`}>
     <header className="op-header"><a className="brand" href="/operations">RADAR<span> / FLIGHT MONITOR</span></a>
       <nav aria-label="화면 선택"><a href="/" target="_blank" rel="noreferrer">모의 MCP 열기 ↗</a></nav>
       <span className="op-muted">모의 환경 · 설정은 직접 조작</span></header>
@@ -166,6 +168,8 @@ export default function Operations() {
       </section>
       {connectionError && <div className="op-error" role="alert"><strong>서버 상태를 확인할 수 없습니다.</strong><p>{connectionError}</p><p>표시된 값은 마지막 수신 기록입니다. 현재 일치 여부는 판단 보류입니다.</p></div>}
       {snapshot ? <>
+        {!ended && <DemoPanel key={flightId} snapshot={snapshot} connected={connected} onSpeech={setDemoSpeech} />}
+        <details className="op-diagnostics" open={ended}><summary>상세 검증 · 관제 이력 · 음성 안내 · 근거와 장치 상태</summary>
         <section className={`op-overview op-${connected ? snapshot.result : 'UNVERIFIED'}`} aria-label="전체 서버 판정">
           <div><p className="eyebrow">{ended ? '비행이 종료되었습니다' : 'SERVER VALIDATION'}</p><h2>{connected ? phases[snapshot.validation.phase] || '상태 확인' : '연결 복구 후 재확인 필요'}</h2>
             <p>{connected ? reasons[snapshot.reason] || '서버에서 상태를 확인하고 있습니다' : '이전 일치 상태를 현재 상태로 사용하지 않습니다.'}</p></div>
@@ -194,6 +198,7 @@ export default function Operations() {
             <small>최초 탐지 <Stamp value={item.detected_at} /></small>{item.status === 'OPEN' && <small>현재 확인: {statusLabel(item.current_check.result, connected && !ended)}</small>}
           </li>)}</ul> : <p className="op-muted">저장된 오류 발생 기록이 없습니다.</p>}
         </section>
+        </details>
       </> : <p className="op-panel" role="status">비행 상태를 확인하고 있습니다. 아직 현재 판정을 표시할 수 없습니다.</p>}
     </>}
     <footer>실제 항공기를 제어하지 않는 모의 환경 보조 화면입니다.</footer>

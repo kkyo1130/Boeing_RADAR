@@ -20,3 +20,7 @@ htmlcov/
 
 # 로그
 *.log
+# Local demo model, evidence and generated scenario audio
+.demo/
+
+/frontend/node_modules

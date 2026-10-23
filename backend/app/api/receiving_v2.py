@@ -75,6 +75,8 @@ def health(flight_id: str, payload: HealthEventV2, db: Session = Depends(get_db)
 
 @router.get("/{flight_id}/state")
 def state(flight_id: str, db: Session = Depends(get_db)):
+    from app.services.demo.adapters import expire_camera
+    expire_camera(db, flight_id)
     return service.get_state(db, flight_id)
 
 
