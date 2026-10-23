@@ -1,7 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { lazy, Suspense, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './style.css';
 import Operations from './Operations.jsx';
+const Cockpit3D = lazy(() => import('./Cockpit3D.jsx'));
 import cockpitReference from '../../docs/vision/assets/mcp-reference.png';
 
 const initial = { speed: 250, heading: 270, altitude: 3000 };
@@ -19,6 +20,7 @@ function NumericDisplay({ text }) {
 
 function App() {
   const [values, setValues] = useState(initial);
+  const [threeD, setThreeD] = useState(true);
   const [hidden, setHidden] = useState({});
   const [editing, setEditing] = useState(null);
   const [draft, setDraft] = useState('');
@@ -92,13 +94,14 @@ function App() {
     <section className="intro">
       <p className="eyebrow">TABLET CAMERA DEMO</p>
       <h1>Cockpit을 화면에,<br />선택값은 직접 조작.</h1>
-      <p>사진 위 세 숫자 창을 터치해 값을 바꾸세요. 아래 계기 화면은 고정된 참고 이미지입니다.</p>
+      <p>3D 패널의 숫자를 눌러 값을 바꾸고, 드래그로 회전해 보세요. MCP 외형을 단순화한 모의 모델입니다.</p>
     </section>
     <div className="view-toolbar">
-      <span>COCKPIT REFERENCE / MANUAL MCP</span>
-      <button aria-pressed={zoom} onClick={() => setZoom(!zoom)}>{zoom ? '전체 조종석 보기' : 'MCP 확대 보기'}</button>
+      <span>{threeD ? '3D COCKPIT / MANUAL MCP' : 'COCKPIT REFERENCE / MANUAL MCP'}</span>
+      <div className="model-actions"><button aria-pressed={threeD} onClick={() => setThreeD(!threeD)}>{threeD ? '사진 보기' : '3D 보기'}</button>
+      {!threeD && <button aria-pressed={zoom} onClick={() => setZoom(!zoom)}>{zoom ? '전체 조종석 보기' : 'MCP 확대 보기'}</button>}</div>
     </div>
-    <section className={`cockpit-scene ${zoom ? 'mcp-closeup' : ''}`} aria-label="사진 기반 모의 MCP 선택 설정값">
+    {threeD ? <Suspense fallback={<p role="status">3D 화면 준비 중…</p>}><Cockpit3D values={values} hidden={hidden} capture={capture} onEdit={key => openEditor(instruments.find(item => item.key === key))} onChange={(key, direction) => change(instruments.find(item => item.key === key), direction)} /></Suspense> : <section className={`cockpit-scene ${zoom ? 'mcp-closeup' : ''}`} aria-label="사진 기반 모의 MCP 선택 설정값">
       <div className="cockpit-photo">
         <img src={cockpitReference} alt="MCP와 주변 계기·조종간이 보이는 참고 Cockpit 사진" draggable="false" />
         {instruments.map(item => {
@@ -112,7 +115,7 @@ function App() {
         })}
       </div>
       <span className="scene-label">RADAR · SIMULATED MCP</span>
-    </section>
+    </section>}
     <section className="instrument-controls" aria-label="MCP 값 수동 조작">
       {instruments.map(item => <article className="instrument" key={item.key}>
           <div className="instrument-label"><h2>{item.title}</h2><span>{item.unit}</span></div>

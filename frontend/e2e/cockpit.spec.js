@@ -1,0 +1,30 @@
+import {test,expect} from '@playwright/test';
+
+test('GLB loads, 3D picking edits shared values and photo view preserves them',async({page})=>{
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('/');
+ await expect(page.locator('.cockpit-3d')).toHaveAttribute('data-state','ready');
+ const response=await page.request.get('/models/cockpit.glb');
+ expect(response.status()).toBe(200);
+ expect((await response.body()).subarray(0,4).toString()).toBe('glTF');
+ await page.getByRole('button',{name:'정면 보기',exact:true}).click();
+ const box=await page.locator('.cockpit-3d canvas').boundingBox();
+ const scale=box.height/(2*13*Math.tan(16*Math.PI/180));
+ await page.mouse.click(box.x+box.width/2,box.y+box.height/2-.58*scale);
+ await expect(page.getByRole('dialog')).toBeVisible();
+ await page.getByLabel('DEGREES · 0~359').fill('359');
+ await page.getByRole('button',{name:'적용',exact:true}).click();
+ await page.getByRole('button',{name:'HEADING 증가',exact:true}).click();
+ await expect(page.getByRole('button',{name:'HEADING 선택값 입력',exact:true})).toHaveText('000');
+ await page.locator('.cockpit-3d canvas').scrollIntoViewIfNeeded();
+ const knobBox=await page.locator('.cockpit-3d canvas').boundingBox();
+ await page.mouse.click(knobBox.x+knobBox.width/2+.15*scale,knobBox.y+knobBox.height/2+.48*scale);
+ await expect(page.getByRole('button',{name:'HEADING 선택값 입력',exact:true})).toHaveText('001');
+ await page.getByRole('button',{name:'사진 보기',exact:true}).click();
+ await expect(page.getByRole('button',{name:'HEADING 1, 값 입력',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'3D 보기',exact:true}).click();
+ await expect(page.locator('.cockpit-3d')).toHaveAttribute('data-state','ready');
+ await page.getByRole('button',{name:'촬영 모드',exact:true}).click();
+ await expect(page.locator('main')).toHaveClass('capture-mode');
+ expect(errors).toEqual([]);
+});
