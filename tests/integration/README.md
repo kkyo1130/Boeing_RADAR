@@ -43,3 +43,28 @@ SPEC-005-WI-01 이후에는 합성 구조 규칙 정책도 비행별로 고정�
 SPEC-005-WI-02에서 정상/조기 일치→즉시 재불일치와 Cockpit 미입력 중 복창 오류 우선2개를 추가해 현재 HTTP 통합은26개다. validation-snapshot-v1 Schema·판정/Trace 대응을 확인한다. 정밀5초 경계·부분 지시·타이머 rollback은 backend 가상 시계 테스트다. 과거 UNVERIFIED 고정 설명은 당시 수신 구현의 한계이며 현재 최종 비교는 state.validation을 사용한다.
 
 SPEC-005-WI-03은 완료 이후 설정 필드9개 조합, 확실한 복창 오류+다른 복창 품질 보류+Cockpit 판독 불가, 새 실행/비행의 정상 근거 격리11개를 추가했다. 현재 HTTP 전체는37개다. 요청·접수 event_id·원본/지시/관측 ID·판정/Trace·공개 Schema를 대조한다. 유한한 fixture 회귀로 실제 모델 정확도나 실장비 성공률을 계산하지 않는다. 상세 전체 AC 근거는 [WI-03](../../docs/spec/005-safe-validation/workitem/wi-03.md)에 기록한다.
+
+## SPEC-006-WI-04 화면·음성 통합 인수
+
+새 HTTP3건이 실제 receiver/SQLite에서 가림5초·가림→방위 순서·둘째 문장만 재시작, 끊김 즉시1회·AVAILABLE만으로 미복구·새 프레임 무음 복구, 원본 이미지 전송·ACK 비해결·새 관측 해결을 검사한다. 전체 HTTP는50개다. 입력은 합성 JSON이고 음성 완료 보고는 시험 생산자가 주입한다. 실제 카메라/OCR·마이크/STT 결과나 물리 출력 성공이 아니다.
+
+실행마다 **새 출력 디렉터리**를 지정해 HTTP가 반환한 실제 snapshot/Trace를 저장하고, 같은 세션에서 실제 React 컴포넌트에 전달해 렌더링을 검사한다. 과거 bundle 재사용은 인수 근거가 아니다. UI 검사는 서로 다른 run_id3개·해당 비행 ID 대응·15분 이내 생성 시각을 확인하고 디렉터리에 다른 실행 bundle이 섞이면 실패한다. 출력에는 합성 입력/Trace가 있으므로 Git에 커밋하지 않는다.
+
+```sh
+# 저장소 루트; 테스트 Python 가상환경을 준비한 후 실행
+acceptance_dir=$(mktemp -d /tmp/radar-interface-acceptance.XXXXXX)
+RADAR_INTERFACE_ACCEPTANCE_DIR="$acceptance_dir" backend/.venv/bin/python -m pytest tests/integration -q
+RADAR_INTERFACE_ACCEPTANCE_DIR="$acceptance_dir" npm --prefix frontend run test:acceptance
+npm --prefix frontend test
+npm --prefix frontend run build
+```
+
+HTTP producer는 frontend 검사를 대신하지 않는다. `test:acceptance`는 실제 서버 bundle→실제 Verdicts/VoicePanel/EvidenceContents SSR5건이다. 브라우저 오디오 출력·클릭·화면 갱신은 별도 실제 브라우저로 확인해야 한다. 장치 입력 완료 전에도 fixture/API 범위를 검사할 수 있지만 WI-04 AC-04의 **최종 인수**는 SPEC-003-WI-05와 SPEC-004-WI-04 결과가 필요하다.
+
+| 필수 실제 입력 증거 | 필요한 연결·인수 |
+| --- | --- |
+| Vision SPEC-003-WI-05 | 실촬영 frame/observation ID·ROI·관측 시각·값/null/roi_occluded·health·분리/재연결·지연 결과. 실제 v2 receiver에 송신 |
+| 음성 SPEC-004-WI-04 | 실제 ATC/Pilot 입력의 segment/attempt/instruction ID·STT 결과/품질/시각. audioFocus.begin/end와 ATC 수음 여유 시간 연결 |
+| 실제 브라우저·출력 | 입력 시작 전 안내/근거 음성 중단, 마이크 재유입·잔향, 가림5초·끊김즉시·복구무음·둘째 문장 재시작, 해당 서버 Trace 대조 |
+
+이 세 가지가 연결되면 같은 사례를 새 실행 ID로 다시 수행하고 해당 WI-04 MD에 장치/설정/브랜치·명령·기대/실제 결과·보류 사유를 기록한다. 기존 합성 성공을 실장비 통과로 복사하지 않는다.
