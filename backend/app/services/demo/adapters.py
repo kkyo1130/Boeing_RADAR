@@ -49,7 +49,7 @@ def base(flight, revision, observed, evidence):
                 evidence_unavailable_reason=None)
 
 
-def speech_payload(flight, revision, segment, transcript, score, registry, audio, quality_reason=None):
+def speech_payload(flight, revision, segment, transcript, score, registry, audio, quality_reason=None, ner_result=None):
     text = normalize(transcript)
     matches = [(canonical, alias, raw) for canonical, aliases in registry.items()
                for alias, raw in aliases.items() if text.startswith(normalize(raw)+' ')]
@@ -61,6 +61,12 @@ def speech_payload(flight, revision, segment, transcript, score, registry, audio
         values, issues = parse_command(text[len(normalize(raw))+1:])
         call = dict(value=canonical, alias_key=alias, raw_text=raw, validity='VALID', reason=None,
                     quality=quality(score, not quality_reason, quality_reason))
+    if ner_result is not None:
+        from app.services.speech.ner import check_candidates
+        ner_issue = check_candidates(ner_result, call['raw_text'], values)
+        if ner_issue:
+            issues.append(ner_issue)
+            quality_reason = quality_reason or ner_issue
     if issues:
         values = {}  # No partial guess from an unconsumed transcript.
     fields = {key: reading(value, key, score, raw=str(value)) for key, value in values.items()}
@@ -130,9 +136,22 @@ def receive_speech(db, flight, body, data, *, scenario=None):
             reason = 'speech_engine_unavailable'
         finally:
             STT_LOCK.release()
-    payload = speech_payload(flight, revision, segment, transcript, score, registry, audio, reason)
+    ner_result = None
+    if os.getenv('RADAR_NER_MODEL'):
+        from app.services.speech.ner import extract_atc
+        try:
+            ner_result = extract_atc(transcript)
+        except Exception:
+            # An explicitly enabled model must never silently fall back to grammar-only PASS.
+            ner_result = dict(entities=[], tokens=[], issues=['NER_UNAVAILABLE'],
+                              instruction_check='NEEDS_REVIEW', score_calibrated=False,
+                              numeric_validation='NOT_PERFORMED', model_version='v7', transcript=transcript)
+            reason = reason or 'ner_engine_unavailable'
+    payload = speech_payload(flight, revision, segment, transcript, score, registry, audio, reason, ner_result)
+    if ner_result is not None and payload['instruction_check'] == 'NEEDS_REVIEW':
+        reason = reason or 'ner_or_grammar_needs_review'
     receipt, _ = intake.receive(db, flight, ObservationV2.model_validate(payload), 'OBSERVATION')
-    return dict(receipt=receipt, transcript=transcript, model_score=score, quality_reason=reason,
+    return dict(receipt=receipt, transcript=transcript, model_score=score, quality_reason=reason, ner=ner_result,
                 input_mode='registered_scenario' if scenario else 'uploaded_wav_local_whisper',
                 instruction_id=segment['instruction_id'])
 

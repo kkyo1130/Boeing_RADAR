@@ -93,3 +93,33 @@ def test_homophone_readback_preserves_raw_and_compares_actual(client,flight,monk
     row=next(row for row in state['validation']['readback']['fields'] if row['field']=='HDG')
     assert row['actual']==expected
     assert row['result']==('NORMAL' if expected==270 else 'MISMATCH')
+
+
+def test_enabled_ner_follows_stt_and_failure_blocks_pass(client,flight,monkeypatch):
+    from app.services.speech import ner
+    monkeypatch.setenv('RADAR_NER_MODEL','configured-test-model')
+    text='Radar one two three climb and maintain three thousand feet heading two seven zero'
+    labels='B-CALLSIGN I-CALLSIGN I-CALLSIGN I-CALLSIGN B-ACTION I-ACTION I-ACTION B-ALT I-ALT I-ALT O B-HDG I-HDG I-HDG'.split()
+    calls=[]
+    def extract(raw):
+        calls.append(raw)
+        return ner.assemble(raw,labels,[.9]*len(labels))
+    monkeypatch.setattr(ner,'extract_atc',extract)
+    now=intake.utc_now()
+    r=client.post(f'/api/demo/{flight}/scenario/baseline',json={'started_at':intake.stamp(now-timedelta(seconds=4)),'ended_at':intake.stamp(now-timedelta(seconds=3))})
+    assert r.status_code==200,r.text
+    state=client.get(f'/api/v2/flights/{flight}/state').json()
+    assert state['targets']['ALT']['value']==3000
+    class ASR:
+        def transcribe(self,path): return {'transcript':text,'model_score':.9}
+    monkeypatch.setattr(demo,'MODEL',ASR())
+    def unavailable(raw):
+        calls.append(raw)
+        raise RuntimeError('unavailable')
+    monkeypatch.setattr(ner,'extract_atc',unavailable)
+    response=client.post(f'/api/demo/{flight}/readback',json={'started_at':intake.stamp(now-timedelta(seconds=2)),'ended_at':intake.stamp(now-timedelta(seconds=1)),'atc_input_id':state['readback_required']['atc_input_id'],'audio':base64.b64encode(wav_bytes()).decode()})
+    assert response.status_code==200,response.text
+    assert calls[-1]==text and response.json()['transcript']==text
+    assert response.json()['ner']['issues']==['NER_UNAVAILABLE']
+    assert response.json()['quality_reason']=='ner_engine_unavailable'
+    assert client.get(f'/api/v2/flights/{flight}/state').json()['result']!='NORMAL'

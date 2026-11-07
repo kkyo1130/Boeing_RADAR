@@ -67,10 +67,13 @@
 
 #### 결과·검증·리뷰·인수인계
 
-- 구현: 미착수; 코드 기준·변경 파일은 수행 후 기록.
-- 검증: 미실행; 실제 명령·환경·기대/관찰 결과·통과/실패/차단을 수행 후 기록.
-- 리뷰: 미수행; 계약·범위·회귀·근거 검토와 지적 해결 여부를 수행 후 기록.
-- 인수인계: 담당 세션 미배정; 선행 결과와 해당 미정 사항 확인 후 이 WI를 지정해 착수.
+2026-11-08 사용자 요청 범위: 학습된 v7 NER의 영어 추출 함수와 현재 RADAR STT 연결. 기준 dev `2e3dd77`, 브랜치 `codex/v7-stt-integration`. 원래 작업 폴더의 미커밋 변경은 보존하고 독립 worktree에서 구현했다.
+
+- 구현: `speech/ner.py`는 local-only safetensors/config/manifest를 검사하고 모델·fast tokenizer를 프로세스별 캐시한다. 첫 subtoken 라벨을 원문 단어/문자구간에 정렬, raw BIO와 비보정 모델 점수 반환. 128토큰 초과/빈 입력/illegal BIO를 정상 처리하지 않음. `scripts/extract-atc.py` 및 opt-in `POST /api/demo/speech/extract` 제공.
+- 연결: `demo/adapters.py`의 LocalWhisper 결과를 v7에 전달. 등록 호출부호/전체 문장 문법으로 변환된 값과 NER 후보가 일치해야 기존 PASS 가능. 등록 ATC 시나리오도 같은 gate를 사용하나 실제 ATC STT라고 표현하지 않음. `RADAR_NER_MODEL`을 지정하면 모델 실패/후보 불일치 시 fields를 비우고 NEEDS_REVIEW; 미지정 시 기존 동작 유지. 원본 transcript, 음성근거, segment/attempt/ATC ID·역할과 후속 수신/구조 검사 보존.
+- 검증: backend에서 전용 Python3.11 환경으로 `python -m pytest -q`: 506 passed, 1 skipped(실제 모델 opt-in), Starlette TestClient deprecation 경고1. `RADAR_TEST_NER_MODEL=<final-v7> python -m pytest -q tests/test_ner_v7.py`: 실제 가중치 포함8 passed. 주입 ASR의 raw transcript 전달/모델 실패 후 비정상 상태, 미지원 suffix·오디오 품질 보류, 호출부호/숫자 불일치, 잘못된BIO/NaN/길이초과 검사. 실제v7+speech_payload 직접 smoke에서 Radar123/ALT3000/HDG270의 기존 문법과 NER 일치 PASS 확인.
+- 리뷰: 자체 검토. NER 점수를 검증된 정확도로 표현하지 않음, 신경망 결과만으로 숫자 승인/상태 정상/설정 변경하지 않음. 동일 transcript의 두 검사는 독립 안전 채널 아님. 유효 BIO라도 잘못된 의미 추출 가능. 기존 parser의 미지원 문법을 임의 제거/확장하지 않음. weight/pickle/원음은 커밋하지 않음.
+- 인수인계: `backend/requirements-ner.txt`, `RADAR_NER_MODEL`, `docs/v7-stt-integration.md` 참고. v7 함수와 현재 데모 STT 결과 연결만 요청 범위에서 구현. 실제 사용자 마이크/Whisper 원음 E2E, 더 넓은 관제 문법/숫자 정규화, 전체 AC-02 인수는 미완료. 코드 PR 검토 대상이며 WI 전체 완료를 주장하지 않는다.
 
 <a id="wi-03"></a>
 

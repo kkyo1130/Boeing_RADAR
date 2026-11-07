@@ -1,0 +1,4 @@
+-r requirements.txt
+# Optional local v7 extraction (no training/remote downloads at runtime).
+torch==2.8.0
+transformers==4.57.1
