@@ -29,6 +29,10 @@ def normalize(value):
 def digits(value):
     if re.fullmatch(r"[0-9]+", value):
         return value
+    # STT may render a spoken digit sequence as 2-7-0. This is slot-local:
+    # ranges (270-280), negatives (-90), short ranges (2-7), and >3 digits are not accepted here.
+    if re.fullmatch(r"[0-9](?:-[0-9]){2}", value):
+        return value.replace("-", "")
     words = number_words(value).split()
     if words and all(word in DIGITS or re.fullmatch(r"[0-9]", word) for word in words):
         return "".join(str(DIGITS[word]) if word in DIGITS else word for word in words)

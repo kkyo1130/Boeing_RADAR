@@ -75,6 +75,17 @@
 - 리뷰: 자체 검토. NER 점수를 검증된 정확도로 표현하지 않음, 신경망 결과만으로 숫자 승인/상태 정상/설정 변경하지 않음. 동일 transcript의 두 검사는 독립 안전 채널 아님. 유효 BIO라도 잘못된 의미 추출 가능. 기존 parser의 미지원 문법을 임의 제거/확장하지 않음. weight/pickle/원음은 커밋하지 않음.
 - 인수인계: `backend/requirements-ner.txt`, `RADAR_NER_MODEL`, `docs/v7-stt-integration.md` 참고. v7 함수와 현재 데모 STT 결과 연결만 요청 범위에서 구현. 실제 사용자 마이크/Whisper 원음 E2E, 더 넓은 관제 문법/숫자 정규화, 전체 AC-02 인수는 미완료. 코드 PR 검토 대상이며 WI 전체 완료를 주장하지 않는다.
 
+#### BERT+규칙 STT 추가 연결 · 2026-11-09
+
+- 범위/기준: 사용자 요청에 따라 SPEC-004-WI-02의 기존 STT 구조화 경로를 확장했다. 기준 `origin/dev` `4a6fd74`, 독립 브랜치 `codex/bert-hybrid-stt`. 기존 작업 폴더의 변경은 보존했다. 상태는 reviewing이며 WI 전체 AC-02 완료를 뜻하지 않는다.
+- 구현: `speech/hybrid.py`는 로컬 BERT의 CALLSIGN과 이전 비교 실험에서 보완한 `hybrid_rules.py`/`hybrid_baseline.py`의 ACTION·ALT·HDG를 합친다. `hybrid_prefixes.json`은 실제 UWB 학습400개에서 얻은46개 접두어이며 별도 출처·라이선스 고지를 포함한다. BERT는 기존 검증99개의 전체일치 기준으로 seed13을 선택했고 재학습하지 않았다. 모델·tokenizer6개 파일의 SHA-256과 정확한 라벨 구성을 검사한다.
+- 연결/계약: `RADAR_NER_BACKEND=bert-hybrid`에서 LocalWhisper→원문→BERT+규칙 후보→기존 전체 문법/등록 호출부호/숫자 검사→기존 저장·판정으로 이어진다. 원문/문자 오프셋/모델 원시 라벨과 정규화 입력을 보존한다. 규칙 결과는 `source=rule, model_score=null`; BERT 점수는 정확도로 표현하지 않는다. 모델 로딩 실패, 잘못된 BIO, 조건/정정/충돌·필수 호출부호 누락은 fields를 비우고 검토로 남긴다. 명시적 backend 설정에 모델이 없어도 규칙만으로 조용히 통과하지 않는다. 기본 설정의 v7은 유지한다.
+- STT 표현 보완: 실제 Whisper가 생성한 쉼표·`3,000`·`2-7-0`을 처리한다. BERT 입력의 단어 끝 문장부호만 제거하고 원문은 유지한다. 숫자 슬롯에서 정확히3자리 하이픈 표기만 허용하며 `270-280`, `2-7`, `-90`, `2--7-0` 등은 거부한다.
+- 자동 검증: 작업 worktree의 `backend/`에서 실제 두 모델 경로를 지정해 `RADAR_TEST_BERT_MODEL=<prepared-bert> RADAR_TEST_NER_MODEL=<v7> ../.venv/bin/python -m pytest -q` 실행: **532 passed**, skipped 없음, Starlette TestClient deprecation 경고1. 실제 BERT/v7 로딩, artifact 변조, 원문 정렬·점수 출처, 규칙 수정, 잘못된 BIO/조건/단위/숫자 표기/명시 설정 실패 처리와 기존 서버 회귀를 포함한다. 별도로 기존487문장×3seed의 캐시 예측1461개를 옮긴 결합 함수와 대조해 라벨·오프셋 일치를 확인했다. 이 비교는 새 추론 정확도 평가가 아니다.
+- HTTP 검증: 실제 실행 서버에서 `.venv/bin/python scripts/test-hybrid-stt.py --audio .demo/audio --output .demo/hybrid-http-verified --recorded-wav <previous-microphone.wav>`를 실행했다. ASR stub 없이 faster-whisper base.en과 BERT가 동작했다. 합성 정상 음성은 RADAR123/3000ft/270°, 구조PASS·복창NORMAL; 합성290° 음성은 기대270° 대비 MISMATCH; 무음은 NEEDS_REVIEW/UNVERIFIED. 이전 사용자 마이크 WAV의 `Eight thousand feet, heading 270.`는 호출부호/명령 누락으로 NEEDS_REVIEW/UNVERIFIED였다. 정상 복창도 Cockpit 관측이 없으므로 비행 전체 상태는 UNVERIFIED다. frontend5176의 `/api/demo/status`가 backend8013의 bert-hybrid를 반환하는 proxy 연결도 확인했다.
+- 자체 리뷰: 동일 전사의 검사들은 독립 안전 채널이 아니다. 하이픈 처리가2자리 범위까지 받아들이던 초기 구현을 정확히3자리로 제한하고 회귀 테스트를 추가했다. 명시 설정 실패의 묵시적 규칙 fallback, 속도/상승률의 고도 혼동, BERT 점수의 규칙 점수 전용, 출처 누락 위험을 검토했다. 외부 사람/자동 PR 리뷰는 아직 미수행이다.
+- 인수인계: [실행·검증 안내](../bert-hybrid-stt-integration.md), `scripts/prepare-hybrid-model.py`, `scripts/run-hybrid-backend.sh`, `scripts/test-hybrid-stt.py` 참고. 가중치·오디오·DB·원시 보고서는 로컬 `.demo/`에만 보존한다. 새 실시간 마이크 녹음, 실제 ATC 원음 STT, 카메라 통합/전체 AC-02는 미실행이다. PR 검토 후 병합 여부를 결정하며 자동 병합하지 않는다.
+
 <a id="wi-03"></a>
 
 ### SPEC-004-WI-03: 음성 품질·입력 건전성과 불확실성

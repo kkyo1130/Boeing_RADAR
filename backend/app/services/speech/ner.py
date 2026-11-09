@@ -72,7 +72,8 @@ class V7Extractor:
             raise ExtractionError('EMPTY_TRANSCRIPT')
         if len(text) > 2048: raise ExtractionError('TRANSCRIPT_TOO_LONG')
         with self.lock:
-            encoded = self.tokenizer(text.split(), is_split_into_words=True,
+            model_words = self.words_for_model(text) if hasattr(self, 'words_for_model') else text.split()
+            encoded = self.tokenizer(model_words, is_split_into_words=True,
                                      truncation=False, return_tensors='pt')
             if encoded['input_ids'].shape[1] > 128:
                 raise ExtractionError('NER_TOKEN_LIMIT')
@@ -86,31 +87,40 @@ class V7Extractor:
                     labels.append(LABELS[int(label)])
                     scores.append(float(score))
                 previous = word_id
-            return assemble(text, labels, scores)
+            result = assemble(text, labels, scores)
+            result['model_version'] = getattr(self, 'version', 'v7')
+            if model_words != text.split(): result['model_input_tokens'] = model_words
+            return result
 
 
 LOAD_LOCK = Lock()
 
 
-@lru_cache(maxsize=1)
-def _load(path):
-    return V7Extractor(path)
+@lru_cache(maxsize=2)
+def _load(path, backend='v7'):
+    if backend == 'v7':
+        return V7Extractor(path)
+    if backend == 'bert-hybrid':
+        from .hybrid import BertHybridExtractor
+        return BertHybridExtractor(path)
+    raise ExtractionError('NER_BACKEND_UNSUPPORTED')
 
 
-def extract_atc(text, model_path=None):
+def extract_atc(text, model_path=None, *, backend=None):
     """English transcript -> raw BIO tokens and entity spans, without numeric approval."""
     path = model_path or os.getenv('RADAR_NER_MODEL')
     if not path: raise ExtractionError('NER_MODEL_NOT_CONFIGURED')
     # Serialize first load as functools' cache alone may construct twice concurrently.
     with LOAD_LOCK:
-        extractor = _load(str(Path(path).resolve()))
+        extractor = _load(str(Path(path).resolve()), backend or os.getenv('RADAR_NER_BACKEND', 'v7'))
     return extractor.extract(text)
 
 
 def check_candidates(result, callsign_raw, values):
     """Veto disagreement with the full-transcript grammar; never bypass it."""
     from app.services.structure_rules import normalize, parse_command
-    if result['issues']: return 'ner_invalid_bio'
+    if result['issues']:
+        return 'hybrid_needs_review' if result.get('model_version') == 'bert-hybrid-rules-v2' else 'ner_invalid_bio'
     calls = [e for e in result['entities'] if e['label'] == 'CALLSIGN']
     if len(calls) != 1 or normalize(calls[0]['text']) != normalize(callsign_raw or ''):
         return 'ner_callsign_disagreement'

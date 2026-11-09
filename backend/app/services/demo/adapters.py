@@ -137,7 +137,7 @@ def receive_speech(db, flight, body, data, *, scenario=None):
         finally:
             STT_LOCK.release()
     ner_result = None
-    if os.getenv('RADAR_NER_MODEL'):
+    if os.getenv('RADAR_NER_MODEL') or os.getenv('RADAR_NER_BACKEND'):
         from app.services.speech.ner import extract_atc
         try:
             ner_result = extract_atc(transcript)
@@ -145,7 +145,7 @@ def receive_speech(db, flight, body, data, *, scenario=None):
             # An explicitly enabled model must never silently fall back to grammar-only PASS.
             ner_result = dict(entities=[], tokens=[], issues=['NER_UNAVAILABLE'],
                               instruction_check='NEEDS_REVIEW', score_calibrated=False,
-                              numeric_validation='NOT_PERFORMED', model_version='v7', transcript=transcript)
+                              numeric_validation='NOT_PERFORMED', model_version=os.getenv('RADAR_NER_BACKEND', 'v7'), transcript=transcript)
             reason = reason or 'ner_engine_unavailable'
     payload = speech_payload(flight, revision, segment, transcript, score, registry, audio, reason, ner_result)
     if ner_result is not None and payload['instruction_check'] == 'NEEDS_REVIEW':
