@@ -86,6 +86,10 @@
 - 자체 리뷰: 동일 전사의 검사들은 독립 안전 채널이 아니다. 하이픈 처리가2자리 범위까지 받아들이던 초기 구현을 정확히3자리로 제한하고 회귀 테스트를 추가했다. 명시 설정 실패의 묵시적 규칙 fallback, 속도/상승률의 고도 혼동, BERT 점수의 규칙 점수 전용, 출처 누락 위험을 검토했다. 외부 사람/자동 PR 리뷰는 아직 미수행이다.
 - 인수인계: [실행·검증 안내](../bert-hybrid-stt-integration.md), `scripts/prepare-hybrid-model.py`, `scripts/run-hybrid-backend.sh`, `scripts/test-hybrid-stt.py` 참고. 가중치·오디오·DB·원시 보고서는 로컬 `.demo/`에만 보존한다. 새 실시간 마이크 녹음, 실제 ATC 원음 STT, 카메라 통합/전체 AC-02는 미실행이다. PR 검토 후 병합 여부를 결정하며 자동 병합하지 않는다.
 
+#### 실제 마이크 후속 검증 · 2026-11-09 23:07–23:10 KST
+
+MacBook Air 마이크(48kHz mono PCM16) 신규 녹음3회를 실제 HTTP STT 경로로 전달했다. 1회 약신호로 빈 전사·보류, 2회 고도/방위 구간은 추출됐으나 전사에 호출부호가 없어 보류, 3회 전체 문장에서 Whisper가 `two`를 `to`로 전사했다. 3회 BERT CALLSIGN/규칙 ALT는 추출됐지만 hybrid HDG가 누락되어 구조 NEEDS_REVIEW(MENTION_SCOPE_UNKNOWN)·복창/전체 UNVERIFIED였다. 기존 문법의 후보값3000/270이 있어도 정상 복창으로 승인하지 않았다. 연결은 실제 입력으로 확인했으나 전체 정상 판정 성공은0/3이다. 앞부분 누락의 원인은 확정하지 않았다. 브라우저 마이크 권한/MediaRecorder 경로·실제 ATC·카메라는 여전히 미실행이다. 코드 변경 없이 [검증 안내](../bert-hybrid-stt-integration.md)에 기록하며 원음·전체응답은 Git-ignored `.demo/live-mic-20261109-*`에 보존했다. 동음어 처리 불일치는 미해결 후속 항목이며 테스트 통과를 위해 입력을 보정하지 않았다.
+
 <a id="wi-03"></a>
 
 ### SPEC-004-WI-03: 음성 품질·입력 건전성과 불확실성

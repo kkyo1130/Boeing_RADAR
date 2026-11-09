@@ -108,7 +108,7 @@ The first two audio fixtures are synthetic speech, not real ATC recordings. The
 last input is replay of a prior microphone recording, not a new live recording.
 Overall flight state remains UNVERIFIED without a Cockpit observation even when
 the readback itself matches. No frontend microphone permissions or camera E2E
-were tested here.
+were tested in that run. A subsequent native microphone test is recorded below.
 
 Re-run the actual WAV HTTP checks against an already-running local server:
 
@@ -133,3 +133,30 @@ RADAR_TEST_NER_MODEL=/absolute/path/to/v7/model \
 Without those two test variables, actual model smoke tests are skipped; other
 unit/API tests do not require model files. Switch back by setting
 `RADAR_NER_BACKEND=v7` and a v7 `RADAR_NER_MODEL` before restarting the server.
+
+## New live microphone follow-up (2026-11-09 23:07–23:10 KST)
+
+Three new recordings used the MacBook Air microphone (48kHz mono PCM16),
+submitted to the same actual HTTP readback endpoint. This exercised native
+microphone capture, not the frontend browser MediaRecorder permission flow.
+
+| Attempt | Observation | Result |
+| --- | --- | --- |
+| 1, 12s | Weak signal, empty STT; RMS58 | NEEDS_REVIEW / UNVERIFIED |
+| 2, 12s | `climb and maintain, three thousand feet, heading two, seven, zero.`; callsign absent from transcript | ALT/HDG spans found, missing callsign held |
+| 3, 20s | `Radar, one, two, three, climb and maintain, three thousand feet, heading to seven, zero.` | BERT CALLSIGN and rule ALT found; hybrid HDG absent, held |
+
+The last attempt began only after capture activation was observed. Whisper
+rendered the prompted `two` as `to`. The existing full grammar derived
+ALT3000/HDG270, but the hybrid candidate set did not include HDG. The final
+structure check was NEEDS_REVIEW (MENTION_SCOPE_UNKNOWN), readback/overall
+UNVERIFIED, and no values were accepted as a verified readback. No global
+`to -> two` substitution or expected-answer injection was introduced.
+
+These are real live captures and confirm the connection, but **none achieved a
+fully accepted readback**. Initial missing speech/callsign may involve capture
+timing or STT; their cause was not conclusively identified. The observed
+homophone handling difference remains unresolved. Audio, capture metadata and
+full API evidence are local-only `.demo/live-mic-20261109-*` artifacts. The
+532-test result above predates this follow-up; no implementation changed and
+the suite was not rerun for this documentation-only update.
