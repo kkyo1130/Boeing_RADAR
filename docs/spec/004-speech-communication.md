@@ -90,6 +90,12 @@
 
 MacBook Air 마이크(48kHz mono PCM16) 신규 녹음3회를 실제 HTTP STT 경로로 전달했다. 1회 약신호로 빈 전사·보류, 2회 고도/방위 구간은 추출됐으나 전사에 호출부호가 없어 보류, 3회 전체 문장에서 Whisper가 `two`를 `to`로 전사했다. 3회 BERT CALLSIGN/규칙 ALT는 추출됐지만 hybrid HDG가 누락되어 구조 NEEDS_REVIEW(MENTION_SCOPE_UNKNOWN)·복창/전체 UNVERIFIED였다. 기존 문법의 후보값3000/270이 있어도 정상 복창으로 승인하지 않았다. 연결은 실제 입력으로 확인했으나 전체 정상 판정 성공은0/3이다. 앞부분 누락의 원인은 확정하지 않았다. 브라우저 마이크 권한/MediaRecorder 경로·실제 ATC·카메라는 여전히 미실행이다. 코드 변경 없이 [검증 안내](../bert-hybrid-stt-integration.md)에 기록하며 원음·전체응답은 Git-ignored `.demo/live-mic-20261109-*`에 보존했다. 동음어 처리 불일치는 미해결 후속 항목이며 테스트 통과를 위해 입력을 보정하지 않았다.
 
+#### 숫자 동음어 보완·원본 재시험 · 2026-11-09
+
+사용자 요청에 따라 `speech/numeric_slots.py`에서 기존 숫자 grammar의 동음어 사전을 후보 추출에도 적용했다. heading/flight level 뒤의 정확한3자리(heading359이하), 고도 명령+명시 feet 단위의 지원 숫자에만 적용하며 CALLSIGN·원문·BERT 입력은 변경하지 않는다. 원래 토큰과 후보·위치·문맥을 `numeric_normalizations`에 반환한다. 조건/범위/미지원 꼬리문구/누락 검사는 유지한다. 실제 BERT 포함 전용42개, 전체 backend549개 통과(skip0, 기존경고1). 최초 루트 실행은 app import경로로 실패해 정해진 backend 위치에서 다시 실행했다.
+
+신규 녹음3개 원본 WAV를 실제 Whisper/BERT HTTP 경로로 재시험했다. 전사3개 모두 이전과 동일했다. 마지막20초 녹음에서 `heading to seven, zero.`를 보존한 채 HDG 후보의 to→two를 기록하여 RADAR123/3000ft/270°, 구조PASS·복창NORMAL을 확인했다. 앞의 약신호/호출부호 누락2개는 계속 보류됐다. Cockpit 부재로 전체 상태UNVERIFIED를 유지했다. 입력 SHA-256/원문/전체응답은 `.demo/homophone-replay/`에 보존하며 새 독립 정확도나 새 마이크 녹음으로 표현하지 않는다. 자체 리뷰에서 전역치환·정답주입·호출부호보완 없음과 기존 보류 조건을 확인했다. 같은 PR #21에 추가하며 외부리뷰/병합 전 reviewing 유지.
+
 <a id="wi-03"></a>
 
 ### SPEC-004-WI-03: 음성 품질·입력 건전성과 불확실성

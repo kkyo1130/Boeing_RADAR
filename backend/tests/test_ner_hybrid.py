@@ -139,3 +139,51 @@ def test_tampered_manifest_is_not_loaded(tmp_path):
     (tmp_path/'config.json').write_text(json.dumps({'model_type':'bert','id2label':{str(i):t for i,t in enumerate(LABELS)},'label2id':{t:i for i,t in enumerate(LABELS)}}))
     (tmp_path/'radar_hybrid.json').write_text(json.dumps({'schema_version':1,'backend':'bert-hybrid','sha256':{f:'wrong' for f in ARTIFACT_FILES}}))
     with pytest.raises(ExtractionError,match='HASH_MISMATCH'):BertHybridExtractor(tmp_path)
+
+
+@pytest.mark.parametrize('operand,value', [('to seven zero',270),('too seven zero',270),('one ate zero',180),('tree fore fife',345),('o for zero',40)])
+def test_homophones_in_complete_heading_slot_preserve_evidence(operand,value):
+    t='Radar one two three maintain three thousand feet heading '+operand
+    out=fuse(t,fake(t,4))
+    assert check_candidates(out,'Radar one two three',{'ALT':3000,'HDG':value}) is None
+    entity=next(e for e in out['entities'] if e['label']=='HDG')
+    assert entity['text']==operand and t[entity['start']:entity['end']]==operand
+    assert out['transcript']==t and out['numeric_normalizations']
+    assert entity['model_score'] is None
+
+
+@pytest.mark.parametrize('command', ['heading to seven', 'heading to two seven zero', 'heading for seven zero', 'heading to seven zero degrees', 'contact tower for clearance', 'taxi to holding point', 'turn to the left', 'climb to three thousand feet'])
+def test_non_numeric_to_or_incomplete_grammar_cannot_be_approved(command):
+    from app.services.speech.numeric_slots import normalize_numeric_slots
+    if not command.startswith('heading'):
+        assert normalize_numeric_slots(command.split())[1]==[]
+    t='Radar one two three '+command
+    out=fuse(t,fake(t,4))
+    p=speech_payload('f',0,{'started_at':'2026-11-09T00:00:00Z','role':'ATC','segment_id':'s','attempt_id':'a','atc_input_id':'i'},t,.9,{'RADAR123':{'r':'Radar one two three'}},{'evidence_id':'e','ref':'stored:e'},ner_result=out)
+    assert p['instruction_check']=='NEEDS_REVIEW' and p['fields']=={}
+
+
+@pytest.mark.parametrize('command,alt',[('maintain flight level one ate zero',18000),('maintain to thousand feet',2000)])
+def test_explicit_altitude_slot_homophones(command,alt):
+    t='Radar one two three '+command
+    out=fuse(t,fake(t,4))
+    assert check_candidates(out,'Radar one two three',{'ALT':alt}) is None
+    assert out['numeric_normalizations']
+
+
+def test_homophones_do_not_rewrite_callsign_and_conditions_still_hold():
+    t='Radar to fore maintain three thousand feet heading to seven zero if able'
+    out=fuse(t,fake(t,3))
+    assert out['entities'][0]['text']=='Radar to fore'
+    assert all(c['token_index']>3 for c in out['numeric_normalizations'])
+    assert check_candidates(out,'Radar to fore',{'ALT':3000,'HDG':270})=='hybrid_needs_review'
+
+
+def test_real_bert_with_unchanged_live_stt_transcript():
+    path=os.getenv('RADAR_TEST_BERT_MODEL')
+    if not path:pytest.skip('Set RADAR_TEST_BERT_MODEL for actual BERT inference')
+    text='Radar, one, two, three, climb and maintain, three thousand feet, heading to seven, zero.'
+    out=extract_atc(text,path,backend='bert-hybrid')
+    assert out['transcript']==text
+    assert check_candidates(out,'Radar one two three',{'ALT':3000,'HDG':270}) is None
+    assert next(e for e in out['entities'] if e['label']=='HDG')['text']=='to seven, zero.'

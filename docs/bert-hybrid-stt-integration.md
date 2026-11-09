@@ -160,3 +160,33 @@ homophone handling difference remains unresolved. Audio, capture metadata and
 full API evidence are local-only `.demo/live-mic-20261109-*` artifacts. The
 532-test result above predates this follow-up; no implementation changed and
 the suite was not rerun for this documentation-only update.
+
+## Numeric homophone fix and original WAV replay (2026-11-09)
+
+`numeric_slots.py` now aligns hybrid rule candidates with the existing grammar's
+NUMBER_HOMOPHONES mapping. It operates only after heading/flight-level markers
+(exactly three numeric digits, heading <=359) or an altitude command followed
+by a supported number and explicit feet unit. It never changes BERT input,
+callsign words or the original transcript. `numeric_candidate_policy` and
+`numeric_normalizations` expose token index, original token, candidate token,
+slot and reason. Full grammar, reference/rate filters, BIO and context checks
+still apply; candidate normalization alone does not approve a command.
+
+The same three recorded WAVs were replayed through actual Whisper and BERT.
+All three transcripts exactly matched their prior outputs. Weak signal and
+missing-callsign recordings remained NEEDS_REVIEW/UNVERIFIED. The third WAV
+(SHA-256 `9a20dfac8cbf6c15683d7689312b7fcf539fd4ea9fb194d1dc5d643d49a6b31c`)
+kept `heading to seven, zero.` in the source transcript, with token11 `to`
+recorded as the HDG candidate `two`. It now produced RADAR123, ALT3000/HDG270,
+structure PASS and readback NORMAL. Overall flight remains UNVERIFIED because
+there is no Cockpit observation. This is a regression replay of a known
+failure, not an independent STT accuracy benchmark or another live capture.
+Full replay responses and SHA-256 values are in ignored `.demo/homophone-replay/`.
+
+Verification: targeted42 passed; complete backend suite with actual BERT/v7
+models **549 passed**, no skips, one existing Starlette warning. Negative
+cases cover prepositions/callsigns, short and out-of-range operands, unknown
+trailing words and conditions. Self-review confirmed no global replacement,
+expected-value injection or missing-callsign completion. The previous
+`two/to` candidate mismatch is resolved within this bounded scope; wider STT
+error accuracy, browser recording and real ATC/camera E2E remain unmeasured.
