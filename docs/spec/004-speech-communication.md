@@ -96,6 +96,14 @@ MacBook Air 마이크(48kHz mono PCM16) 신규 녹음3회를 실제 HTTP STT 경
 
 신규 녹음3개 원본 WAV를 실제 Whisper/BERT HTTP 경로로 재시험했다. 전사3개 모두 이전과 동일했다. 마지막20초 녹음에서 `heading to seven, zero.`를 보존한 채 HDG 후보의 to→two를 기록하여 RADAR123/3000ft/270°, 구조PASS·복창NORMAL을 확인했다. 앞의 약신호/호출부호 누락2개는 계속 보류됐다. Cockpit 부재로 전체 상태UNVERIFIED를 유지했다. 입력 SHA-256/원문/전체응답은 `.demo/homophone-replay/`에 보존하며 새 독립 정확도나 새 마이크 녹음으로 표현하지 않는다. 자체 리뷰에서 전역치환·정답주입·호출부호보완 없음과 기존 보류 조건을 확인했다. 같은 PR #21에 추가하며 외부리뷰/병합 전 reviewing 유지.
 
+#### 동일 실제 관제 음원 STT 비교 · 2026-11-10
+
+- 범위/기준: 사용자 요청으로 기존3개 실제 관제 음원과 당시 물리 마이크 녹음본을 고정해 base.en/small.en/medium.en/large-v3-turbo를 비교했다. 평가 도구는 dev `d267d4b` 기반 `codex/atc-stt-comparison`, 실행 서버 코드는 PR #22 `da0f219` 별도 체크아웃이다. 운영 STT/NER/품질 기준을 수정하지 않았다.
+- 구현: `scripts/evaluation/compare_atc_stt.py`가 고정 계획·파일 해시를 확인하고 CPU int8/4 threads로 모델별 별도 프로세스에서 실제 LocalWhisper→BERT+규칙→ATC API를 실행한다. 실험용 임시 DB를 사용한다. 단어 오류율, 실제 STT 소요시간, 올바른/잘못된 지시 채택을 분리한다. `summarize_atc_stt.py`는 각 모델·조건의 동일6개 파일과 계획 해시를 확인하고 공개 JSON을 만든다.
+- 검증: 실제 추론 기본24회 + 안내문 제거 후속24회 모두 처리 완료. 기대 HDG 채택0/48, 잘못된 채택0/48. 원음/마이크 기본 WER는 base48.4/90.3%, small38.7/51.6%, medium61.3/67.7%, turbo38.7/45.2%. 메모리16GiB M4의 CPU 시간이며 GPU 성능이 아니다. 별도 정답 텍스트 추출 진단3/3 PASS; ASR 입력이나 실제 지시 채택으로 계산하지 않았다. 점수 단위 테스트5개·py_compile·입력/계획 해시 및 누락 감사 통과. 제품 코드 변경이 없어 전체 backend/UI 회귀는 미실행.
+- 자체 리뷰: 기준선/추가조건을 분리했고 기존 전사 정답·등록 호출부호·임계값을 고정했다. 숫자 표기를 제외한 정답 보정/학습/강제 호출부호 교체는 하지 않았다. 악센트 단어 분리 오류를 채점기에서 수정한 뒤 같은48개 출력 전체를 재채점했다. 원음/모델은 Git에 넣지 않는다. 이미 분석한3개뿐이며 독립 평가/전체 정확도로 표현하지 않는다. 외부 리뷰는 PR에서 별도로 확인한다.
+- 인수인계: [보고서·재현 명령](../atc-stt-comparison.md), [출처·고정 계획·실측 결과](../evaluation/atc-stt-comparison-2026-11-10.json). small.en은 비용 대비 추가 시험 후보지만 검증된 대체 모델로 채택하지 않았다. ATC 특화 STT/더 넓은 미사용 음원 평가가 남으며 WI 전체 완료로 표시하지 않는다.
+
 #### 병합 전 리뷰·CI 보완 · 2026-11-09
 
 PR #21 자동 Codex 리뷰는 최초 구현 `98e6015`에 지적 없음으로 완료됐으며 GitHub APPROVED 제출과는 구분한다. 미해결 review thread는0개다. 이후 `e7b1e9e`까지의 숫자 동음어 변경은 자체 추가 검토로 원문/점수 출처 보존, 숫자 슬롯 한정, 조건·누락 보류를 확인했다. 최신 원격 Python fixtures는 Ubuntu/macOS 모두 성공했으나 frontend Chromium E2E가 기존 pilot 테스트의 Mac 전용 `/private/tmp` 캡처 경로 때문에 Linux에서3건 실패했다. 테스트 기대값은 유지하고 `testInfo.outputPath`로 캡처 경로만 바꿔 OS별 임시경로 의존과 실행 간 파일 충돌을 제거한다. 사용자 요청에 따라 최신 CI 성공과 head/충돌 여부 확인 후 squash merge한다. 자동 리뷰가 최신 코드를 재검토했다고 표현하지 않는다.

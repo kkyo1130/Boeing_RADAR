@@ -138,3 +138,7 @@ SPEC-004-WI-02의 요청 범위 추가 구현을 `origin/dev` `4a6fd74` 기반 `
 2026-11-09 숫자 동음어 후속: 명시 숫자 슬롯 후보만 보완. 실제 모델 포함549 passed. 동일 원본 WAV3개 재전사 불변, 마지막 녹음은 구조PASS·복창NORMAL, 앞의 약신호/누락2개는 보류 유지. PR #21 reviewing, 실제 음성 정확도 개선 수치로 일반화하지 않는다.
 
 2026-11-09 PR #21 병합 전 확인: 최초98e6015 자동리뷰 지적없음, 이후e7b1e9e까지 자체 추가검토 지적없음. 원격 Python Ubuntu/macOS 성공, Linux frontend E2E의 기존 `/private/tmp` 캡처 경로3건 실패를 testInfo.outputPath로 수정. 로컬 Node24+Chromium E2E6 passed. 최신 원격 CI를 확인한 뒤 사용자 지시에 따라 squash merge하며 전체 AC 완료와 구분한다.
+
+## 동일 실제 관제 음원 STT 비교 · 2026-11-10
+
+SPEC-004-WI-02의 모델 선택 추가 실험을 `codex/atc-stt-comparison`에서 reviewing으로 제출한다. Whisper4종×원음/기존 마이크 녹음×3발화×안내문2조건의 실제 로컬48회 처리 완료, 올바른 채택0·잘못된 채택0이다. 정답 텍스트의 별도 추출 진단3/3 PASS, 채점 테스트5개 통과. 운영 모델은 유지했다. [상세 결과/재현](../atc-stt-comparison.md), [WI-02 기록](004-speech-communication.md#wi-02). 새 제품 기능·전체 독립 성능평가 완료를 의미하지 않으며 다른 WI 상태를 변경하지 않는다.

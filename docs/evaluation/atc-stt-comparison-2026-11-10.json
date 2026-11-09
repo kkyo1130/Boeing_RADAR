@@ -1,0 +1,1947 @@
+{
+  "hardware": {
+    "cpu": "Apple M4",
+    "memory_bytes": 17179869184,
+    "logical_cores": 10
+  },
+  "scope": "3 previously inspected utterances, each original and previously recorded microphone WAV. Not independent held-out evaluation.",
+  "source": {
+    "dataset": "https://huggingface.co/datasets/Jzuluaga/uwb_atcc",
+    "revision": "1e8270beb8c1643c8735dddb7229fffb0e399f74",
+    "license": "CC-BY-NC-SA-4.0",
+    "attribution": "University of West Bohemia UWB-ATCC; Hugging Face Jzuluaga redistribution"
+  },
+  "metric": "Pooled token edit distance / reference token count; lowercase/punctuation normalization. digit_expanded_wer additionally expands 080 to zero eight zero only.",
+  "notes": [
+    "Original corpus references unchanged, including Lufthansa k vs spoken kilo ambiguity.",
+    "No target/callsign hints in ASR; same registry, BERT, rules and quality thresholds.",
+    "Initial generic prompt condition was primary. No-prompt follow-up was triggered by observed number-list output; not an independent confirmatory experiment.",
+    "Latency is a single pass per clip on CPU int8/4 threads, excludes loading; first inference may include startup overhead. No Apple GPU benchmark.",
+    "Models are Whisper checkpoints, not four unrelated ASR architectures."
+  ],
+  "plans": {
+    "generic_atc": {
+      "purpose": "Comparison on previously inspected clips, not a held-out benchmark",
+      "models": [
+        "base.en",
+        "small.en",
+        "medium.en",
+        "large-v3-turbo"
+      ],
+      "preprocessing": "None added; original WAV files and previous audible microphone recordings unchanged",
+      "microphone_recordings": "Previously recorded physical speaker-to-microphone WAV, replayed from disk; no new recording",
+      "source_revision": "1e8270beb8c1643c8735dddb7229fffb0e399f74",
+      "reference_policy": "Original corpus transcript unchanged, including ambiguous k in Lufthansa reference",
+      "flight_config": {
+        "callsigns": {
+          "RADAR123": {
+            "radar-one-two-three": "Radar one two three"
+          },
+          "GWI7P": {
+            "spoken": "german wings seven papa"
+          },
+          "DLH1KK": {
+            "spoken": "lufthansa one kilo k"
+          },
+          "BAW820": {
+            "spoken": "speed bird eight two zero",
+            "joined": "speedbird eight two zero"
+          }
+        },
+        "freshness": {
+          "max_age_seconds": 60.0,
+          "max_future_skew_seconds": 0.1,
+          "minimum_model_score": 0.5
+        },
+        "structure_rules": {
+          "policy_ref": "synthetic-contract-tests/1",
+          "max_altitude_ft": 50000,
+          "max_altitude_change_ft": 10000,
+          "max_heading_change_deg": 180
+        }
+      },
+      "clips": [
+        {
+          "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+          "condition": "original",
+          "file": "uwb-atcc_APP-0Oi8pk_003039_003329_AT.wav",
+          "sha256": "cab1c7c8cf8484e6d210ab52c426dc9f64b5d2581df4f0488bec9d332d15035f",
+          "reference": "german wings seven papa turn left heading zero four zero",
+          "callsign": "GWI7P",
+          "heading": 40
+        },
+        {
+          "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+          "condition": "original",
+          "file": "uwb-atcc_APP-1a67h9_000000_000314_AT.wav",
+          "sha256": "76355cff008a4f4d03490b618d77b0c1a00c43eac866d07943a8cdc5a7533cdb",
+          "reference": "lufthansa one kilo k turn left heading three zero zero",
+          "callsign": "DLH1KK",
+          "heading": 300
+        },
+        {
+          "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+          "condition": "original",
+          "file": "uwb-atcc_APP-33pYrA_000102_000342_AT.wav",
+          "sha256": "3df6cfa1718f2ec31aa0aa491cc45605051f095fc716bc41ad0c31f8fc777e4a",
+          "reference": "speed bird eight two zero turn left heading zero eight zero",
+          "callsign": "BAW820",
+          "heading": 80
+        },
+        {
+          "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+          "condition": "recorded_microphone",
+          "file": "uwb-atcc_APP-0Oi8pk_003039_003329_AT-microphone-audible.wav",
+          "sha256": "d144049604c7368a2f5e44c5f0de3a0d3b03a8de1b1a84adb491d01bd4ea29b4",
+          "reference": "german wings seven papa turn left heading zero four zero",
+          "callsign": "GWI7P",
+          "heading": 40
+        },
+        {
+          "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+          "condition": "recorded_microphone",
+          "file": "uwb-atcc_APP-1a67h9_000000_000314_AT-microphone-audible.wav",
+          "sha256": "c3dd2731b0371843b110d20904786d6fd21af4a27f2607dfe260743f67fa5d2e",
+          "reference": "lufthansa one kilo k turn left heading three zero zero",
+          "callsign": "DLH1KK",
+          "heading": 300
+        },
+        {
+          "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+          "condition": "recorded_microphone",
+          "file": "uwb-atcc_APP-33pYrA_000102_000342_AT-microphone-audible.wav",
+          "sha256": "a4ca1a29b9013bbdec9239926a56ba6f3f4c49ee2cded4f90a76322c778cfb1f",
+          "reference": "speed bird eight two zero turn left heading zero eight zero",
+          "callsign": "BAW820",
+          "heading": 80
+        }
+      ]
+    },
+    "none": {
+      "purpose": "Follow-up diagnostic ablation after medium.en emitted number-list prompt content; same 4 models and all 6 frozen files, not held-out validation",
+      "models": [
+        "base.en",
+        "small.en",
+        "medium.en",
+        "large-v3-turbo"
+      ],
+      "preprocessing": "None added; original WAV files and previous audible microphone recordings unchanged",
+      "microphone_recordings": "Previously recorded physical speaker-to-microphone WAV, replayed from disk; no new recording",
+      "source_revision": "1e8270beb8c1643c8735dddb7229fffb0e399f74",
+      "reference_policy": "Original corpus transcript unchanged, including ambiguous k in Lufthansa reference",
+      "flight_config": {
+        "callsigns": {
+          "RADAR123": {
+            "radar-one-two-three": "Radar one two three"
+          },
+          "GWI7P": {
+            "spoken": "german wings seven papa"
+          },
+          "DLH1KK": {
+            "spoken": "lufthansa one kilo k"
+          },
+          "BAW820": {
+            "spoken": "speed bird eight two zero",
+            "joined": "speedbird eight two zero"
+          }
+        },
+        "freshness": {
+          "max_age_seconds": 60.0,
+          "max_future_skew_seconds": 0.1,
+          "minimum_model_score": 0.5
+        },
+        "structure_rules": {
+          "policy_ref": "synthetic-contract-tests/1",
+          "max_altitude_ft": 50000,
+          "max_altitude_change_ft": 10000,
+          "max_heading_change_deg": 180
+        }
+      },
+      "clips": [
+        {
+          "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+          "condition": "original",
+          "file": "uwb-atcc_APP-0Oi8pk_003039_003329_AT.wav",
+          "sha256": "cab1c7c8cf8484e6d210ab52c426dc9f64b5d2581df4f0488bec9d332d15035f",
+          "reference": "german wings seven papa turn left heading zero four zero",
+          "callsign": "GWI7P",
+          "heading": 40
+        },
+        {
+          "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+          "condition": "original",
+          "file": "uwb-atcc_APP-1a67h9_000000_000314_AT.wav",
+          "sha256": "76355cff008a4f4d03490b618d77b0c1a00c43eac866d07943a8cdc5a7533cdb",
+          "reference": "lufthansa one kilo k turn left heading three zero zero",
+          "callsign": "DLH1KK",
+          "heading": 300
+        },
+        {
+          "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+          "condition": "original",
+          "file": "uwb-atcc_APP-33pYrA_000102_000342_AT.wav",
+          "sha256": "3df6cfa1718f2ec31aa0aa491cc45605051f095fc716bc41ad0c31f8fc777e4a",
+          "reference": "speed bird eight two zero turn left heading zero eight zero",
+          "callsign": "BAW820",
+          "heading": 80
+        },
+        {
+          "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+          "condition": "recorded_microphone",
+          "file": "uwb-atcc_APP-0Oi8pk_003039_003329_AT-microphone-audible.wav",
+          "sha256": "d144049604c7368a2f5e44c5f0de3a0d3b03a8de1b1a84adb491d01bd4ea29b4",
+          "reference": "german wings seven papa turn left heading zero four zero",
+          "callsign": "GWI7P",
+          "heading": 40
+        },
+        {
+          "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+          "condition": "recorded_microphone",
+          "file": "uwb-atcc_APP-1a67h9_000000_000314_AT-microphone-audible.wav",
+          "sha256": "c3dd2731b0371843b110d20904786d6fd21af4a27f2607dfe260743f67fa5d2e",
+          "reference": "lufthansa one kilo k turn left heading three zero zero",
+          "callsign": "DLH1KK",
+          "heading": 300
+        },
+        {
+          "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+          "condition": "recorded_microphone",
+          "file": "uwb-atcc_APP-33pYrA_000102_000342_AT-microphone-audible.wav",
+          "sha256": "a4ca1a29b9013bbdec9239926a56ba6f3f4c49ee2cded4f90a76322c778cfb1f",
+          "reference": "speed bird eight two zero turn left heading zero eight zero",
+          "callsign": "BAW820",
+          "heading": 80
+        }
+      ],
+      "prompt_mode": "none"
+    }
+  },
+  "reference_text_control": {
+    "diagnostic": "Reference text to extractor only: no ASR, no audio, no actual state adoption; separate from STT comparison. No changes to registry or model.",
+    "rows": [
+      {
+        "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+        "reference": "german wings seven papa turn left heading zero four zero",
+        "instruction_check": "PASS",
+        "callsign": "GWI7P",
+        "fields": {
+          "HDG": 40
+        },
+        "ner_issues": []
+      },
+      {
+        "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+        "reference": "lufthansa one kilo k turn left heading three zero zero",
+        "instruction_check": "PASS",
+        "callsign": "DLH1KK",
+        "fields": {
+          "HDG": 300
+        },
+        "ner_issues": []
+      },
+      {
+        "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+        "reference": "speed bird eight two zero turn left heading zero eight zero",
+        "instruction_check": "PASS",
+        "callsign": "BAW820",
+        "fields": {
+          "HDG": 80
+        },
+        "ner_issues": []
+      }
+    ]
+  },
+  "model_sources": {
+    "base.en": {
+      "name": "base.en",
+      "source": "Existing local base.en artifact; weights hash recorded below"
+    },
+    "small.en": {
+      "name": "small.en",
+      "repo": "Systran/faster-whisper-small.en",
+      "revision": "d1d751a5f8271d482d14ca55d9e2deeebbae577f",
+      "downloads_at_fetch": 1448630,
+      "likes_at_fetch": 24
+    },
+    "medium.en": {
+      "name": "medium.en",
+      "repo": "Systran/faster-whisper-medium.en",
+      "revision": "a29b04bd15381511a9af671baec01072039215e3",
+      "downloads_at_fetch": 347865,
+      "likes_at_fetch": 4
+    },
+    "large-v3-turbo": {
+      "name": "large-v3-turbo",
+      "repo": "dropbox-dash/faster-whisper-large-v3-turbo",
+      "revision": "0a363e9161cbc7ed1431c9597a8ceaf0c4f78fcf",
+      "downloads_at_fetch": 3436107,
+      "likes_at_fetch": 90
+    }
+  },
+  "runs": [
+    {
+      "model": "base.en",
+      "radar_commit": "da0f219b4b328e252d6bded629c6f155bbd370b0",
+      "plan_sha256": "1c94e4485a8a26ca24b4d9b7ad1e5d5884836c0bebca1a86777b9c022f31e1b5",
+      "weights_sha256": "2a166925539a16005f14ff328359f9b9adb9dc4fb631bb3b227526862e93e2ef",
+      "load_seconds": 0.4170120410853997,
+      "settings": {
+        "device": "cpu",
+        "compute_type": "int8",
+        "cpu_threads": 4,
+        "decoding": "Unmodified RADAR LocalWhisper defaults; beam5, English, VAD, generic phraseology prompt",
+        "latency": "Single measured pass per file, excludes model loading, includes VAD. No throughput claims."
+      },
+      "packages": {
+        "faster-whisper": "1.2.1",
+        "ctranslate2": "4.8.5",
+        "torch": "2.8.0",
+        "transformers": "4.57.1"
+      },
+      "scoring_version": "unicode-word-boundaries-v1; rescored unchanged transcripts after tokenizer audit",
+      "prompt_mode": "generic_atc",
+      "summary": [
+        {
+          "condition": "original",
+          "count": 3,
+          "correct_adoptions": 0,
+          "incorrect_adoptions": 0,
+          "stt_median_seconds": 0.99086600006558,
+          "stt_total_seconds": 2.899819292128086,
+          "audio_total_seconds": 8.450000000000001,
+          "lexical_wer": {
+            "errors": 15,
+            "reference_words": 31,
+            "wer": 0.4838709677419355
+          },
+          "digit_expanded_wer": {
+            "errors": 15,
+            "reference_words": 31,
+            "wer": 0.4838709677419355
+          }
+        },
+        {
+          "condition": "recorded_microphone",
+          "count": 3,
+          "correct_adoptions": 0,
+          "incorrect_adoptions": 0,
+          "stt_median_seconds": 0.8608801249647513,
+          "stt_total_seconds": 2.559599166852422,
+          "audio_total_seconds": 14.450000000000001,
+          "lexical_wer": {
+            "errors": 28,
+            "reference_words": 31,
+            "wer": 0.9032258064516129
+          },
+          "digit_expanded_wer": {
+            "errors": 28,
+            "reference_words": 31,
+            "wer": 0.9032258064516129
+          }
+        }
+      ],
+      "rows": [
+        {
+          "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+          "condition": "original",
+          "audio_sha256": "cab1c7c8cf8484e6d210ab52c426dc9f64b5d2581df4f0488bec9d332d15035f",
+          "duration_seconds": 2.91,
+          "transcript": "German win some pop-up and lavering zero, four zero.",
+          "lexical_wer": {
+            "errors": 6,
+            "reference_words": 10,
+            "wer": 0.6
+          },
+          "digit_expanded_wer": {
+            "errors": 6,
+            "reference_words": 10,
+            "wer": 0.6
+          },
+          "stt_seconds": 0.99086600006558,
+          "pipeline_seconds": 6.228381791035645,
+          "stt_model_score": 0.44712443165460936,
+          "quality_reason": "low_or_unknown_model_score",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+          "condition": "original",
+          "audio_sha256": "76355cff008a4f4d03490b618d77b0c1a00c43eac866d07943a8cdc5a7533cdb",
+          "duration_seconds": 3.14,
+          "transcript": "One's a one kilo kilo, turn left, heading three, zero, zero.",
+          "lexical_wer": {
+            "errors": 4,
+            "reference_words": 10,
+            "wer": 0.4
+          },
+          "digit_expanded_wer": {
+            "errors": 4,
+            "reference_words": 10,
+            "wer": 0.4
+          },
+          "stt_seconds": 0.9935171250253916,
+          "pipeline_seconds": 1.0561944160144776,
+          "stt_model_score": 0.710212135427495,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+          "condition": "original",
+          "audio_sha256": "3df6cfa1718f2ec31aa0aa491cc45605051f095fc716bc41ad0c31f8fc777e4a",
+          "duration_seconds": 2.4,
+          "transcript": "It'll be right eight, two, zero, ten, left heading zero, eight, zero.",
+          "lexical_wer": {
+            "errors": 5,
+            "reference_words": 11,
+            "wer": 0.45454545454545453
+          },
+          "digit_expanded_wer": {
+            "errors": 5,
+            "reference_words": 11,
+            "wer": 0.45454545454545453
+          },
+          "stt_seconds": 0.9154361670371145,
+          "pipeline_seconds": 0.9806027500890195,
+          "stt_model_score": 0.5928794463947786,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "d144049604c7368a2f5e44c5f0de3a0d3b03a8de1b1a84adb491d01bd4ea29b4",
+          "duration_seconds": 4.91,
+          "transcript": "You're managing some pop-up and I'm getting zero positive.",
+          "lexical_wer": {
+            "errors": 11,
+            "reference_words": 10,
+            "wer": 1.1
+          },
+          "digit_expanded_wer": {
+            "errors": 11,
+            "reference_words": 10,
+            "wer": 1.1
+          },
+          "stt_seconds": 0.8608801249647513,
+          "pipeline_seconds": 0.9341159169562161,
+          "stt_model_score": 0.4935319193777921,
+          "quality_reason": "low_or_unknown_model_score",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "c3dd2731b0371843b110d20904786d6fd21af4a27f2607dfe260743f67fa5d2e",
+          "duration_seconds": 5.14,
+          "transcript": "Oh, I saw.",
+          "lexical_wer": {
+            "errors": 10,
+            "reference_words": 10,
+            "wer": 1.0
+          },
+          "digit_expanded_wer": {
+            "errors": 10,
+            "reference_words": 10,
+            "wer": 1.0
+          },
+          "stt_seconds": 0.7188351668883115,
+          "pipeline_seconds": 0.793519499944523,
+          "stt_model_score": 0.519809539415804,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "a4ca1a29b9013bbdec9239926a56ba6f3f4c49ee2cded4f90a76322c778cfb1f",
+          "duration_seconds": 4.4,
+          "transcript": "Let's be ready, two, zero, ten, eleven, zero, eight, zero.",
+          "lexical_wer": {
+            "errors": 7,
+            "reference_words": 11,
+            "wer": 0.6363636363636364
+          },
+          "digit_expanded_wer": {
+            "errors": 7,
+            "reference_words": 11,
+            "wer": 0.6363636363636364
+          },
+          "stt_seconds": 0.9798838749993593,
+          "pipeline_seconds": 1.048740917001851,
+          "stt_model_score": 0.6549991328885407,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        }
+      ]
+    },
+    {
+      "model": "small.en",
+      "radar_commit": "da0f219b4b328e252d6bded629c6f155bbd370b0",
+      "plan_sha256": "1c94e4485a8a26ca24b4d9b7ad1e5d5884836c0bebca1a86777b9c022f31e1b5",
+      "weights_sha256": "62b2a45b05ee59acb4a5341b33ee35e041395d378d418a18acfe4c9e768ee37a",
+      "load_seconds": 0.9813056669663638,
+      "settings": {
+        "device": "cpu",
+        "compute_type": "int8",
+        "cpu_threads": 4,
+        "decoding": "Unmodified RADAR LocalWhisper defaults; beam5, English, VAD, generic phraseology prompt",
+        "latency": "Single measured pass per file, excludes model loading, includes VAD. No throughput claims."
+      },
+      "packages": {
+        "faster-whisper": "1.2.1",
+        "ctranslate2": "4.8.5",
+        "torch": "2.8.0",
+        "transformers": "4.57.1"
+      },
+      "scoring_version": "unicode-word-boundaries-v1; rescored unchanged transcripts after tokenizer audit",
+      "prompt_mode": "generic_atc",
+      "summary": [
+        {
+          "condition": "original",
+          "count": 3,
+          "correct_adoptions": 0,
+          "incorrect_adoptions": 0,
+          "stt_median_seconds": 2.898633792065084,
+          "stt_total_seconds": 17.19530541705899,
+          "audio_total_seconds": 8.450000000000001,
+          "lexical_wer": {
+            "errors": 12,
+            "reference_words": 31,
+            "wer": 0.3870967741935484
+          },
+          "digit_expanded_wer": {
+            "errors": 12,
+            "reference_words": 31,
+            "wer": 0.3870967741935484
+          }
+        },
+        {
+          "condition": "recorded_microphone",
+          "count": 3,
+          "correct_adoptions": 0,
+          "incorrect_adoptions": 0,
+          "stt_median_seconds": 2.8348843340063468,
+          "stt_total_seconds": 8.541739334119484,
+          "audio_total_seconds": 14.450000000000001,
+          "lexical_wer": {
+            "errors": 16,
+            "reference_words": 31,
+            "wer": 0.5161290322580645
+          },
+          "digit_expanded_wer": {
+            "errors": 16,
+            "reference_words": 31,
+            "wer": 0.5161290322580645
+          }
+        }
+      ],
+      "rows": [
+        {
+          "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+          "condition": "original",
+          "audio_sha256": "cab1c7c8cf8484e6d210ab52c426dc9f64b5d2581df4f0488bec9d332d15035f",
+          "duration_seconds": 2.91,
+          "transcript": "Turn right, wing seven pop up and left, heading zero, four, zero.",
+          "lexical_wer": {
+            "errors": 6,
+            "reference_words": 10,
+            "wer": 0.6
+          },
+          "digit_expanded_wer": {
+            "errors": 6,
+            "reference_words": 10,
+            "wer": 0.6
+          },
+          "stt_seconds": 11.549244499998167,
+          "pipeline_seconds": 16.156063625006936,
+          "stt_model_score": 0.4943437706811394,
+          "quality_reason": "low_or_unknown_model_score",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+          "condition": "original",
+          "audio_sha256": "76355cff008a4f4d03490b618d77b0c1a00c43eac866d07943a8cdc5a7533cdb",
+          "duration_seconds": 3.14,
+          "transcript": "Move on to one kilo kilo, turn left, heading three, zero, zero.",
+          "lexical_wer": {
+            "errors": 4,
+            "reference_words": 10,
+            "wer": 0.4
+          },
+          "digit_expanded_wer": {
+            "errors": 4,
+            "reference_words": 10,
+            "wer": 0.4
+          },
+          "stt_seconds": 2.898633792065084,
+          "pipeline_seconds": 2.967455165926367,
+          "stt_model_score": 0.6752763772886299,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+          "condition": "original",
+          "audio_sha256": "3df6cfa1718f2ec31aa0aa491cc45605051f095fc716bc41ad0c31f8fc777e4a",
+          "duration_seconds": 2.4,
+          "transcript": "Spirit, eight, two, zero, turn left, heading zero, eight, zero.",
+          "lexical_wer": {
+            "errors": 2,
+            "reference_words": 11,
+            "wer": 0.18181818181818182
+          },
+          "digit_expanded_wer": {
+            "errors": 2,
+            "reference_words": 11,
+            "wer": 0.18181818181818182
+          },
+          "stt_seconds": 2.7474271249957383,
+          "pipeline_seconds": 2.8199711670167744,
+          "stt_model_score": 0.7251898681877504,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "d144049604c7368a2f5e44c5f0de3a0d3b03a8de1b1a84adb491d01bd4ea29b4",
+          "duration_seconds": 4.91,
+          "transcript": "Trim and wings come pop up and we're heading zero, close it up.",
+          "lexical_wer": {
+            "errors": 11,
+            "reference_words": 10,
+            "wer": 1.1
+          },
+          "digit_expanded_wer": {
+            "errors": 11,
+            "reference_words": 10,
+            "wer": 1.1
+          },
+          "stt_seconds": 2.764984750072472,
+          "pipeline_seconds": 2.8484290830092505,
+          "stt_model_score": 0.5036872592445031,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "c3dd2731b0371843b110d20904786d6fd21af4a27f2607dfe260743f67fa5d2e",
+          "duration_seconds": 5.14,
+          "transcript": "One, two, one, kilo, kilo, turn left, heading three, zero, zero.",
+          "lexical_wer": {
+            "errors": 3,
+            "reference_words": 10,
+            "wer": 0.3
+          },
+          "digit_expanded_wer": {
+            "errors": 3,
+            "reference_words": 10,
+            "wer": 0.3
+          },
+          "stt_seconds": 2.9418702500406653,
+          "pipeline_seconds": 3.027620750013739,
+          "stt_model_score": 0.6782371935499438,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "a4ca1a29b9013bbdec9239926a56ba6f3f4c49ee2cded4f90a76322c778cfb1f",
+          "duration_seconds": 4.4,
+          "transcript": "Spirit, eight, two, zero, turn left, heading zero, eight, zero.",
+          "lexical_wer": {
+            "errors": 2,
+            "reference_words": 11,
+            "wer": 0.18181818181818182
+          },
+          "digit_expanded_wer": {
+            "errors": 2,
+            "reference_words": 11,
+            "wer": 0.18181818181818182
+          },
+          "stt_seconds": 2.8348843340063468,
+          "pipeline_seconds": 2.922685290919617,
+          "stt_model_score": 0.7448156645014391,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        }
+      ]
+    },
+    {
+      "model": "medium.en",
+      "radar_commit": "da0f219b4b328e252d6bded629c6f155bbd370b0",
+      "plan_sha256": "1c94e4485a8a26ca24b4d9b7ad1e5d5884836c0bebca1a86777b9c022f31e1b5",
+      "weights_sha256": "11b220779aea4c6f3ce9d2549c8a95ea869ed84066864b999531ef53e594fe5b",
+      "load_seconds": 3.3616164170671254,
+      "settings": {
+        "device": "cpu",
+        "compute_type": "int8",
+        "cpu_threads": 4,
+        "decoding": "Unmodified RADAR LocalWhisper defaults; beam5, English, VAD, generic phraseology prompt",
+        "latency": "Single measured pass per file, excludes model loading, includes VAD. No throughput claims."
+      },
+      "packages": {
+        "faster-whisper": "1.2.1",
+        "ctranslate2": "4.8.5",
+        "torch": "2.8.0",
+        "transformers": "4.57.1"
+      },
+      "scoring_version": "unicode-word-boundaries-v1; rescored unchanged transcripts after tokenizer audit",
+      "prompt_mode": "generic_atc",
+      "summary": [
+        {
+          "condition": "original",
+          "count": 3,
+          "correct_adoptions": 0,
+          "incorrect_adoptions": 0,
+          "stt_median_seconds": 8.512438124977052,
+          "stt_total_seconds": 24.8557483330369,
+          "audio_total_seconds": 8.450000000000001,
+          "lexical_wer": {
+            "errors": 25,
+            "reference_words": 31,
+            "wer": 0.8064516129032258
+          },
+          "digit_expanded_wer": {
+            "errors": 19,
+            "reference_words": 31,
+            "wer": 0.6129032258064516
+          }
+        },
+        {
+          "condition": "recorded_microphone",
+          "count": 3,
+          "correct_adoptions": 0,
+          "incorrect_adoptions": 0,
+          "stt_median_seconds": 8.516306540928781,
+          "stt_total_seconds": 25.4713375819847,
+          "audio_total_seconds": 14.450000000000001,
+          "lexical_wer": {
+            "errors": 27,
+            "reference_words": 31,
+            "wer": 0.8709677419354839
+          },
+          "digit_expanded_wer": {
+            "errors": 21,
+            "reference_words": 31,
+            "wer": 0.6774193548387096
+          }
+        }
+      ],
+      "rows": [
+        {
+          "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+          "condition": "original",
+          "audio_sha256": "cab1c7c8cf8484e6d210ab52c426dc9f64b5d2581df4f0488bec9d332d15035f",
+          "duration_seconds": 2.91,
+          "transcript": "Command wing seven pop-up and leveling zero four zero.",
+          "lexical_wer": {
+            "errors": 6,
+            "reference_words": 10,
+            "wer": 0.6
+          },
+          "digit_expanded_wer": {
+            "errors": 6,
+            "reference_words": 10,
+            "wer": 0.6
+          },
+          "stt_seconds": 8.512438124977052,
+          "pipeline_seconds": 13.418538124999031,
+          "stt_model_score": 0.4332189721014077,
+          "quality_reason": "low_or_unknown_model_score",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+          "condition": "original",
+          "audio_sha256": "76355cff008a4f4d03490b618d77b0c1a00c43eac866d07943a8cdc5a7533cdb",
+          "duration_seconds": 3.14,
+          "transcript": "One, two, three, four, five, six, seven, eight, nine, thousand, hundred.",
+          "lexical_wer": {
+            "errors": 11,
+            "reference_words": 10,
+            "wer": 1.1
+          },
+          "digit_expanded_wer": {
+            "errors": 11,
+            "reference_words": 10,
+            "wer": 1.1
+          },
+          "stt_seconds": 8.757332875044085,
+          "pipeline_seconds": 8.814530708012171,
+          "stt_model_score": 0.6970563508461022,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+          "condition": "original",
+          "audio_sha256": "3df6cfa1718f2ec31aa0aa491cc45605051f095fc716bc41ad0c31f8fc777e4a",
+          "duration_seconds": 2.4,
+          "transcript": "Spirit 820, turn left, heading 080.",
+          "lexical_wer": {
+            "errors": 8,
+            "reference_words": 11,
+            "wer": 0.7272727272727273
+          },
+          "digit_expanded_wer": {
+            "errors": 2,
+            "reference_words": 11,
+            "wer": 0.18181818181818182
+          },
+          "stt_seconds": 7.585977333015762,
+          "pipeline_seconds": 7.650660792016424,
+          "stt_model_score": 0.6749186364653719,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "d144049604c7368a2f5e44c5f0de3a0d3b03a8de1b1a84adb491d01bd4ea29b4",
+          "duration_seconds": 4.91,
+          "transcript": "Two men doing some pop-up and elevating zero positive.",
+          "lexical_wer": {
+            "errors": 10,
+            "reference_words": 10,
+            "wer": 1.0
+          },
+          "digit_expanded_wer": {
+            "errors": 10,
+            "reference_words": 10,
+            "wer": 1.0
+          },
+          "stt_seconds": 8.027608333039097,
+          "pipeline_seconds": 8.106646958040074,
+          "stt_model_score": 0.4359989868926414,
+          "quality_reason": "low_or_unknown_model_score",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "c3dd2731b0371843b110d20904786d6fd21af4a27f2607dfe260743f67fa5d2e",
+          "duration_seconds": 5.14,
+          "transcript": "One, two, three, four, five, six, seven, hundred.",
+          "lexical_wer": {
+            "errors": 9,
+            "reference_words": 10,
+            "wer": 0.9
+          },
+          "digit_expanded_wer": {
+            "errors": 9,
+            "reference_words": 10,
+            "wer": 0.9
+          },
+          "stt_seconds": 8.516306540928781,
+          "pipeline_seconds": 8.594902332988568,
+          "stt_model_score": 0.6276475113690675,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "a4ca1a29b9013bbdec9239926a56ba6f3f4c49ee2cded4f90a76322c778cfb1f",
+          "duration_seconds": 4.4,
+          "transcript": "Spirit 820, turn left, heading 080.",
+          "lexical_wer": {
+            "errors": 8,
+            "reference_words": 11,
+            "wer": 0.7272727272727273
+          },
+          "digit_expanded_wer": {
+            "errors": 2,
+            "reference_words": 11,
+            "wer": 0.18181818181818182
+          },
+          "stt_seconds": 8.92742270801682,
+          "pipeline_seconds": 9.006046082940884,
+          "stt_model_score": 0.677199651881512,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        }
+      ]
+    },
+    {
+      "model": "large-v3-turbo",
+      "radar_commit": "da0f219b4b328e252d6bded629c6f155bbd370b0",
+      "plan_sha256": "1c94e4485a8a26ca24b4d9b7ad1e5d5884836c0bebca1a86777b9c022f31e1b5",
+      "weights_sha256": "e76620f83d5f5b69efd3d87e3dc180c1bd21df9fbebacfd4335e5e1efcc018da",
+      "load_seconds": 3.375931040965952,
+      "settings": {
+        "device": "cpu",
+        "compute_type": "int8",
+        "cpu_threads": 4,
+        "decoding": "Unmodified RADAR LocalWhisper defaults; beam5, English, VAD, generic phraseology prompt",
+        "latency": "Single measured pass per file, excludes model loading, includes VAD. No throughput claims."
+      },
+      "packages": {
+        "faster-whisper": "1.2.1",
+        "ctranslate2": "4.8.5",
+        "torch": "2.8.0",
+        "transformers": "4.57.1"
+      },
+      "scoring_version": "unicode-word-boundaries-v1; rescored unchanged transcripts after tokenizer audit",
+      "prompt_mode": "generic_atc",
+      "summary": [
+        {
+          "condition": "original",
+          "count": 3,
+          "correct_adoptions": 0,
+          "incorrect_adoptions": 0,
+          "stt_median_seconds": 11.749063916970044,
+          "stt_total_seconds": 35.402448459062725,
+          "audio_total_seconds": 8.450000000000001,
+          "lexical_wer": {
+            "errors": 12,
+            "reference_words": 31,
+            "wer": 0.3870967741935484
+          },
+          "digit_expanded_wer": {
+            "errors": 12,
+            "reference_words": 31,
+            "wer": 0.3870967741935484
+          }
+        },
+        {
+          "condition": "recorded_microphone",
+          "count": 3,
+          "correct_adoptions": 0,
+          "incorrect_adoptions": 0,
+          "stt_median_seconds": 15.553238458931446,
+          "stt_total_seconds": 61.8212091679452,
+          "audio_total_seconds": 14.450000000000001,
+          "lexical_wer": {
+            "errors": 14,
+            "reference_words": 31,
+            "wer": 0.45161290322580644
+          },
+          "digit_expanded_wer": {
+            "errors": 14,
+            "reference_words": 31,
+            "wer": 0.45161290322580644
+          }
+        }
+      ],
+      "rows": [
+        {
+          "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+          "condition": "original",
+          "audio_sha256": "cab1c7c8cf8484e6d210ab52c426dc9f64b5d2581df4f0488bec9d332d15035f",
+          "duration_seconds": 2.91,
+          "transcript": "German wings, seven, five, five, eleven, zero, four, zero.",
+          "lexical_wer": {
+            "errors": 4,
+            "reference_words": 10,
+            "wer": 0.4
+          },
+          "digit_expanded_wer": {
+            "errors": 4,
+            "reference_words": 10,
+            "wer": 0.4
+          },
+          "stt_seconds": 11.749063916970044,
+          "pipeline_seconds": 16.394645374966785,
+          "stt_model_score": 0.5359889140432097,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+          "condition": "original",
+          "audio_sha256": "76355cff008a4f4d03490b618d77b0c1a00c43eac866d07943a8cdc5a7533cdb",
+          "duration_seconds": 3.14,
+          "transcript": "Luanzo, one, kilo, kilo, turn left, heading, treasers, no?",
+          "lexical_wer": {
+            "errors": 5,
+            "reference_words": 10,
+            "wer": 0.5
+          },
+          "digit_expanded_wer": {
+            "errors": 5,
+            "reference_words": 10,
+            "wer": 0.5
+          },
+          "stt_seconds": 11.981722875032574,
+          "pipeline_seconds": 12.034047791967168,
+          "stt_model_score": 0.5905714189518116,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+          "condition": "original",
+          "audio_sha256": "3df6cfa1718f2ec31aa0aa491cc45605051f095fc716bc41ad0c31f8fc777e4a",
+          "duration_seconds": 2.4,
+          "transcript": "Speedway eight, zero, turn left heading, zero, eight, zero.",
+          "lexical_wer": {
+            "errors": 3,
+            "reference_words": 11,
+            "wer": 0.2727272727272727
+          },
+          "digit_expanded_wer": {
+            "errors": 3,
+            "reference_words": 11,
+            "wer": 0.2727272727272727
+          },
+          "stt_seconds": 11.671661667060107,
+          "pipeline_seconds": 11.725153416977264,
+          "stt_model_score": 0.7139905204299779,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "d144049604c7368a2f5e44c5f0de3a0d3b03a8de1b1a84adb491d01bd4ea29b4",
+          "duration_seconds": 4.91,
+          "transcript": "Coming in some pop-up and leveling zero, four, zero.",
+          "lexical_wer": {
+            "errors": 7,
+            "reference_words": 10,
+            "wer": 0.7
+          },
+          "digit_expanded_wer": {
+            "errors": 7,
+            "reference_words": 10,
+            "wer": 0.7
+          },
+          "stt_seconds": 12.344933499931358,
+          "pipeline_seconds": 12.404323584050871,
+          "stt_model_score": 0.46470059344020664,
+          "quality_reason": "low_or_unknown_model_score",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "c3dd2731b0371843b110d20904786d6fd21af4a27f2607dfe260743f67fa5d2e",
+          "duration_seconds": 5.14,
+          "transcript": "Um, so. Uvanzovan kilo kilo, ten left heading three, zero.",
+          "lexical_wer": {
+            "errors": 6,
+            "reference_words": 10,
+            "wer": 0.6
+          },
+          "digit_expanded_wer": {
+            "errors": 6,
+            "reference_words": 10,
+            "wer": 0.6
+          },
+          "stt_seconds": 33.923037209082395,
+          "pipeline_seconds": 33.98230799997691,
+          "stt_model_score": 0.30456606036356687,
+          "quality_reason": "low_or_unknown_model_score",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "a4ca1a29b9013bbdec9239926a56ba6f3f4c49ee2cded4f90a76322c778cfb1f",
+          "duration_seconds": 4.4,
+          "transcript": "Speed rate eight, two, zero, turn left heading zero, eight, zero.",
+          "lexical_wer": {
+            "errors": 1,
+            "reference_words": 11,
+            "wer": 0.09090909090909091
+          },
+          "digit_expanded_wer": {
+            "errors": 1,
+            "reference_words": 11,
+            "wer": 0.09090909090909091
+          },
+          "stt_seconds": 15.553238458931446,
+          "pipeline_seconds": 15.689354500034824,
+          "stt_model_score": 0.6951481543775268,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        }
+      ]
+    },
+    {
+      "model": "base.en",
+      "radar_commit": "da0f219b4b328e252d6bded629c6f155bbd370b0",
+      "plan_sha256": "f43b652e3e574c22ee710b365c65309fc318f2c9c17c380781eca7dd0435ad9e",
+      "weights_sha256": "2a166925539a16005f14ff328359f9b9adb9dc4fb631bb3b227526862e93e2ef",
+      "load_seconds": 0.5789693749975413,
+      "settings": {
+        "device": "cpu",
+        "compute_type": "int8",
+        "cpu_threads": 4,
+        "decoding": "RADAR LocalWhisper: beam5, English, VAD; prompt mode recorded separately",
+        "latency": "Single measured pass per file, excludes model loading, includes VAD. No throughput claims."
+      },
+      "packages": {
+        "faster-whisper": "1.2.1",
+        "ctranslate2": "4.8.5",
+        "torch": "2.8.0",
+        "transformers": "4.57.1"
+      },
+      "scoring_version": "unicode-word-boundaries-v1; rescored unchanged transcripts after tokenizer audit",
+      "prompt_mode": "none",
+      "summary": [
+        {
+          "condition": "original",
+          "count": 3,
+          "correct_adoptions": 0,
+          "incorrect_adoptions": 0,
+          "stt_median_seconds": 1.3642877500969917,
+          "stt_total_seconds": 3.6641557491384447,
+          "audio_total_seconds": 8.450000000000001,
+          "lexical_wer": {
+            "errors": 29,
+            "reference_words": 31,
+            "wer": 0.9354838709677419
+          },
+          "digit_expanded_wer": {
+            "errors": 23,
+            "reference_words": 31,
+            "wer": 0.7419354838709677
+          }
+        },
+        {
+          "condition": "recorded_microphone",
+          "count": 3,
+          "correct_adoptions": 0,
+          "incorrect_adoptions": 0,
+          "stt_median_seconds": 1.3041265000356361,
+          "stt_total_seconds": 3.6147557919612154,
+          "audio_total_seconds": 14.450000000000001,
+          "lexical_wer": {
+            "errors": 34,
+            "reference_words": 31,
+            "wer": 1.096774193548387
+          },
+          "digit_expanded_wer": {
+            "errors": 30,
+            "reference_words": 31,
+            "wer": 0.967741935483871
+          }
+        }
+      ],
+      "rows": [
+        {
+          "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+          "condition": "original",
+          "audio_sha256": "cab1c7c8cf8484e6d210ab52c426dc9f64b5d2581df4f0488bec9d332d15035f",
+          "duration_seconds": 2.91,
+          "transcript": "German win some pop-up and lavering 0-4 0.",
+          "lexical_wer": {
+            "errors": 9,
+            "reference_words": 10,
+            "wer": 0.9
+          },
+          "digit_expanded_wer": {
+            "errors": 6,
+            "reference_words": 10,
+            "wer": 0.6
+          },
+          "stt_seconds": 0.8866751659661531,
+          "pipeline_seconds": 6.0237070000730455,
+          "stt_model_score": 0.3700929027459992,
+          "quality_reason": "low_or_unknown_model_score",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+          "condition": "original",
+          "audio_sha256": "76355cff008a4f4d03490b618d77b0c1a00c43eac866d07943a8cdc5a7533cdb",
+          "duration_seconds": 3.14,
+          "transcript": "We want the one kilo kilo and left it in three years ago.",
+          "lexical_wer": {
+            "errors": 9,
+            "reference_words": 10,
+            "wer": 0.9
+          },
+          "digit_expanded_wer": {
+            "errors": 9,
+            "reference_words": 10,
+            "wer": 0.9
+          },
+          "stt_seconds": 1.3642877500969917,
+          "pipeline_seconds": 1.4411794170737267,
+          "stt_model_score": 0.44792840293911995,
+          "quality_reason": "low_or_unknown_model_score",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+          "condition": "original",
+          "audio_sha256": "3df6cfa1718f2ec31aa0aa491cc45605051f095fc716bc41ad0c31f8fc777e4a",
+          "duration_seconds": 2.4,
+          "transcript": "It will be 8-0 to 11-0 to 8-0.",
+          "lexical_wer": {
+            "errors": 11,
+            "reference_words": 11,
+            "wer": 1.0
+          },
+          "digit_expanded_wer": {
+            "errors": 8,
+            "reference_words": 11,
+            "wer": 0.7272727272727273
+          },
+          "stt_seconds": 1.4131928330752999,
+          "pipeline_seconds": 1.4894908749265596,
+          "stt_model_score": 0.4742879123658311,
+          "quality_reason": "low_or_unknown_model_score",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "d144049604c7368a2f5e44c5f0de3a0d3b03a8de1b1a84adb491d01bd4ea29b4",
+          "duration_seconds": 4.91,
+          "transcript": "You're maneuvering some pop-up and I'm letting zero pose it up.",
+          "lexical_wer": {
+            "errors": 13,
+            "reference_words": 10,
+            "wer": 1.3
+          },
+          "digit_expanded_wer": {
+            "errors": 13,
+            "reference_words": 10,
+            "wer": 1.3
+          },
+          "stt_seconds": 1.3041265000356361,
+          "pipeline_seconds": 1.4024039999349043,
+          "stt_model_score": 0.4874001665938558,
+          "quality_reason": "low_or_unknown_model_score",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "c3dd2731b0371843b110d20904786d6fd21af4a27f2607dfe260743f67fa5d2e",
+          "duration_seconds": 5.14,
+          "transcript": "Oh, I saw.",
+          "lexical_wer": {
+            "errors": 10,
+            "reference_words": 10,
+            "wer": 1.0
+          },
+          "digit_expanded_wer": {
+            "errors": 10,
+            "reference_words": 10,
+            "wer": 1.0
+          },
+          "stt_seconds": 0.9929148749215528,
+          "pipeline_seconds": 1.1043403749354184,
+          "stt_model_score": 0.38596213473116625,
+          "quality_reason": "low_or_unknown_model_score",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "a4ca1a29b9013bbdec9239926a56ba6f3f4c49ee2cded4f90a76322c778cfb1f",
+          "duration_seconds": 4.4,
+          "transcript": "It's been 8-0 to 11-0-8-0.",
+          "lexical_wer": {
+            "errors": 11,
+            "reference_words": 11,
+            "wer": 1.0
+          },
+          "digit_expanded_wer": {
+            "errors": 7,
+            "reference_words": 11,
+            "wer": 0.6363636363636364
+          },
+          "stt_seconds": 1.3177144170040265,
+          "pipeline_seconds": 1.4007034579990432,
+          "stt_model_score": 0.5423239567958305,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        }
+      ]
+    },
+    {
+      "model": "small.en",
+      "radar_commit": "da0f219b4b328e252d6bded629c6f155bbd370b0",
+      "plan_sha256": "f43b652e3e574c22ee710b365c65309fc318f2c9c17c380781eca7dd0435ad9e",
+      "weights_sha256": "62b2a45b05ee59acb4a5341b33ee35e041395d378d418a18acfe4c9e768ee37a",
+      "load_seconds": 0.9626553748967126,
+      "settings": {
+        "device": "cpu",
+        "compute_type": "int8",
+        "cpu_threads": 4,
+        "decoding": "RADAR LocalWhisper: beam5, English, VAD; prompt mode recorded separately",
+        "latency": "Single measured pass per file, excludes model loading, includes VAD. No throughput claims."
+      },
+      "packages": {
+        "faster-whisper": "1.2.1",
+        "ctranslate2": "4.8.5",
+        "torch": "2.8.0",
+        "transformers": "4.57.1"
+      },
+      "scoring_version": "unicode-word-boundaries-v1; rescored unchanged transcripts after tokenizer audit",
+      "prompt_mode": "none",
+      "summary": [
+        {
+          "condition": "original",
+          "count": 3,
+          "correct_adoptions": 0,
+          "incorrect_adoptions": 0,
+          "stt_median_seconds": 2.95119445794262,
+          "stt_total_seconds": 8.85331887495704,
+          "audio_total_seconds": 8.450000000000001,
+          "lexical_wer": {
+            "errors": 19,
+            "reference_words": 31,
+            "wer": 0.6129032258064516
+          },
+          "digit_expanded_wer": {
+            "errors": 10,
+            "reference_words": 31,
+            "wer": 0.3225806451612903
+          }
+        },
+        {
+          "condition": "recorded_microphone",
+          "count": 3,
+          "correct_adoptions": 0,
+          "incorrect_adoptions": 0,
+          "stt_median_seconds": 3.397770707961172,
+          "stt_total_seconds": 9.859610331943259,
+          "audio_total_seconds": 14.450000000000001,
+          "lexical_wer": {
+            "errors": 25,
+            "reference_words": 31,
+            "wer": 0.8064516129032258
+          },
+          "digit_expanded_wer": {
+            "errors": 19,
+            "reference_words": 31,
+            "wer": 0.6129032258064516
+          }
+        }
+      ],
+      "rows": [
+        {
+          "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+          "condition": "original",
+          "audio_sha256": "cab1c7c8cf8484e6d210ab52c426dc9f64b5d2581df4f0488bec9d332d15035f",
+          "duration_seconds": 2.91,
+          "transcript": "German wings some pop-up elevating zero four zero",
+          "lexical_wer": {
+            "errors": 5,
+            "reference_words": 10,
+            "wer": 0.5
+          },
+          "digit_expanded_wer": {
+            "errors": 5,
+            "reference_words": 10,
+            "wer": 0.5
+          },
+          "stt_seconds": 2.9957257920177653,
+          "pipeline_seconds": 8.005976959015243,
+          "stt_model_score": 0.3888968127667632,
+          "quality_reason": "low_or_unknown_model_score",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+          "condition": "original",
+          "audio_sha256": "76355cff008a4f4d03490b618d77b0c1a00c43eac866d07943a8cdc5a7533cdb",
+          "duration_seconds": 3.14,
+          "transcript": "11.1 kilo kilo, turn left heading 300.",
+          "lexical_wer": {
+            "errors": 6,
+            "reference_words": 10,
+            "wer": 0.6
+          },
+          "digit_expanded_wer": {
+            "errors": 3,
+            "reference_words": 10,
+            "wer": 0.3
+          },
+          "stt_seconds": 2.95119445794262,
+          "pipeline_seconds": 3.0293705840595067,
+          "stt_model_score": 0.5253143180951385,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+          "condition": "original",
+          "audio_sha256": "3df6cfa1718f2ec31aa0aa491cc45605051f095fc716bc41ad0c31f8fc777e4a",
+          "duration_seconds": 2.4,
+          "transcript": "Spirit 820, turn left heading 080.",
+          "lexical_wer": {
+            "errors": 8,
+            "reference_words": 11,
+            "wer": 0.7272727272727273
+          },
+          "digit_expanded_wer": {
+            "errors": 2,
+            "reference_words": 11,
+            "wer": 0.18181818181818182
+          },
+          "stt_seconds": 2.9063986249966547,
+          "pipeline_seconds": 2.9884546659886837,
+          "stt_model_score": 0.5070298276360967,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "d144049604c7368a2f5e44c5f0de3a0d3b03a8de1b1a84adb491d01bd4ea29b4",
+          "duration_seconds": 4.91,
+          "transcript": "Jim, I'm doing some pop-up and I'm adding zero positive",
+          "lexical_wer": {
+            "errors": 12,
+            "reference_words": 10,
+            "wer": 1.2
+          },
+          "digit_expanded_wer": {
+            "errors": 12,
+            "reference_words": 10,
+            "wer": 1.2
+          },
+          "stt_seconds": 3.397770707961172,
+          "pipeline_seconds": 3.486619084025733,
+          "stt_model_score": 0.491183544181132,
+          "quality_reason": "low_or_unknown_model_score",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "c3dd2731b0371843b110d20904786d6fd21af4a27f2607dfe260743f67fa5d2e",
+          "duration_seconds": 5.14,
+          "transcript": "Oh, so. One to one kilo kilo, turn left heading three zero zero.",
+          "lexical_wer": {
+            "errors": 5,
+            "reference_words": 10,
+            "wer": 0.5
+          },
+          "digit_expanded_wer": {
+            "errors": 5,
+            "reference_words": 10,
+            "wer": 0.5
+          },
+          "stt_seconds": 3.464866082998924,
+          "pipeline_seconds": 3.5553605830064043,
+          "stt_model_score": 0.5063130819451651,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "a4ca1a29b9013bbdec9239926a56ba6f3f4c49ee2cded4f90a76322c778cfb1f",
+          "duration_seconds": 4.4,
+          "transcript": "Spirit, 820, turn left heading 080.",
+          "lexical_wer": {
+            "errors": 8,
+            "reference_words": 11,
+            "wer": 0.7272727272727273
+          },
+          "digit_expanded_wer": {
+            "errors": 2,
+            "reference_words": 11,
+            "wer": 0.18181818181818182
+          },
+          "stt_seconds": 2.996973540983163,
+          "pipeline_seconds": 3.0873538330197334,
+          "stt_model_score": 0.5188899333335669,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        }
+      ]
+    },
+    {
+      "model": "medium.en",
+      "radar_commit": "da0f219b4b328e252d6bded629c6f155bbd370b0",
+      "plan_sha256": "f43b652e3e574c22ee710b365c65309fc318f2c9c17c380781eca7dd0435ad9e",
+      "weights_sha256": "11b220779aea4c6f3ce9d2549c8a95ea869ed84066864b999531ef53e594fe5b",
+      "load_seconds": 3.050465708016418,
+      "settings": {
+        "device": "cpu",
+        "compute_type": "int8",
+        "cpu_threads": 4,
+        "decoding": "RADAR LocalWhisper: beam5, English, VAD; prompt mode recorded separately",
+        "latency": "Single measured pass per file, excludes model loading, includes VAD. No throughput claims."
+      },
+      "packages": {
+        "faster-whisper": "1.2.1",
+        "ctranslate2": "4.8.5",
+        "torch": "2.8.0",
+        "transformers": "4.57.1"
+      },
+      "scoring_version": "unicode-word-boundaries-v1; rescored unchanged transcripts after tokenizer audit",
+      "prompt_mode": "none",
+      "summary": [
+        {
+          "condition": "original",
+          "count": 3,
+          "correct_adoptions": 0,
+          "incorrect_adoptions": 0,
+          "stt_median_seconds": 8.693591583985835,
+          "stt_total_seconds": 26.800311416969635,
+          "audio_total_seconds": 8.450000000000001,
+          "lexical_wer": {
+            "errors": 20,
+            "reference_words": 31,
+            "wer": 0.6451612903225806
+          },
+          "digit_expanded_wer": {
+            "errors": 11,
+            "reference_words": 31,
+            "wer": 0.3548387096774194
+          }
+        },
+        {
+          "condition": "recorded_microphone",
+          "count": 3,
+          "correct_adoptions": 0,
+          "incorrect_adoptions": 0,
+          "stt_median_seconds": 8.551495834020898,
+          "stt_total_seconds": 55.268646126030944,
+          "audio_total_seconds": 14.450000000000001,
+          "lexical_wer": {
+            "errors": 28,
+            "reference_words": 31,
+            "wer": 0.9032258064516129
+          },
+          "digit_expanded_wer": {
+            "errors": 21,
+            "reference_words": 31,
+            "wer": 0.6774193548387096
+          }
+        }
+      ],
+      "rows": [
+        {
+          "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+          "condition": "original",
+          "audio_sha256": "cab1c7c8cf8484e6d210ab52c426dc9f64b5d2581df4f0488bec9d332d15035f",
+          "duration_seconds": 2.91,
+          "transcript": "to menuing some pop-up and leveling 0-4-0.",
+          "lexical_wer": {
+            "errors": 10,
+            "reference_words": 10,
+            "wer": 1.0
+          },
+          "digit_expanded_wer": {
+            "errors": 7,
+            "reference_words": 10,
+            "wer": 0.7
+          },
+          "stt_seconds": 9.870020458009094,
+          "pipeline_seconds": 14.756017875042744,
+          "stt_model_score": 0.4689260098437982,
+          "quality_reason": "low_or_unknown_model_score",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+          "condition": "original",
+          "audio_sha256": "76355cff008a4f4d03490b618d77b0c1a00c43eac866d07943a8cdc5a7533cdb",
+          "duration_seconds": 3.14,
+          "transcript": "One kilo kilo, turn left heading three zero zero.",
+          "lexical_wer": {
+            "errors": 2,
+            "reference_words": 10,
+            "wer": 0.2
+          },
+          "digit_expanded_wer": {
+            "errors": 2,
+            "reference_words": 10,
+            "wer": 0.2
+          },
+          "stt_seconds": 8.693591583985835,
+          "pipeline_seconds": 8.749788040993735,
+          "stt_model_score": 0.43550693034858434,
+          "quality_reason": "low_or_unknown_model_score",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+          "condition": "original",
+          "audio_sha256": "3df6cfa1718f2ec31aa0aa491cc45605051f095fc716bc41ad0c31f8fc777e4a",
+          "duration_seconds": 2.4,
+          "transcript": "Spirit 820, turn left heading 080.",
+          "lexical_wer": {
+            "errors": 8,
+            "reference_words": 11,
+            "wer": 0.7272727272727273
+          },
+          "digit_expanded_wer": {
+            "errors": 2,
+            "reference_words": 11,
+            "wer": 0.18181818181818182
+          },
+          "stt_seconds": 8.236699374974705,
+          "pipeline_seconds": 8.301742499927059,
+          "stt_model_score": 0.6164178411237643,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "d144049604c7368a2f5e44c5f0de3a0d3b03a8de1b1a84adb491d01bd4ea29b4",
+          "duration_seconds": 4.91,
+          "transcript": "Jim entering some pop-up and levitating 0 positive",
+          "lexical_wer": {
+            "errors": 10,
+            "reference_words": 10,
+            "wer": 1.0
+          },
+          "digit_expanded_wer": {
+            "errors": 9,
+            "reference_words": 10,
+            "wer": 0.9
+          },
+          "stt_seconds": 8.551495834020898,
+          "pipeline_seconds": 8.619612582959235,
+          "stt_model_score": 0.5681561102714471,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "c3dd2731b0371843b110d20904786d6fd21af4a27f2607dfe260743f67fa5d2e",
+          "duration_seconds": 5.14,
+          "transcript": "Oh, so...",
+          "lexical_wer": {
+            "errors": 10,
+            "reference_words": 10,
+            "wer": 1.0
+          },
+          "digit_expanded_wer": {
+            "errors": 10,
+            "reference_words": 10,
+            "wer": 1.0
+          },
+          "stt_seconds": 38.41478637501132,
+          "pipeline_seconds": 38.53290841705166,
+          "stt_model_score": 0.3241982518095388,
+          "quality_reason": "low_or_unknown_model_score",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "a4ca1a29b9013bbdec9239926a56ba6f3f4c49ee2cded4f90a76322c778cfb1f",
+          "duration_seconds": 4.4,
+          "transcript": "Spirit 820, turn left heading 080.",
+          "lexical_wer": {
+            "errors": 8,
+            "reference_words": 11,
+            "wer": 0.7272727272727273
+          },
+          "digit_expanded_wer": {
+            "errors": 2,
+            "reference_words": 11,
+            "wer": 0.18181818181818182
+          },
+          "stt_seconds": 8.302363916998729,
+          "pipeline_seconds": 8.371865374967456,
+          "stt_model_score": 0.6326037836321105,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        }
+      ]
+    },
+    {
+      "model": "large-v3-turbo",
+      "radar_commit": "da0f219b4b328e252d6bded629c6f155bbd370b0",
+      "plan_sha256": "f43b652e3e574c22ee710b365c65309fc318f2c9c17c380781eca7dd0435ad9e",
+      "weights_sha256": "e76620f83d5f5b69efd3d87e3dc180c1bd21df9fbebacfd4335e5e1efcc018da",
+      "load_seconds": 3.4723485830472782,
+      "settings": {
+        "device": "cpu",
+        "compute_type": "int8",
+        "cpu_threads": 4,
+        "decoding": "RADAR LocalWhisper: beam5, English, VAD; prompt mode recorded separately",
+        "latency": "Single measured pass per file, excludes model loading, includes VAD. No throughput claims."
+      },
+      "packages": {
+        "faster-whisper": "1.2.1",
+        "ctranslate2": "4.8.5",
+        "torch": "2.8.0",
+        "transformers": "4.57.1"
+      },
+      "scoring_version": "unicode-word-boundaries-v1; rescored unchanged transcripts after tokenizer audit",
+      "prompt_mode": "none",
+      "summary": [
+        {
+          "condition": "original",
+          "count": 3,
+          "correct_adoptions": 0,
+          "incorrect_adoptions": 0,
+          "stt_median_seconds": 12.076968541950919,
+          "stt_total_seconds": 35.48251849994995,
+          "audio_total_seconds": 8.450000000000001,
+          "lexical_wer": {
+            "errors": 23,
+            "reference_words": 31,
+            "wer": 0.7419354838709677
+          },
+          "digit_expanded_wer": {
+            "errors": 14,
+            "reference_words": 31,
+            "wer": 0.45161290322580644
+          }
+        },
+        {
+          "condition": "recorded_microphone",
+          "count": 3,
+          "correct_adoptions": 0,
+          "incorrect_adoptions": 0,
+          "stt_median_seconds": 10.409486124990508,
+          "stt_total_seconds": 34.556689999997616,
+          "audio_total_seconds": 14.450000000000001,
+          "lexical_wer": {
+            "errors": 34,
+            "reference_words": 31,
+            "wer": 1.096774193548387
+          },
+          "digit_expanded_wer": {
+            "errors": 28,
+            "reference_words": 31,
+            "wer": 0.9032258064516129
+          }
+        }
+      ],
+      "rows": [
+        {
+          "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+          "condition": "original",
+          "audio_sha256": "cab1c7c8cf8484e6d210ab52c426dc9f64b5d2581df4f0488bec9d332d15035f",
+          "duration_seconds": 2.91,
+          "transcript": "German Wings 7.5 and Leveling 040",
+          "lexical_wer": {
+            "errors": 8,
+            "reference_words": 10,
+            "wer": 0.8
+          },
+          "digit_expanded_wer": {
+            "errors": 4,
+            "reference_words": 10,
+            "wer": 0.4
+          },
+          "stt_seconds": 12.076968541950919,
+          "pipeline_seconds": 16.993115707999095,
+          "stt_model_score": 0.40952479646710577,
+          "quality_reason": "low_or_unknown_model_score",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+          "condition": "original",
+          "audio_sha256": "76355cff008a4f4d03490b618d77b0c1a00c43eac866d07943a8cdc5a7533cdb",
+          "duration_seconds": 3.14,
+          "transcript": "RUVANZOVÁN KILO KILO TEN LEFT HEADING TREE ZROZENO",
+          "lexical_wer": {
+            "errors": 7,
+            "reference_words": 10,
+            "wer": 0.7
+          },
+          "digit_expanded_wer": {
+            "errors": 7,
+            "reference_words": 10,
+            "wer": 0.7
+          },
+          "stt_seconds": 13.022860000026412,
+          "pipeline_seconds": 13.085026874905452,
+          "stt_model_score": 0.6144122478519949,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+          "condition": "original",
+          "audio_sha256": "3df6cfa1718f2ec31aa0aa491cc45605051f095fc716bc41ad0c31f8fc777e4a",
+          "duration_seconds": 2.4,
+          "transcript": "Speedway 860, turn left heading 080",
+          "lexical_wer": {
+            "errors": 8,
+            "reference_words": 11,
+            "wer": 0.7272727272727273
+          },
+          "digit_expanded_wer": {
+            "errors": 3,
+            "reference_words": 11,
+            "wer": 0.2727272727272727
+          },
+          "stt_seconds": 10.382689957972616,
+          "pipeline_seconds": 10.439662999939173,
+          "stt_model_score": 0.6462089671539745,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "d144049604c7368a2f5e44c5f0de3a0d3b03a8de1b1a84adb491d01bd4ea29b4",
+          "duration_seconds": 4.91,
+          "transcript": "I'm entering some pop-up and leveling zero for zero.",
+          "lexical_wer": {
+            "errors": 9,
+            "reference_words": 10,
+            "wer": 0.9
+          },
+          "digit_expanded_wer": {
+            "errors": 9,
+            "reference_words": 10,
+            "wer": 0.9
+          },
+          "stt_seconds": 10.409486124990508,
+          "pipeline_seconds": 10.46612691693008,
+          "stt_model_score": 0.43566353533287017,
+          "quality_reason": "low_or_unknown_model_score",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "c3dd2731b0371843b110d20904786d6fd21af4a27f2607dfe260743f67fa5d2e",
+          "duration_seconds": 5.14,
+          "transcript": "Oh, so. I'm going to run a kilo kilo. I'm going to run a kilo kilo.",
+          "lexical_wer": {
+            "errors": 17,
+            "reference_words": 10,
+            "wer": 1.7
+          },
+          "digit_expanded_wer": {
+            "errors": 17,
+            "reference_words": 10,
+            "wer": 1.7
+          },
+          "stt_seconds": 14.190637374995276,
+          "pipeline_seconds": 14.253165542031638,
+          "stt_model_score": 0.34883669904985226,
+          "quality_reason": "low_or_unknown_model_score",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        },
+        {
+          "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+          "condition": "recorded_microphone",
+          "audio_sha256": "a4ca1a29b9013bbdec9239926a56ba6f3f4c49ee2cded4f90a76322c778cfb1f",
+          "duration_seconds": 4.4,
+          "transcript": "Speedway 820, turn left heading 080.",
+          "lexical_wer": {
+            "errors": 8,
+            "reference_words": 11,
+            "wer": 0.7272727272727273
+          },
+          "digit_expanded_wer": {
+            "errors": 2,
+            "reference_words": 11,
+            "wer": 0.18181818181818182
+          },
+          "stt_seconds": 9.956566500011832,
+          "pipeline_seconds": 10.014958041952923,
+          "stt_model_score": 0.6156971617435151,
+          "quality_reason": "ner_or_grammar_needs_review",
+          "adopted": false,
+          "correct_adoption": false,
+          "validation_reason": "LATEST_ATC_NOT_ADOPTED"
+        }
+      ]
+    }
+  ]
+}
