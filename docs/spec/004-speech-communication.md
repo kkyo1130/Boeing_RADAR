@@ -96,6 +96,10 @@ MacBook Air 마이크(48kHz mono PCM16) 신규 녹음3회를 실제 HTTP STT 경
 
 신규 녹음3개 원본 WAV를 실제 Whisper/BERT HTTP 경로로 재시험했다. 전사3개 모두 이전과 동일했다. 마지막20초 녹음에서 `heading to seven, zero.`를 보존한 채 HDG 후보의 to→two를 기록하여 RADAR123/3000ft/270°, 구조PASS·복창NORMAL을 확인했다. 앞의 약신호/호출부호 누락2개는 계속 보류됐다. Cockpit 부재로 전체 상태UNVERIFIED를 유지했다. 입력 SHA-256/원문/전체응답은 `.demo/homophone-replay/`에 보존하며 새 독립 정확도나 새 마이크 녹음으로 표현하지 않는다. 자체 리뷰에서 전역치환·정답주입·호출부호보완 없음과 기존 보류 조건을 확인했다. 같은 PR #21에 추가하며 외부리뷰/병합 전 reviewing 유지.
 
+#### 병합 전 리뷰·CI 보완 · 2026-11-09
+
+PR #21 자동 Codex 리뷰는 최초 구현 `98e6015`에 지적 없음으로 완료됐으며 GitHub APPROVED 제출과는 구분한다. 미해결 review thread는0개다. 이후 `e7b1e9e`까지의 숫자 동음어 변경은 자체 추가 검토로 원문/점수 출처 보존, 숫자 슬롯 한정, 조건·누락 보류를 확인했다. 최신 원격 Python fixtures는 Ubuntu/macOS 모두 성공했으나 frontend Chromium E2E가 기존 pilot 테스트의 Mac 전용 `/private/tmp` 캡처 경로 때문에 Linux에서3건 실패했다. 테스트 기대값은 유지하고 `testInfo.outputPath`로 캡처 경로만 바꿔 OS별 임시경로 의존과 실행 간 파일 충돌을 제거한다. 사용자 요청에 따라 최신 CI 성공과 head/충돌 여부 확인 후 squash merge한다. 자동 리뷰가 최신 코드를 재검토했다고 표현하지 않는다.
+
 <a id="wi-03"></a>
 
 ### SPEC-004-WI-03: 음성 품질·입력 건전성과 불확실성
