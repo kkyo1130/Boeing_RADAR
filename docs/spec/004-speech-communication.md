@@ -98,7 +98,7 @@ MacBook Air 마이크(48kHz mono PCM16) 신규 녹음3회를 실제 HTTP STT 경
 
 #### 동일 실제 관제 음원 STT 비교 · 2026-11-10
 
-- 범위/기준: 사용자 요청으로 기존3개 실제 관제 음원과 당시 물리 마이크 녹음본을 고정해 base.en/small.en/medium.en/large-v3-turbo를 비교했다. 평가 도구는 dev `d267d4b` 기반 `codex/atc-stt-comparison`, 실행 서버 코드는 PR #22 `da0f219` 별도 체크아웃이다. 운영 STT/NER/품질 기준을 수정하지 않았다.
+- 범위/기준: 사용자 요청으로 기존3개 실제 관제 음원과 당시 물리 마이크 녹음본을 고정해 base.en/small.en/medium.en/large-v3-turbo를 비교했다. 평가 도구는 dev `d267d4b` 기반 `codex/atc-stt-comparison`·구현 커밋 `fe2cf3e`·[PR #23](https://github.com/kkyo1130/Boeing_RADAR/pull/23), 실행 서버 코드는 PR #22 `da0f219` 별도 체크아웃이다. 운영 STT/NER/품질 기준을 수정하지 않았다.
 - 구현: `scripts/evaluation/compare_atc_stt.py`가 고정 계획·파일 해시를 확인하고 CPU int8/4 threads로 모델별 별도 프로세스에서 실제 LocalWhisper→BERT+규칙→ATC API를 실행한다. 실험용 임시 DB를 사용한다. 단어 오류율, 실제 STT 소요시간, 올바른/잘못된 지시 채택을 분리한다. `summarize_atc_stt.py`는 각 모델·조건의 동일6개 파일과 계획 해시를 확인하고 공개 JSON을 만든다.
 - 검증: 실제 추론 기본24회 + 안내문 제거 후속24회 모두 처리 완료. 기대 HDG 채택0/48, 잘못된 채택0/48. 원음/마이크 기본 WER는 base48.4/90.3%, small38.7/51.6%, medium61.3/67.7%, turbo38.7/45.2%. 메모리16GiB M4의 CPU 시간이며 GPU 성능이 아니다. 별도 정답 텍스트 추출 진단3/3 PASS; ASR 입력이나 실제 지시 채택으로 계산하지 않았다. 점수 단위 테스트5개·py_compile·입력/계획 해시 및 누락 감사 통과. 제품 코드 변경이 없어 전체 backend/UI 회귀는 미실행.
 - 자체 리뷰: 기준선/추가조건을 분리했고 기존 전사 정답·등록 호출부호·임계값을 고정했다. 숫자 표기를 제외한 정답 보정/학습/강제 호출부호 교체는 하지 않았다. 악센트 단어 분리 오류를 채점기에서 수정한 뒤 같은48개 출력 전체를 재채점했다. 원음/모델은 Git에 넣지 않는다. 이미 분석한3개뿐이며 독립 평가/전체 정확도로 표현하지 않는다. 외부 리뷰는 PR에서 별도로 확인한다.
