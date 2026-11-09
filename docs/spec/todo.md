@@ -126,3 +126,15 @@ WI-02는 이 dev 기준 별도 브랜치에서 수신/문맥/중복/시간/원�
 | [SPEC-006-WI-05](006-advisory-interface/workitem/wi-05.md) | 소형 디바이스 조종사 화면 | Codex (이번 요청 구현) | SPEC-006-WI-01, SPEC-006-WI-02 | reviewing |
 
 기존 WI-02 완료 이력을 유지하고 이번 추가 화면만 독립 PR로 검토한다.
+
+## 2026-11-09 BERT+보완 규칙 STT 연결
+
+SPEC-004-WI-02의 요청 범위 추가 구현을 `origin/dev` `4a6fd74` 기반 `codex/bert-hybrid-stt`에서 reviewing으로 제출한다. BERT CALLSIGN+규칙 ACTION/ALT/HDG를 로컬 Whisper WAV 경로에 연결했다. 실제 모델 포함 backend **532 passed**(skip 없음, deprecation 경고1), 실제 HTTP 음성4사례에서 정상 복창/방위 불일치/무음 보류/호출부호 누락 보류, frontend proxy 연결을 확인했다. 두 정상·불일치 음성은 합성, 사용자 음성은 이전 녹음 재생이며 새 live 마이크·실제 ATC·카메라 E2E는 미실행이다. 공유 기본은 v7 유지, 새 조합은 명시 설정한다. 상세 근거는 [WI-02 기록](004-speech-communication.md#wi-02)과 [실행 안내](../bert-hybrid-stt-integration.md)를 따른다. 다른 WI 상태는 바꾸지 않는다.
+
+제출: [PR #21](https://github.com/kkyo1130/Boeing_RADAR/pull/21), 구현 커밋 `98e6015`. 자체 검토 완료, 외부 리뷰·병합 대기.
+
+2026-11-09 실제 마이크 후속: 신규3회 녹음→Whisper→BERT+규칙→저장·보류 확인. 최종 정상 복창0/3; 약신호, 호출부호 누락, `two/to` 오인식에 따른 hybrid HDG 누락을 기록. reviewing 유지, 세부 원인과 한계는 WI-02/실행 안내 참조. 코드 변경·회귀 재실행 없음.
+
+2026-11-09 숫자 동음어 후속: 명시 숫자 슬롯 후보만 보완. 실제 모델 포함549 passed. 동일 원본 WAV3개 재전사 불변, 마지막 녹음은 구조PASS·복창NORMAL, 앞의 약신호/누락2개는 보류 유지. PR #21 reviewing, 실제 음성 정확도 개선 수치로 일반화하지 않는다.
+
+2026-11-09 PR #21 병합 전 확인: 최초98e6015 자동리뷰 지적없음, 이후e7b1e9e까지 자체 추가검토 지적없음. 원격 Python Ubuntu/macOS 성공, Linux frontend E2E의 기존 `/private/tmp` 캡처 경로3건 실패를 testInfo.outputPath로 수정. 로컬 Node24+Chromium E2E6 passed. 최신 원격 CI를 확인한 뒤 사용자 지시에 따라 squash merge하며 전체 AC 완료와 구분한다.

@@ -75,6 +75,31 @@
 - 리뷰: 자체 검토. NER 점수를 검증된 정확도로 표현하지 않음, 신경망 결과만으로 숫자 승인/상태 정상/설정 변경하지 않음. 동일 transcript의 두 검사는 독립 안전 채널 아님. 유효 BIO라도 잘못된 의미 추출 가능. 기존 parser의 미지원 문법을 임의 제거/확장하지 않음. weight/pickle/원음은 커밋하지 않음.
 - 인수인계: `backend/requirements-ner.txt`, `RADAR_NER_MODEL`, `docs/v7-stt-integration.md` 참고. v7 함수와 현재 데모 STT 결과 연결만 요청 범위에서 구현. 실제 사용자 마이크/Whisper 원음 E2E, 더 넓은 관제 문법/숫자 정규화, 전체 AC-02 인수는 미완료. 코드 PR 검토 대상이며 WI 전체 완료를 주장하지 않는다.
 
+#### BERT+규칙 STT 추가 연결 · 2026-11-09
+
+- 범위/기준: 사용자 요청에 따라 SPEC-004-WI-02의 기존 STT 구조화 경로를 확장했다. 기준 `origin/dev` `4a6fd74`, 독립 브랜치 `codex/bert-hybrid-stt`. 기존 작업 폴더의 변경은 보존했다. 상태는 reviewing이며 WI 전체 AC-02 완료를 뜻하지 않는다.
+- 구현: `speech/hybrid.py`는 로컬 BERT의 CALLSIGN과 이전 비교 실험에서 보완한 `hybrid_rules.py`/`hybrid_baseline.py`의 ACTION·ALT·HDG를 합친다. `hybrid_prefixes.json`은 실제 UWB 학습400개에서 얻은46개 접두어이며 별도 출처·라이선스 고지를 포함한다. BERT는 기존 검증99개의 전체일치 기준으로 seed13을 선택했고 재학습하지 않았다. 모델·tokenizer6개 파일의 SHA-256과 정확한 라벨 구성을 검사한다.
+- 연결/계약: `RADAR_NER_BACKEND=bert-hybrid`에서 LocalWhisper→원문→BERT+규칙 후보→기존 전체 문법/등록 호출부호/숫자 검사→기존 저장·판정으로 이어진다. 원문/문자 오프셋/모델 원시 라벨과 정규화 입력을 보존한다. 규칙 결과는 `source=rule, model_score=null`; BERT 점수는 정확도로 표현하지 않는다. 모델 로딩 실패, 잘못된 BIO, 조건/정정/충돌·필수 호출부호 누락은 fields를 비우고 검토로 남긴다. 명시적 backend 설정에 모델이 없어도 규칙만으로 조용히 통과하지 않는다. 기본 설정의 v7은 유지한다.
+- STT 표현 보완: 실제 Whisper가 생성한 쉼표·`3,000`·`2-7-0`을 처리한다. BERT 입력의 단어 끝 문장부호만 제거하고 원문은 유지한다. 숫자 슬롯에서 정확히3자리 하이픈 표기만 허용하며 `270-280`, `2-7`, `-90`, `2--7-0` 등은 거부한다.
+- 자동 검증: 작업 worktree의 `backend/`에서 실제 두 모델 경로를 지정해 `RADAR_TEST_BERT_MODEL=<prepared-bert> RADAR_TEST_NER_MODEL=<v7> ../.venv/bin/python -m pytest -q` 실행: **532 passed**, skipped 없음, Starlette TestClient deprecation 경고1. 실제 BERT/v7 로딩, artifact 변조, 원문 정렬·점수 출처, 규칙 수정, 잘못된 BIO/조건/단위/숫자 표기/명시 설정 실패 처리와 기존 서버 회귀를 포함한다. 별도로 기존487문장×3seed의 캐시 예측1461개를 옮긴 결합 함수와 대조해 라벨·오프셋 일치를 확인했다. 이 비교는 새 추론 정확도 평가가 아니다.
+- HTTP 검증: 실제 실행 서버에서 `.venv/bin/python scripts/test-hybrid-stt.py --audio .demo/audio --output .demo/hybrid-http-verified --recorded-wav <previous-microphone.wav>`를 실행했다. ASR stub 없이 faster-whisper base.en과 BERT가 동작했다. 합성 정상 음성은 RADAR123/3000ft/270°, 구조PASS·복창NORMAL; 합성290° 음성은 기대270° 대비 MISMATCH; 무음은 NEEDS_REVIEW/UNVERIFIED. 이전 사용자 마이크 WAV의 `Eight thousand feet, heading 270.`는 호출부호/명령 누락으로 NEEDS_REVIEW/UNVERIFIED였다. 정상 복창도 Cockpit 관측이 없으므로 비행 전체 상태는 UNVERIFIED다. frontend5176의 `/api/demo/status`가 backend8013의 bert-hybrid를 반환하는 proxy 연결도 확인했다.
+- 자체 리뷰: 동일 전사의 검사들은 독립 안전 채널이 아니다. 하이픈 처리가2자리 범위까지 받아들이던 초기 구현을 정확히3자리로 제한하고 회귀 테스트를 추가했다. 명시 설정 실패의 묵시적 규칙 fallback, 속도/상승률의 고도 혼동, BERT 점수의 규칙 점수 전용, 출처 누락 위험을 검토했다. 외부 사람/자동 PR 리뷰는 아직 미수행이다.
+- 인수인계: [실행·검증 안내](../bert-hybrid-stt-integration.md), `scripts/prepare-hybrid-model.py`, `scripts/run-hybrid-backend.sh`, `scripts/test-hybrid-stt.py` 참고. 가중치·오디오·DB·원시 보고서는 로컬 `.demo/`에만 보존한다. 새 실시간 마이크 녹음, 실제 ATC 원음 STT, 카메라 통합/전체 AC-02는 미실행이다. PR 검토 후 병합 여부를 결정하며 자동 병합하지 않는다.
+
+#### 실제 마이크 후속 검증 · 2026-11-09 23:07–23:10 KST
+
+MacBook Air 마이크(48kHz mono PCM16) 신규 녹음3회를 실제 HTTP STT 경로로 전달했다. 1회 약신호로 빈 전사·보류, 2회 고도/방위 구간은 추출됐으나 전사에 호출부호가 없어 보류, 3회 전체 문장에서 Whisper가 `two`를 `to`로 전사했다. 3회 BERT CALLSIGN/규칙 ALT는 추출됐지만 hybrid HDG가 누락되어 구조 NEEDS_REVIEW(MENTION_SCOPE_UNKNOWN)·복창/전체 UNVERIFIED였다. 기존 문법의 후보값3000/270이 있어도 정상 복창으로 승인하지 않았다. 연결은 실제 입력으로 확인했으나 전체 정상 판정 성공은0/3이다. 앞부분 누락의 원인은 확정하지 않았다. 브라우저 마이크 권한/MediaRecorder 경로·실제 ATC·카메라는 여전히 미실행이다. 코드 변경 없이 [검증 안내](../bert-hybrid-stt-integration.md)에 기록하며 원음·전체응답은 Git-ignored `.demo/live-mic-20261109-*`에 보존했다. 동음어 처리 불일치는 미해결 후속 항목이며 테스트 통과를 위해 입력을 보정하지 않았다.
+
+#### 숫자 동음어 보완·원본 재시험 · 2026-11-09
+
+사용자 요청에 따라 `speech/numeric_slots.py`에서 기존 숫자 grammar의 동음어 사전을 후보 추출에도 적용했다. heading/flight level 뒤의 정확한3자리(heading359이하), 고도 명령+명시 feet 단위의 지원 숫자에만 적용하며 CALLSIGN·원문·BERT 입력은 변경하지 않는다. 원래 토큰과 후보·위치·문맥을 `numeric_normalizations`에 반환한다. 조건/범위/미지원 꼬리문구/누락 검사는 유지한다. 실제 BERT 포함 전용42개, 전체 backend549개 통과(skip0, 기존경고1). 최초 루트 실행은 app import경로로 실패해 정해진 backend 위치에서 다시 실행했다.
+
+신규 녹음3개 원본 WAV를 실제 Whisper/BERT HTTP 경로로 재시험했다. 전사3개 모두 이전과 동일했다. 마지막20초 녹음에서 `heading to seven, zero.`를 보존한 채 HDG 후보의 to→two를 기록하여 RADAR123/3000ft/270°, 구조PASS·복창NORMAL을 확인했다. 앞의 약신호/호출부호 누락2개는 계속 보류됐다. Cockpit 부재로 전체 상태UNVERIFIED를 유지했다. 입력 SHA-256/원문/전체응답은 `.demo/homophone-replay/`에 보존하며 새 독립 정확도나 새 마이크 녹음으로 표현하지 않는다. 자체 리뷰에서 전역치환·정답주입·호출부호보완 없음과 기존 보류 조건을 확인했다. 같은 PR #21에 추가하며 외부리뷰/병합 전 reviewing 유지.
+
+#### 병합 전 리뷰·CI 보완 · 2026-11-09
+
+PR #21 자동 Codex 리뷰는 최초 구현 `98e6015`에 지적 없음으로 완료됐으며 GitHub APPROVED 제출과는 구분한다. 미해결 review thread는0개다. 이후 `e7b1e9e`까지의 숫자 동음어 변경은 자체 추가 검토로 원문/점수 출처 보존, 숫자 슬롯 한정, 조건·누락 보류를 확인했다. 최신 원격 Python fixtures는 Ubuntu/macOS 모두 성공했으나 frontend Chromium E2E가 기존 pilot 테스트의 Mac 전용 `/private/tmp` 캡처 경로 때문에 Linux에서3건 실패했다. 테스트 기대값은 유지하고 `testInfo.outputPath`로 캡처 경로만 바꿔 OS별 임시경로 의존과 실행 간 파일 충돌을 제거한다. 사용자 요청에 따라 최신 CI 성공과 head/충돌 여부 확인 후 squash merge한다. 자동 리뷰가 최신 코드를 재검토했다고 표현하지 않는다.
+
 <a id="wi-03"></a>
 
 ### SPEC-004-WI-03: 음성 품질·입력 건전성과 불확실성

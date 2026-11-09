@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 const row = (field, result, expected, actual, reason = 'VALUE_MISMATCH') => ({ field, result, expected, actual, reason, instruction_id: 'A', observation_id: 'obs' });
 const snapshot = () => ({ schema_version: '2', flight_id: 'pilot-test', revision: 1, status: 'ACTIVE', callsign: 'RADAR123', result: 'MISMATCH', targets: {}, current: { READBACK: {}, COCKPIT: {} }, channels: {}, validation: { result: 'MISMATCH', phase: 'READBACK', readback: { result: 'MISMATCH', fields: [row('ALT', 'MISMATCH', 5000, 3000)] }, setting: { result: 'NORMAL', fields: [] } } });
 for (const size of [{ width: 480, height: 320 }, { width: 800, height: 480 }, { width: 360, height: 640 }]) {
-  test(`compact display ${size.width}x${size.height}: mismatch, stale, disconnect, recovery`, async ({ page }) => {
+  test(`compact display ${size.width}x${size.height}: mismatch, stale, disconnect, recovery`, async ({ page }, testInfo) => {
     await page.setViewportSize(size);
     let data = snapshot(), offline = false;
     await page.route('**/api/v2/flights/pilot-test/state', route => offline ? route.abort() : route.fulfill({ json: data }));
@@ -12,7 +12,7 @@ for (const size of [{ width: 480, height: 320 }, { width: 800, height: 480 }, { 
     await expect(page.getByText('3,000 ft')).toBeInViewport({ ratio: 1 });
     await expect(page.getByText('5,000 ft')).toBeInViewport({ ratio: 1 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    await page.screenshot({ path: `/private/tmp/radar-pilot-${size.width}.png`, fullPage: true });
+    await page.screenshot({ path: testInfo.outputPath(`radar-pilot-${size.width}.png`), fullPage: true });
     data.result = data.validation.result = 'UNVERIFIED';
     data.reason = data.validation.reason = 'LATEST_ATC_NOT_ADOPTED';
     data.validation.phase = 'WAITING_ATC';
