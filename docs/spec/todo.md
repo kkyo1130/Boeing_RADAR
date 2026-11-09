@@ -138,3 +138,7 @@ SPEC-004-WI-02의 요청 범위 추가 구현을 `origin/dev` `4a6fd74` 기반 `
 2026-11-09 숫자 동음어 후속: 명시 숫자 슬롯 후보만 보완. 실제 모델 포함549 passed. 동일 원본 WAV3개 재전사 불변, 마지막 녹음은 구조PASS·복창NORMAL, 앞의 약신호/누락2개는 보류 유지. PR #21 reviewing, 실제 음성 정확도 개선 수치로 일반화하지 않는다.
 
 2026-11-09 PR #21 병합 전 확인: 최초98e6015 자동리뷰 지적없음, 이후e7b1e9e까지 자체 추가검토 지적없음. 원격 Python Ubuntu/macOS 성공, Linux frontend E2E의 기존 `/private/tmp` 캡처 경로3건 실패를 testInfo.outputPath로 수정. 로컬 Node24+Chromium E2E6 passed. 최신 원격 CI를 확인한 뒤 사용자 지시에 따라 squash merge하며 전체 AC 완료와 구분한다.
+
+## ATC 마이크 수음 모드 · 2026-11-10
+
+SPEC-004-WI-02 추가 요청 범위를 `d267d4b` 기반 `codex/atc-microphone-modes`에서 reviewing으로 제출한다. ATC 수음/Pilot 복창을 분리하고 실제 ATC WAV→STT 경로, 파일 재생→마이크 캡처 UI, 취소·실패 후 과거 지시 재사용 차단을 구현했다. backend560/frontend53/브라우저7/빌드 통과. 실제 UWB-ATCC3개 원음 및 물리 스피커→마이크 각3개는 처리·보류 경로를 확인했으나 지시 채택0/3이며 실제 STT 성능 개선이 남았다. [WI-02 상세 기록](004-speech-communication.md#wi-02)과 [재현 안내](../atc-microphone-modes.md)를 따른다. 다른 WI 상태와 미완료 전체 인수 범위는 유지한다.

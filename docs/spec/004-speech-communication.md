@@ -100,6 +100,17 @@ MacBook Air 마이크(48kHz mono PCM16) 신규 녹음3회를 실제 HTTP STT 경
 
 PR #21 자동 Codex 리뷰는 최초 구현 `98e6015`에 지적 없음으로 완료됐으며 GitHub APPROVED 제출과는 구분한다. 미해결 review thread는0개다. 이후 `e7b1e9e`까지의 숫자 동음어 변경은 자체 추가 검토로 원문/점수 출처 보존, 숫자 슬롯 한정, 조건·누락 보류를 확인했다. 최신 원격 Python fixtures는 Ubuntu/macOS 모두 성공했으나 frontend Chromium E2E가 기존 pilot 테스트의 Mac 전용 `/private/tmp` 캡처 경로 때문에 Linux에서3건 실패했다. 테스트 기대값은 유지하고 `testInfo.outputPath`로 캡처 경로만 바꿔 OS별 임시경로 의존과 실행 간 파일 충돌을 제거한다. 사용자 요청에 따라 최신 CI 성공과 head/충돌 여부 확인 후 squash merge한다. 자동 리뷰가 최신 코드를 재검토했다고 표현하지 않는다.
 
+#### ATC 수음 / 파일럿 복창 분리 · 2026-11-10
+
+- 범위·기준: PR #21 squash merge 후 `origin/dev` `d267d4b`, 별도 `codex/atc-microphone-modes` worktree. SPEC-004-WI-02의 실제 ATC 입력을 확장한다. 기존 사용자 작업 폴더·다른 WI는 변경하지 않는다.
+- 구현: `api/demo.py`의 `/atc`는 PCM WAV와 두 가지 입력 경로 표시만 받고 서버가 ATC ID/역할을 만든다. `demo/adapters.py`는 사전 등록 전사를 거치지 않고 실제 LocalWhisper→선택된 NER/규칙→기존 구조/품질 검사를 재사용한다. ASR lock을 미디어/segment 쓰기 앞에서 획득해 busy 요청의 상태 변경을 막는다. 기존 Pilot 경로는 현재 ATC ID를 요구한다.
+- UI: `DemoPanel.jsx`에 ATC/파일럿 모드, 관제 파일 재생+실제 마이크 캡처, 외부 재생 수음, 원문 구분을 추가했다. 녹음/처리 중 모드 전환 금지, 재생 후0.5초 수음 여유, 28초 초과 파일·29초 제한 입력 취소, 실패/취소/늦은 응답의 이전 지시 재사용 방지. `demo-audio.js`에서 ATC 수음의 echo cancellation/noise suppression을 끄고 Pilot에서 복구한다. `DemoResults.jsx`는 새 입력 확인 중 보류 문구를 표시한다. 서버 health 이벤트가 이전 복창 근거를 해제한다.
+- 검증: backend에서 `RADAR_TEST_BERT_MODEL=<BERT 경로> RADAR_TEST_NER_MODEL=<v7 경로> ../.venv/bin/python -m pytest -q` → **560 passed**, skip0, 기존 Starlette deprecation1. 신규11개는 stub ASR로 두 경로 실제 ASR 호출, ATC→Pilot ID 연결, 조건부/인식 실패/엔진 장애, busy 무부작용, 정답/역할 주입 거절, 잘못된 WAV 거절을 확인한다. 실제 모델 smoke는 위 전체 실행에 포함된다.
+- UI 검증: Node24에서 frontend `npm test` **53 passed**, `npm run test:e2e` **7 passed**, `npm run build` 성공. 신규 fake-device 브라우저 시험은 선택 파일 바이트 대신 캡처 WAV 전송, 재생 후 자동종료, 모드 고정, ATC 채택 후 Pilot 연결, 취소와 새로고침 후 과거 지시 차단을 확인한다. 실제 브라우저 하드웨어 수음 시험과 혼동하지 않는다.
+- 실제 음원·장비: UWB-ATCC `_AT` 3개를 추론 전에 고정. 원음 파일3개와 MacBook Air 스피커→내장 마이크3개 모두 HTTP 저장/전사/보류 경로 완료, **지시 채택은 각0/3**. 원음에서도 호출부호·명령 오인식이 있어 현재 Whisper base.en의 실제 무전 전사 개선이 필요하다. 음소거였던 최초 하드웨어 시도는 별도 진단으로 남기고, 음소거 해제·볼륨50 재시험 후 이전 설정을 복원했다. 품질 임계값/정답 주입 없이 실패를 보존했다. [원본 출처·해시·결과](../evaluation/atc-playback-2026-11-10.json).
+- 자체 리뷰: 역할을 추측하지 않는지, 요청이 바쁠 때 새 ATC가 생기지 않는지, 새 ATC 실패/취소/지연·연결 끊김 시 이전 정상 복창이 재사용되지 않는지 검토했다. 추가로 새로고침의 이전 ATC 버튼 활성화, 자동 시간 제한의 완료 오인, 이전 재생 콜백이 새 녹음을 종료할 가능성을 발견해 차단했다. 외부 리뷰/CI는 PR 제출 후 별도 확인한다.
+- 인수인계: [실행 안내와 한계](../atc-microphone-modes.md). branch `codex/atc-microphone-modes`, 커밋/PR은 제출 기록을 따른다. 이번 사용 음원은 train split이고 학습 중복 미감사이므로 독립 성능평가가 아니다. ATCO2 미사용. 새 Pilot 육성/카메라/실제 무선 수신 전체 E2E는 미실행이며 WI-04 완료로 표시하지 않는다. 다음 판단은 고정된 음원으로 STT 모델·전처리를 비교하는 것이다.
+
 <a id="wi-03"></a>
 
 ### SPEC-004-WI-03: 음성 품질·입력 건전성과 불확실성
