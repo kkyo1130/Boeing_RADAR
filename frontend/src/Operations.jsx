@@ -23,7 +23,7 @@ const reasons = {
   CHANNEL_UNAVAILABLE: '입력 장치를 사용할 수 없습니다', INPUT_QUALITY_UNVERIFIED: '입력 품질 확인 필요',
 };
 
-function useFlight(flightId, refresh) {
+export function useFlight(flightId, refresh) {
   const [state, setState] = useState({ snapshot: null, connected: false, error: '', receivedAt: null });
   const sessionRef = useRef(null);
   useEffect(() => {
@@ -144,7 +144,7 @@ export default function Operations() {
   }
   return <main className={`operations ${snapshot && !ended ? 'op-demo-active' : ''}`}>
     <header className="op-header"><a className="brand" href="/operations">RADAR<span> / FLIGHT MONITOR</span></a>
-      <nav aria-label="화면 선택"><a href="/" target="_blank" rel="noreferrer">모의 MCP 열기 ↗</a></nav>
+      <nav aria-label="화면 선택"><a href={`/pilot${flightId ? `?flight=${encodeURIComponent(flightId)}` : ''}`} target="_blank" rel="noreferrer">조종사 화면 ↗</a> <a href="/" target="_blank" rel="noreferrer">모의 MCP 열기 ↗</a></nav>
       <span className="op-muted">모의 환경 · 설정은 직접 조작</span></header>
     <div className="op-intro"><p className="eyebrow">FLIGHT OPERATIONS</p><h1>비행 상태 확인</h1><p>관제 지시와 복명복창, 카메라가 읽은 설정값을 함께 확인하세요.</p></div>
     {ackMessage && <p className="op-notice" role="status">{ackMessage}</p>}
