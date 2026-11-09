@@ -13,9 +13,11 @@ export function PilotDisplay({ snapshot, connected }) {
   const devices = usable ? [['CAMERA', '카메라'], ['MICROPHONE', '마이크'], ['SPEECH_API', '음성 처리']].filter(([key]) => ['DISCONNECTED', 'DEGRADED', 'UNKNOWN'].includes(snapshot.channels[key]?.status)) : [];
   const mismatch = rows.some(row => row.result === 'MISMATCH');
   const normal = usable && snapshot.result === 'NORMAL' && !rows.length && !devices.length;
-  const heading = !connected ? '연결 확인 필요' : !snapshot ? '비행 상태 확인 중' : ended ? '비행 종료' : mismatch ? '확인 필요' : normal ? '지시와 일치' : '확인 중';
+  const hold = usable && snapshot.result === 'UNVERIFIED';
+  const holdReason = reasons[snapshot?.reason || snapshot?.validation?.reason] || '새 입력으로 재확인 필요';
+  const heading = !connected ? '연결 확인 필요' : !snapshot ? '비행 상태 확인 중' : ended ? '비행 종료' : hold ? '판단 보류' : mismatch ? '확인 필요' : normal ? '지시와 일치' : '확인 중';
   return <section className={`pilot-display ${normal ? 'pilot-normal' : mismatch ? 'pilot-mismatch' : 'pilot-unverified'}`} aria-label="조종사 상태" aria-live="polite" aria-atomic="true">
-    <div className="pilot-status"><span className="pilot-dot" />{heading}</div>
+    <div className="pilot-status"><span className="pilot-dot" />{heading}{hold && <span className="pilot-hold-reason"> · {holdReason}</span>}</div>
     {!usable ? <div className="pilot-empty"><h1>{ended && connected ? '비행 종료' : '현재 상태 확인 불가'}</h1><p>{ended && connected ? '운영 화면에서 다음 비행을 선택하세요' : '서버 연결 후 다시 확인합니다'}</p></div> : <>
       <div className={`pilot-cards ${rows.length > 1 ? 'pilot-multiple' : ''}`}>{rows.map(row => <article className={`pilot-card pilot-${row.result.toLowerCase()}`} key={`${row.stageKey}/${row.instruction_id}/${row.field}`}>
         <p className="pilot-stage">{row.stage}</p><h1>{labels[row.field]} <span>{row.result === 'MISMATCH' ? '불일치' : row.reason === 'INITIAL_ADJUSTMENT_WAIT' ? '변경 대기' : '확인 불가'}</span></h1>
