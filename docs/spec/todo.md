@@ -141,4 +141,4 @@ SPEC-004-WI-02의 요청 범위 추가 구현을 `origin/dev` `4a6fd74` 기반 `
 
 ## ATC 마이크 수음 모드 · 2026-11-10
 
-SPEC-004-WI-02 추가 요청 범위를 `d267d4b` 기반 `codex/atc-microphone-modes`에서 reviewing으로 제출한다. ATC 수음/Pilot 복창을 분리하고 실제 ATC WAV→STT 경로, 파일 재생→마이크 캡처 UI, 취소·실패 후 과거 지시 재사용 차단을 구현했다. backend560/frontend53/브라우저7/빌드 통과. 실제 UWB-ATCC3개 원음 및 물리 스피커→마이크 각3개는 처리·보류 경로를 확인했으나 지시 채택0/3이며 실제 STT 성능 개선이 남았다. [WI-02 상세 기록](004-speech-communication.md#wi-02)과 [재현 안내](../atc-microphone-modes.md)를 따른다. 다른 WI 상태와 미완료 전체 인수 범위는 유지한다.
+SPEC-004-WI-02 추가 요청 범위를 `d267d4b` 기반 `codex/atc-microphone-modes`의 구현 커밋 `67852b8`·[PR #22](https://github.com/kkyo1130/Boeing_RADAR/pull/22)를 reviewing으로 제출했다. ATC 수음/Pilot 복창을 분리하고 실제 ATC WAV→STT 경로, 파일 재생→마이크 캡처 UI, 취소·실패 후 과거 지시 재사용 차단을 구현했다. backend560/frontend53/브라우저7/빌드 통과. 실제 UWB-ATCC3개 원음 및 물리 스피커→마이크 각3개는 처리·보류 경로를 확인했으나 지시 채택0/3이며 실제 STT 성능 개선이 남았다. [WI-02 상세 기록](004-speech-communication.md#wi-02)과 [재현 안내](../atc-microphone-modes.md)를 따른다. 다른 WI 상태와 미완료 전체 인수 범위는 유지한다.
