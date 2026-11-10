@@ -29,7 +29,7 @@ export default function DemoResults({snapshot, connected, transcript = '', pendi
           <span>{names[row.field]}</span><small>관제 {numberLabel(row.expected,row.field)}</small>
           <strong>{numberLabel(row.actual,row.field)}</strong><small>{source} · {live && !pending ? statusLabel(row.result) : '판단 보류'}</small>
         </div>)}</div>
-        {!group.fields.length && <p>관제 지시를 재생하고 복창을 시작하세요.</p>}
+        {!group.fields.length && <p>관제 음성을 입력하고, 인식된 지시를 확인한 뒤 복창을 시작하세요.</p>}
         {key==='readback' && <p className="demo-transcript"><b>실제 인식 문장</b><br/>{pending ? '새 음성 입력을 확인하고 있습니다…' : transcript || '아직 이 화면에서 녹음한 문장이 없습니다.'}</p>}
         {key==='setting' && <p className="op-muted">아이패드 숫자를 바꾸면 카메라 인식값이 갱신됩니다. 동일 값 3회 관측 후 반영됩니다.</p>}
 

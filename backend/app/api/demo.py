@@ -40,7 +40,7 @@ class AtcSpeech(Model):
     audio:str=Field(max_length=8000000)
     started_at:UtcTimestamp
     ended_at:UtcTimestamp
-    input_mode:Literal["microphone_playback", "file_upload"]
+    input_mode:Literal["microphone_live", "microphone_playback", "file_upload"]
 
 class Scenario(Model):
     started_at:UtcTimestamp
