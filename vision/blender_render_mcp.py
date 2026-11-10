@@ -31,6 +31,8 @@ def arguments():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--engine", choices=("BLENDER_EEVEE_NEXT", "CYCLES"), default="BLENDER_EEVEE_NEXT")
     parser.add_argument("--samples", type=int, default=32)
+    parser.add_argument("--max-attempts", type=int, default=40,
+                        help="Camera framing attempts per requested frame")
     return parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])
 
 
@@ -113,6 +115,7 @@ def main():
     test_ids = set(session_ids[:n_test])
     val_ids = set(session_ids[n_test:n_test + n_val])
     manifest = []
+    split_counts = {"train": 0, "val": 0, "test": 0}
     bounds = [p for o in mcp_objects for p in box_points(o)]
     center = sum(bounds, Vector((0, 0, 0))) / len(bounds)
     print("MCP center", tuple(center), "mesh count", len(mcp_objects), flush=True)
@@ -125,22 +128,31 @@ def main():
         dist = rng.uniform(17, 32)
         key_data.energy = rng.uniform(900, 2500)
         for frame in range(args.frames_per_session):
-            # Existing GLB uses +Z as panel front; place camera on that side.
-            theta = az + rng.uniform(-.13, .13)
-            elevation = el + rng.uniform(-.07, .07)
-            distance = dist * rng.uniform(.85, 1.15)
-            camera.location = center + Vector((
-                math.sin(theta) * distance,
-                math.sin(elevation) * distance,
-                math.cos(theta) * distance,
-            ))
-            target = center + Vector((rng.uniform(-2, 2), rng.uniform(-1.4, 1.4), 0))
-            look_at(camera, target)
-            camera.data.lens = rng.uniform(28, 48)
-            bpy.context.view_layer.update()
-            bbox = projected_bbox(scene, camera, mcp_objects)
+            bbox = None
+            # Resample until the whole panel is visible. Do not silently
+            # produce empty val/test sets when random views clip the target.
+            for attempt in range(args.max_attempts):
+                theta = az + rng.uniform(-.13, .13)
+                elevation = el + rng.uniform(-.07, .07)
+                distance = dist * rng.uniform(.9, 1.4)
+                camera.location = center + Vector((
+                    math.sin(theta) * distance,
+                    math.sin(elevation) * distance,
+                    math.cos(theta) * distance,
+                ))
+                target = center + Vector((rng.uniform(-.6, .6), rng.uniform(-.3, .3), 0))
+                look_at(camera, target)
+                camera.data.lens = rng.uniform(20, 34)
+                bpy.context.view_layer.update()
+                bbox = projected_bbox(scene, camera, mcp_objects)
+                if bbox is not None:
+                    break
             if bbox is None:
-                continue
+                raise RuntimeError(
+                    f"No valid MCP framing after {args.max_attempts} attempts "
+                    f"for session {session}, frame {frame}. "
+                    "Check imported GLB axes and object hierarchy."
+                )
             filename = f"session{session:03d}_frame{frame:04d}"
             image_rel = Path("images") / split / (filename + ".png")
             label_rel = Path("labels") / split / (filename + ".txt")
@@ -148,13 +160,14 @@ def main():
             (output / label_rel).parent.mkdir(parents=True, exist_ok=True)
             scene.render.filepath = str(output / image_rel)
             bpy.ops.render.render(write_still=True)
-            (output / label_rel).write_text("0 " + " ".join(f"{v:.6f}" for v in bbox) + "\n", encoding="utf-8")
+            (output / label_rel).write_text("0 " + " ".join(f"{v:.6f}" for v in bbox) + "\\n", encoding="utf-8")
             manifest.append(dict(source_path=str(image_rel), image_path=str(image_rel),
                                  label_path=str(label_rel), session_id=f"session{session:03d}",
                                  split=split, x=bbox[0], y=bbox[1], width=bbox[2], height=bbox[3]))
+            split_counts[split] += 1
         print(f"session {session + 1}/{args.sessions} ({split})", flush=True)
-    if not manifest:
-        raise RuntimeError("No valid MCP bounding boxes; inspect camera coordinates and geometry")
+    if any(count == 0 for count in split_counts.values()):
+        raise RuntimeError(f"Empty dataset split: {split_counts}")
     with (output / "manifest.csv").open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=list(manifest[0]))
         writer.writeheader()
@@ -165,6 +178,7 @@ def main():
     (output / "generation.json").write_text(json.dumps(
         {"glb": str(args.glb), "seed": args.seed, "sessions": args.sessions,
          "frames_per_session": args.frames_per_session, "rendered": len(manifest),
+         "split_counts": split_counts,
          "note": "Approximate projected 3D bounding box; verify labels visually. Dynamic UI text is absent."},
         indent=2), encoding="utf-8")
     print(f"Generated {len(manifest)} labeled images in {output}", flush=True)
