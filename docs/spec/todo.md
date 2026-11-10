@@ -156,3 +156,5 @@ SPEC-004-WI-02 요청 범위를 `codex/atc-callsign-context`에서 reviewing. �
 SPEC-004-WI-02의 요청 범위를 `codex/atc-numeric-rules`에서 reviewing. 최신 dev d267d4b에서 시작해 앞 단계 PR #27의203e5e0을 의존성으로 가져왔다. FL2/3자리·완전한 백 단위·음성 heading360→0을 지원하며 wire/OCR 범위는 유지한다. heading 직후 단일 머뭇거림은 후보 추출만 허용하고 구조 보류한다. 기존88개와 문맥 시험24개의 고정 전사를 사용해 규칙 변경만 대조한다.
 
 완료 근거: 고정224조건/실제 BERT222회, 고도11/15→13/15·방위7/13→10/13, 이전 정답 필드 회귀0. backend623 passed·공통 계약 검사 PASS. 숫자 후보와 자동 채택의 차이·재사용 자료 한계는 [숫자 규칙 보고서](../atc-numeric-rules.md) 및 WI-02를 따른다.
+
+제출: `dfb25c7`, [PR #28](https://github.com/kkyo1130/Boeing_RADAR/pull/28). PR #27 의존, 외부 리뷰·병합 대기.
