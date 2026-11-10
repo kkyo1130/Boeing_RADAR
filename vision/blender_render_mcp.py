@@ -31,6 +31,8 @@ def arguments():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--engine", choices=("BLENDER_EEVEE", "BLENDER_EEVEE_NEXT", "CYCLES"), default="BLENDER_EEVEE")
     parser.add_argument("--samples", type=int, default=32)
+    parser.add_argument("--digits", action=argparse.BooleanOptionalAction, default=True,
+                        help="Render synthetic HDG/ALT values in MCP display windows")
     parser.add_argument("--view", choices=("pilot", "overhead"), default="pilot",
                         help="Pilot-eye interior views by default; overhead for debugging only")
     parser.add_argument("--max-attempts", type=int, default=40,
@@ -65,6 +67,44 @@ def look_at(obj, target):
     obj.rotation_euler = direction.to_track_quat("-Z", "Y").to_euler()
 
 
+
+def make_display_text(display, name, digits, material):
+    """Add centered emission text just in front of an imported display face.
+
+    Imported glTF display geometry is authored in local XY, with depth in Z.
+    Parenting preserves the GLB object's rotation (including glTF Y-up conversion).
+    """
+    local = [Vector(v) for v in display.bound_box]
+    low = [min(v[i] for v in local) for i in range(3)]
+    high = [max(v[i] for v in local) for i in range(3)]
+    width = high[0] - low[0]
+    height = high[1] - low[1]
+    depth = high[2] - low[2]
+    if not (width > 0 and height > 0 and depth < min(width, height)):
+        raise RuntimeError(
+            f"Unexpected display geometry {display.name}: "
+            f"dimensions {(width, height, depth)}; cannot place text safely"
+        )
+    font = bpy.data.curves.new(name, type="FONT")
+    font.body = digits
+    font.align_x = "CENTER"
+    font.align_y = "CENTER"
+    font.size = height * 0.72
+    font.space_character = 1.1
+    obj = bpy.data.objects.new(name, font)
+    bpy.context.scene.collection.objects.link(obj)
+    obj.parent = display
+    obj.location = ((low[0] + high[0]) / 2,
+                    (low[1] + high[1]) / 2,
+                    high[2] + max(0.012, depth * 0.25))
+    obj.data.materials.append(material)
+    return obj
+
+
+def display_bbox(scene, camera, display):
+    """Projected display window coordinates, normalized YOLO xywh."""
+    return projected_bbox(scene, camera, [display])
+
 def main():
     args = arguments()
     if not args.glb.is_file():
@@ -80,6 +120,12 @@ def main():
     mcp_objects = [o for o in descendants(root) if o.type == "MESH"]
     if not mcp_objects:
         raise ValueError("mcp_root has no mesh descendants")
+    displays = {}
+    for key in ("heading", "altitude"):
+        matches = [o for o in mcp_objects if o.name == key + "_display"]
+        if len(matches) != 1:
+            raise RuntimeError(f"Expected one {key}_display mesh; got {len(matches)}")
+        displays[key] = matches[0]
     scene = bpy.context.scene
     available_engines = {item.identifier for item in scene.render.bl_rna.properties["engine"].enum_items}
     selected_engine = args.engine
@@ -91,6 +137,20 @@ def main():
         else:
             raise RuntimeError(f"Unsupported render engine {args.engine}; available: {sorted(available_engines)}")
     scene.render.engine = selected_engine
+    digit_texts = {}
+    if args.digits:
+        digit_material = bpy.data.materials.new("MCP_synthetic_digits_amber")
+        digit_material.diffuse_color = (1.0, 0.38, 0.04, 1.0)
+        digit_material.use_nodes = True
+        nodes = digit_material.node_tree.nodes
+        nodes.clear()
+        emission = nodes.new("ShaderNodeEmission")
+        emission.inputs["Color"].default_value = (1.0, 0.31, 0.018, 1.0)
+        emission.inputs["Strength"].default_value = 2.2
+        output_node = nodes.new("ShaderNodeOutputMaterial")
+        digit_material.node_tree.links.new(emission.outputs["Emission"], output_node.inputs["Surface"])
+        digit_texts["heading"] = make_display_text(displays["heading"], "synthetic_HDG", "000", digit_material)
+        digit_texts["altitude"] = make_display_text(displays["altitude"], "synthetic_ALT", "00000", digit_material)
     if args.engine == "CYCLES":
         scene.cycles.samples = args.samples
     else:
@@ -133,6 +193,7 @@ def main():
     test_ids = set(session_ids[:n_test])
     val_ids = set(session_ids[n_test:n_test + n_val])
     manifest = []
+    ocr_manifest = []
     split_counts = {"train": 0, "val": 0, "test": 0}
     bounds = [p for o in mcp_objects for p in box_points(o)]
     center = sum(bounds, Vector((0, 0, 0))) / len(bounds)
@@ -149,6 +210,11 @@ def main():
         key_data.energy = rng.uniform(2000, 3600)
         fill_data.energy = rng.uniform(1100, 2200)
         for frame in range(args.frames_per_session):
+            hdg = rng.randrange(360)
+            alt = rng.randrange(0, 41000, 100)
+            if args.digits:
+                digit_texts["heading"].data.body = f"{hdg:03d}"
+                digit_texts["altitude"].data.body = f"{alt:05d}"
             bbox = None
             for attempt in range(args.max_attempts):
                 if args.view == "pilot":
@@ -173,7 +239,9 @@ def main():
                 look_at(camera, target)
             bpy.context.view_layer.update()
                 bbox = projected_bbox(scene, camera, mcp_objects)
-                if bbox is not None:
+                heading_box = display_bbox(scene, camera, displays["heading"])
+                altitude_box = display_bbox(scene, camera, displays["altitude"])
+                if bbox is not None and heading_box is not None and altitude_box is not None:
                     break
             if bbox is None:
                 raise RuntimeError(
@@ -192,6 +260,13 @@ def main():
             manifest.append(dict(source_path=str(image_rel), image_path=str(image_rel),
                                  label_path=str(label_rel), session_id=f"session{session:03d}",
                                  split=split, x=bbox[0], y=bbox[1], width=bbox[2], height=bbox[3]))
+            ocr_manifest.append(dict(image_path=str(image_rel), split=split,
+                                     session_id=f"session{session:03d}",
+                                     heading=f"{hdg:03d}", altitude=f"{alt:05d}",
+                                     hdg_cx=heading_box[0], hdg_cy=heading_box[1],
+                                     hdg_w=heading_box[2], hdg_h=heading_box[3],
+                                     alt_cx=altitude_box[0], alt_cy=altitude_box[1],
+                                     alt_w=altitude_box[2], alt_h=altitude_box[3]))
             split_counts[split] += 1
         print(f"session {session + 1}/{args.sessions} ({split})", flush=True)
     if any(count == 0 for count in split_counts.values()):
@@ -200,14 +275,18 @@ def main():
         writer = csv.DictWriter(f, fieldnames=list(manifest[0]))
         writer.writeheader()
         writer.writerows(manifest)
+    with (output / "ocr_manifest.csv").open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=list(ocr_manifest[0]))
+        writer.writeheader()
+        writer.writerows(ocr_manifest)
     (output / "dataset.yaml").write_text(
         f"path: {output}\ntrain: images/train\nval: images/val\ntest: images/test\nnames:\n  0: mcp\n",
         encoding="utf-8")
     (output / "generation.json").write_text(json.dumps(
         {"glb": str(args.glb), "seed": args.seed, "sessions": args.sessions,
          "frames_per_session": args.frames_per_session, "rendered": len(manifest),
-         "split_counts": split_counts, "view": args.view,
-         "note": "Approximate projected 3D bounding box; verify labels visually. Dynamic UI text is absent."},
+         "split_counts": split_counts, "view": args.view, "digits": args.digits,
+         "note": "Projected geometry boxes and synthetic HDG/ALT text; inspect visibility, orientation and label alignment before training."},
         indent=2), encoding="utf-8")
     print(f"Generated {len(manifest)} labeled images in {output}", flush=True)
 
