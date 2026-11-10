@@ -102,7 +102,19 @@ def profile(db, flight):
     return result
 
 
-def receive_speech(db, flight, body, data, *, scenario=None):
+def receive_speech(db, flight, body, data, *, scenario=None, atc_mode=None):
+    # Reserve BEFORE media/segment writes. A competing upload must not create
+    # a new ATC input or invalidate an in-flight readback while ASR is busy.
+    if scenario and atc_mode: error('Choose one ATC input path')
+    if atc_mode not in (None, 'microphone_playback', 'file_upload'): error('Unknown ATC input mode')
+    if not STT_LOCK.acquire(blocking=False): error('Speech recognition is busy; retry recording', 409)
+    try:
+        return _receive_speech(db, flight, body, data, scenario=scenario, atc_mode=atc_mode)
+    finally:
+        STT_LOCK.release()
+
+
+def _receive_speech(db, flight, body, data, *, scenario=None, atc_mode=None):
     revision, registry = profile(db, flight)
     media_v2.validate(data, 'audio/wav')
     with wave.open(io.BytesIO(data)) as wav:
@@ -115,14 +127,13 @@ def receive_speech(db, flight, body, data, *, scenario=None):
     if intake.parsed(body['ended_at']) > intake.utc_now() or intake.parsed(body['started_at']) >= intake.parsed(body['ended_at']):
         error('Invalid capture interval')
     audio = media_v2.upload(db, flight, data, 'audio/wav')
-    segment = register(db, flight, body, audio, 'ATC' if scenario else 'PILOT')
+    segment = register(db, flight, body, audio, 'ATC' if scenario or atc_mode else 'PILOT')
     reason = 'silence_or_weak_signal' if rms < .01 else 'clipped_audio' if clipped > .01 else None
     transcript, score = '', None
     if scenario:
         transcript = SCENARIOS[scenario]
     else:
         global MODEL
-        if not STT_LOCK.acquire(blocking=False): error('Speech recognition is busy; retry recording', 409)
         try:
             from app.services.speech.local import LocalWhisper
             if MODEL is None:
@@ -134,8 +145,6 @@ def receive_speech(db, flight, body, data, *, scenario=None):
             if score is None or score < .5: reason = reason or 'low_or_unknown_model_score'
         except Exception as exc:
             reason = 'speech_engine_unavailable'
-        finally:
-            STT_LOCK.release()
     ner_result = None
     if os.getenv('RADAR_NER_MODEL') or os.getenv('RADAR_NER_BACKEND'):
         from app.services.speech.ner import extract_atc
@@ -152,7 +161,8 @@ def receive_speech(db, flight, body, data, *, scenario=None):
         reason = reason or 'ner_or_grammar_needs_review'
     receipt, _ = intake.receive(db, flight, ObservationV2.model_validate(payload), 'OBSERVATION')
     return dict(receipt=receipt, transcript=transcript, model_score=score, quality_reason=reason, ner=ner_result,
-                input_mode='registered_scenario' if scenario else 'uploaded_wav_local_whisper',
+                input_mode='registered_scenario' if scenario else atc_mode or 'uploaded_wav_local_whisper',
+                role=segment['role'], atc_input_id=segment['atc_input_id'],
                 instruction_id=segment['instruction_id'])
 
 

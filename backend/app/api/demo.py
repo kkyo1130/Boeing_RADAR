@@ -2,6 +2,7 @@
 import base64
 import os
 from pathlib import Path
+from typing import Literal
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, Field
@@ -34,6 +35,12 @@ class Speech(Model):
     started_at:UtcTimestamp
     ended_at:UtcTimestamp
     atc_input_id:str=Field(max_length=128)
+
+class AtcSpeech(Model):
+    audio:str=Field(max_length=8000000)
+    started_at:UtcTimestamp
+    ended_at:UtcTimestamp
+    input_mode:Literal["microphone_playback", "file_upload"]
 
 class Scenario(Model):
     started_at:UtcTimestamp
@@ -70,6 +77,12 @@ def readback(flight:str,body:Speech,db:Session=Depends(get_db)):
     try: data=base64.b64decode(body.audio,validate=True)
     except ValueError: demo.error('Invalid WAV encoding')
     return demo.receive_speech(db,flight,body.model_dump(),data)
+
+@router.post('/{flight}/atc')
+def atc(flight:str,body:AtcSpeech,db:Session=Depends(get_db)):
+    try: data=base64.b64decode(body.audio,validate=True)
+    except ValueError: demo.error('Invalid WAV encoding')
+    return demo.receive_speech(db,flight,body.model_dump(),data,atc_mode=body.input_mode)
 
 @router.post('/{flight}/scenario/{scenario}')
 def scenario(flight:str,scenario:str,body:Scenario,db:Session=Depends(get_db)):
