@@ -142,3 +142,5 @@ SPEC-004-WI-02의 요청 범위 추가 구현을 `origin/dev` `4a6fd74` 기반 `
 ## 관제 전사 후단 추출 평가 · 2026-11-10
 
 SPEC-004-WI-02 reviewing 유지. `codex/atc-slot-evaluation`에서 실제 UWB88개 정답/관제용 Whisper 전사에 기존 BERT+규칙을 적용했다. 추가 실제 음원28개 ASR·두 조건176회 추출·전용6개 테스트와 입력/점수 감사를 완료했다. 방위13개는 이전 평가 원본 그룹과 겹치는 진단임을 분리한다. 제품 코드 변경·전체 WI 완료·병합은 하지 않는다. 상세 결과와 미실행 범위는 [WI-02 기록](004-speech-communication.md#wi-02), [평가 보고서](../atc-slot-evaluation.md)를 따른다.
+
+제출: 평가 커밋 `1b879fb`, [PR #26](https://github.com/kkyo1130/Boeing_RADAR/pull/26). 자체 검토 완료, 외부 리뷰 대기.
