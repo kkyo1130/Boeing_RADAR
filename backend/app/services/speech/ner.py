@@ -120,7 +120,7 @@ def check_candidates(result, callsign_raw, values):
     """Veto disagreement with the full-transcript grammar; never bypass it."""
     from app.services.structure_rules import normalize, parse_command
     if result['issues']:
-        return 'hybrid_needs_review' if result.get('model_version') == 'bert-hybrid-rules-v2' else 'ner_invalid_bio'
+        return 'hybrid_needs_review' if result.get('model_version', '').startswith('bert-hybrid-rules-') else 'ner_invalid_bio'
     calls = [e for e in result['entities'] if e['label'] == 'CALLSIGN']
     if len(calls) != 1 or normalize(calls[0]['text']) != normalize(callsign_raw or ''):
         return 'ner_callsign_disagreement'

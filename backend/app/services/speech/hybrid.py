@@ -8,7 +8,7 @@ from threading import Lock
 from .ner import ExtractionError, LABELS, V7Extractor, assemble
 from .hybrid_baseline import rules
 from .hybrid_rules import combine
-from .numeric_slots import normalize_numeric_slots
+from .numeric_slots import normalize_numeric_slots, augment_numeric_candidates
 
 ARTIFACT_FILES = ('model.safetensors', 'config.json', 'tokenizer.json',
                   'tokenizer_config.json', 'special_tokens_map.json', 'vocab.txt')
@@ -24,7 +24,8 @@ def fuse(text, raw):
     numeric_words = [w.replace('-', '') if re.fullmatch(r'[0-9](?:-[0-9]){2}', w) else w
                      for w in numeric_words]
     numeric_words, numeric_changes = normalize_numeric_slots(numeric_words)
-    combined = combine(words, [t['label'] for t in raw['tokens']], rules(numeric_words))
+    rule_tags, added_changes, added_reasons = augment_numeric_candidates(numeric_words, rules(numeric_words))
+    combined = combine(words, [t['label'] for t in raw['tokens']], rule_tags)
     result = assemble(text, combined['tags'], [0.0]*len(words))
     # A deterministic rule has no probability. Never pass the discarded BERT
     # ALT/HDG score off as the score of a rule-generated entity.
@@ -36,13 +37,13 @@ def fuse(text, raw):
         entity['source'] = 'bert' if entity['label'] == 'CALLSIGN' else 'rule'
         selected = [t for t in result['tokens'] if t['start'] >= entity['start'] and t['end'] <= entity['end']]
         entity['model_score'] = min(t['model_score'] for t in selected) if entity['source'] == 'bert' else None
-    result.update(model_version='bert-hybrid-rules-v2', model_tokens=raw['tokens'],
+    result.update(model_version='bert-hybrid-rules-v3', model_tokens=raw['tokens'],
                   model_input_tokens=raw.get('model_input_tokens', words),
-                  numeric_candidate_policy='slot-homophones-v1',
+                  numeric_candidate_policy='explicit-numeric-slots-v2',
                   numeric_normalizations=numeric_changes,
-                  rule_changes=combined['rule_changes'], conflicts=combined['conflicts'],
+                  rule_changes=combined['rule_changes'] + added_changes, conflicts=combined['conflicts'],
                   issues=sorted(set(result['issues'] + raw['issues'] +
-                                    ['HYBRID_'+r.upper() for r in combined['review_reasons']])))
+                                    ['HYBRID_'+r.upper() for r in combined['review_reasons'] + added_reasons])))
     return result
 
 

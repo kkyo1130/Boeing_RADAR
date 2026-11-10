@@ -52,7 +52,7 @@ Backend 회귀는 `backend/`에서 `.venv/bin/python -m pytest -q`로 실행한�
 
 ## 항목값·품질·근거
 
-`fields.ALT`: `unit="ft"`, value는 0 이상 정수 또는 null. `fields.HDG`: `unit="deg"`, value는 0~359 정수 또는 null. 숫자 문자열·boolean·소수는 수치로 변환하지 않는다. FL→feet는 명시적 원문 단위를 확인한 생산자가 변환하고 raw_text에 원문을 남긴다. HDG360을0으로 보정하지 않는다.
+`fields.ALT`: `unit="ft"`, value는 0 이상 정수 또는 null. `fields.HDG`: `unit="deg"`, value는 0~359 정수 또는 null. 숫자 문자열·boolean·소수는 수치로 변환하지 않는다. FL→feet는 명시적 원문 단위를 확인한 생산자가 변환하고 raw_text에 원문을 남긴다. wire HDG360을0으로 보정하지 않는다. 단, 음성 생산자는 명시된 원문 `heading 360`을0도로 정규화해 전송할 수 있고 서버가 원문을 재검사한다(2026-11-10 음성 문법 확장). 원본 transcript/raw_text를 보존하며 Cockpit/OCR 입력에는 적용하지 않는다.
 
 각 항목은 다음 상태를 가진다.
 
