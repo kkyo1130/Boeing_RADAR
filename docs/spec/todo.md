@@ -148,3 +148,5 @@ SPEC-004-WI-02 추가 요청 범위를 `d267d4b` 기반 `codex/atc-microphone-mo
 SPEC-004-WI-02 요청 범위를 `codex/atc-callsign-context`에서 reviewing. 최신 dev d267d4b에서 시작해 ATC 수음 의존 PR #22의 da0f219를 가져왔다. 세션에 등록된 호출부호 발음을 Whisper hotwords로 전달하고 동일 실제 음원으로 전후/목록 밖 음성/호출부호 부재를 비교한다. 외부 교통 목록 연동이나 평가 정답에서 힌트 생성은 제외한다.
 
 완료 근거: 실제23개+합성무음1개 두 조건48회, 실제 모델 ASGI2건, backend571 passed. 등록 데모 호출부호0/3→1/3, 목록 밖3/12 유지; 상세 한계·보류 정책은 [문맥 보고서](../atc-callsign-context.md)와 WI-02를 따른다.
+
+제출: `7a5da03`, [PR #27](https://github.com/kkyo1130/Boeing_RADAR/pull/27). PR #22에 의존하는 별도 PR이며 외부 리뷰·병합 대기.
