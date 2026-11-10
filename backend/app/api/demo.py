@@ -48,7 +48,8 @@ class Scenario(Model):
 
 @router.get('/status')
 def status():
-    return dict(ner_enabled=bool(os.getenv('RADAR_NER_MODEL') or os.getenv('RADAR_NER_BACKEND')),
+    return dict(callsign_context_enabled=os.getenv('RADAR_STT_CALLSIGN_CONTEXT') == '1',
+                ner_enabled=bool(os.getenv('RADAR_NER_MODEL') or os.getenv('RADAR_NER_BACKEND')),
                 ner_backend=os.getenv('RADAR_NER_BACKEND', 'v7'),
                 ner_model_present=Path(os.getenv('RADAR_NER_MODEL','/nonexistent'),'model.safetensors').is_file(),
                 speech_ready=Path(os.getenv('RADAR_WHISPER_MODEL','/nonexistent'),'model.bin').is_file(),
