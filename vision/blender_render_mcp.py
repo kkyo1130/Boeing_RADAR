@@ -31,6 +31,8 @@ def arguments():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--engine", choices=("BLENDER_EEVEE", "BLENDER_EEVEE_NEXT", "CYCLES"), default="BLENDER_EEVEE")
     parser.add_argument("--samples", type=int, default=32)
+    parser.add_argument("--view", choices=("pilot", "overhead"), default="pilot",
+                        help="Pilot-eye interior views by default; overhead for debugging only")
     parser.add_argument("--max-attempts", type=int, default=40,
                         help="Camera framing attempts per requested frame")
     return parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])
@@ -111,8 +113,15 @@ def main():
     scene.collection.objects.link(key)
     key_data.shape = "DISK"
     key_data.size = 8
-    key.location = (1, 8, 12)
-    key_data.energy = 1700
+    key.location = (0, -2.5, 6.5)
+    key_data.energy = 2300
+    fill_data = bpy.data.lights.new("dataset_fill", type="AREA")
+    fill_light = bpy.data.objects.new("dataset_fill", fill_data)
+    scene.collection.objects.link(fill_light)
+    fill_data.shape = "DISK"
+    fill_data.size = 7
+    fill_data.energy = 1400
+    fill_light.location = (-4, -5, 5)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     # A fixed split by entire independent camera/lighting session, never individual frames.
@@ -131,28 +140,38 @@ def main():
     for session in range(args.sessions):
         split = "test" if session in test_ids else "val" if session in val_ids else "train"
         rng = random.Random(args.seed + session * 100003)
-        # Session-specific camera viewpoint and lighting: realistic train/test variation.
-        az = rng.uniform(-.35, .35)
-        el = rng.uniform(-.12, .24)
-        dist = rng.uniform(17, 32)
-        key_data.energy = rng.uniform(900, 2500)
+        # GLB was authored in Three.js (Y-up): Blender import maps the
+        # pilot seats (original +Z) to negative Blender Y.
+        # Keep the camera INSIDE the cockpit, facing forward toward MCP.
+        seat_x = rng.choice((-4.3, 4.3, 0.0))
+        base_y = rng.uniform(-7.2, -5.0)
+        eye_z = rng.uniform(3.5, 4.8)
+        key_data.energy = rng.uniform(2000, 3600)
+        fill_data.energy = rng.uniform(1100, 2200)
         for frame in range(args.frames_per_session):
             bbox = None
-            # Resample until the whole panel is visible. Do not silently
-            # produce empty val/test sets when random views clip the target.
             for attempt in range(args.max_attempts):
-                theta = az + rng.uniform(-.13, .13)
-                elevation = el + rng.uniform(-.07, .07)
-                distance = dist * rng.uniform(.9, 1.4)
-                camera.location = center + Vector((
-                    math.sin(theta) * distance,
-                    math.sin(elevation) * distance,
-                    math.cos(theta) * distance,
-                ))
-                target = center + Vector((rng.uniform(-.6, .6), rng.uniform(-.3, .3), 0))
+                if args.view == "pilot":
+                    camera.location = Vector((
+                        seat_x + rng.uniform(-0.65, 0.65),
+                        base_y + rng.uniform(-0.45, 0.45),
+                        eye_z + rng.uniform(-0.25, 0.25),
+                    ))
+                    target = center + Vector((
+                        rng.uniform(-0.4, 0.4),
+                        rng.uniform(-0.2, 0.2),
+                        rng.uniform(-0.15, 0.15),
+                    ))
+                    camera.data.lens = rng.uniform(20, 34)
+                else:
+                    camera.location = center + Vector((
+                        rng.uniform(-7, 7), rng.uniform(-2, 2),
+                        rng.uniform(12, 24),
+                    ))
+                    target = center
+                    camera.data.lens = rng.uniform(20, 34)
                 look_at(camera, target)
-                camera.data.lens = rng.uniform(20, 34)
-                bpy.context.view_layer.update()
+            bpy.context.view_layer.update()
                 bbox = projected_bbox(scene, camera, mcp_objects)
                 if bbox is not None:
                     break
@@ -187,7 +206,7 @@ def main():
     (output / "generation.json").write_text(json.dumps(
         {"glb": str(args.glb), "seed": args.seed, "sessions": args.sessions,
          "frames_per_session": args.frames_per_session, "rendered": len(manifest),
-         "split_counts": split_counts,
+         "split_counts": split_counts, "view": args.view,
          "note": "Approximate projected 3D bounding box; verify labels visually. Dynamic UI text is absent."},
         indent=2), encoding="utf-8")
     print(f"Generated {len(manifest)} labeled images in {output}", flush=True)
