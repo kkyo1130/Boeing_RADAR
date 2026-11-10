@@ -159,4 +159,4 @@ SPEC-004-WI-02의 요청 범위를 `codex/atc-numeric-rules`에서 reviewing. �
 
 제출: `dfb25c7`, [PR #28](https://github.com/kkyo1130/Boeing_RADAR/pull/28). PR #27 의존, 외부 리뷰·병합 대기.
 
-2026-11-10 SPEC-004-WI-02 후속: `codex/atc-live-demo`에서 사람 관제사 직접 발화 모드/역할 근거/실행기 추가. backend627·HTTP47·frontend54·브라우저2·계약22 검증 통과, 실제 모델의 기존 마이크 파일 재생 검증 통과. 새 2인 실시간 녹음은 미실행. 선행 PR #28에 의존하며 reviewing 유지. 상세 근거는 SPEC-004-WI-02 수행 기록을 따른다.
+2026-11-10 SPEC-004-WI-02 후속: `codex/atc-live-demo`에서 사람 관제사 직접 발화 모드/역할 근거/실행기 추가. backend627·HTTP47·frontend54·브라우저2·계약22 검증 통과, 실제 모델의 기존 마이크 파일 재생 검증 통과. 새 2인 실시간 녹음은 미실행. [PR #29](https://github.com/kkyo1130/Boeing_RADAR/pull/29), 구현 `3ece4fd`. 선행 PR #28에 의존하며 reviewing 유지. 상세 근거는 SPEC-004-WI-02 수행 기록을 따른다.
