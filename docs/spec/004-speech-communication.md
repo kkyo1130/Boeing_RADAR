@@ -100,6 +100,16 @@ MacBook Air 마이크(48kHz mono PCM16) 신규 녹음3회를 실제 HTTP STT 경
 
 PR #21 자동 Codex 리뷰는 최초 구현 `98e6015`에 지적 없음으로 완료됐으며 GitHub APPROVED 제출과는 구분한다. 미해결 review thread는0개다. 이후 `e7b1e9e`까지의 숫자 동음어 변경은 자체 추가 검토로 원문/점수 출처 보존, 숫자 슬롯 한정, 조건·누락 보류를 확인했다. 최신 원격 Python fixtures는 Ubuntu/macOS 모두 성공했으나 frontend Chromium E2E가 기존 pilot 테스트의 Mac 전용 `/private/tmp` 캡처 경로 때문에 Linux에서3건 실패했다. 테스트 기대값은 유지하고 `testInfo.outputPath`로 캡처 경로만 바꿔 OS별 임시경로 의존과 실행 간 파일 충돌을 제거한다. 사용자 요청에 따라 최신 CI 성공과 head/충돌 여부 확인 후 squash merge한다. 자동 리뷰가 최신 코드를 재검토했다고 표현하지 않는다.
 
+#### 관제용 Whisper → BERT+규칙 후보 추출 평가 · 2026-11-10
+
+- 범위/기준: 사용자 요청으로 기존 실제 관제 전사의 후단 추출을 측정했다. `origin/dev` `d267d4b` 기반 `codex/atc-slot-evaluation`; 기존 작업 폴더 보존. 모델 재학습·서비스 규칙·기본 설정 변경 없음. 선행 입력은 [PR #25](https://github.com/kkyo1130/Boeing_RADAR/pull/25)의 고정 관제용 Whisper 전사이며 파일 기반 후보 추출 평가다. AC-02 전체 인수 완료가 아니다.
+- 산출물: `scripts/evaluation/`의 표본 선정·추가 ASR·두 조건 추출·감사/발행·단위 테스트 5개 스크립트, `docs/evaluation/atc-slot-{gold,results}-2026-11-10.json`, [평가 보고서](../atc-slot-evaluation.md). 원음·모델·중간 결과는 ignored `.demo/slots/`와 선행 worktree에 보존한다. 실제 실행 명령과 입력 revision/해시는 보고서·JSON 참조.
+- 자료/계획 조정: 기존 TWR60개에는 목표 ALT/HDG가 없어 실제 고도15개·방위13개를 추가했다. 고도는 모든 이전 사용 원본 그룹 제외. 방위는 완전히 새로운 그룹이 없어 새 ASR/NER 실행 전에 진단 자료로 범위를 변경했다. 방위13개는 BERT 학습400/검증99 그룹 및 기존 정확한 clip ID를 제외하지만 이전 평가 원본 그룹과 겹친다. 양성 표본을 의도적으로 골랐으므로 전체 교신 정확도로 일반화하지 않는다. 전사 기반 어시스턴트 라벨이며 전문가 원음 검수는 미실행이다.
+- 실제 검증: 추가28개 WAV 관제용 Whisper 추론, 최종88개×정답/ASR2조건 BERT 추론176회 완료. 앞선 TWR 예비120회는 중복 합산하지 않는다. `.venv/bin/python -m unittest discover -s scripts/evaluation -p test_atc_slots.py`: 6 passed. Python 컴파일·`git diff --check` 통과. 발행 감사에서 정답/전사/음성/가중치/소스 해시, 176쌍 커버리지, 기존80파일 사용 이력, 추가 자료의 BERT train/validation 그룹 비중복, 채점 재계산 통과.
+- 결과: TWR 호출부호 전체일치 정답50/51→ASR10/51. 고도 값12/15→11/15, 방위 값12/13→7/13. 호출부호와 숫자를 함께 맞힌 ASR 결과 고도4/15·호출부호가 있는 방위0/7. TWR 목표 ALT/HDG가0개인 것을 양성100%로 계산하지 않는다. 상세 표/오검출/실패 사례는 보고서를 원본으로 유지한다.
+- 자체 리뷰: 정답 문자열을 모델 입력/프롬프트에 주입하지 않음, ASR 원문을 사후 수정하지 않음, CALLSIGN 형식 정규화는 채점에만 적용, 값0과 누락·UNRESOLVED 구분, 변환 실패/중복 후보를 오류로 계산, ambiguous 정답 제외를 확인했다. 조건/검토 필요 사유를 보존하며 후보 정답률을 서버 지시 승인율로 표현하지 않는다. 원음/가중치/개인 절대 경로는 커밋 제외. 외부 PR 리뷰·전체 UI/서버 채택·새 마이크 시험은 미실행.
+- 인수인계: WI 상태 reviewing 유지. 별도 커밋·PR로 제출하며 병합은 수행하지 않는다. 다음 개선 후보는 호출부호 STT 손상, FL80/three hundred/360 및 명령 사이 삽입 단어 처리다. 이번 평가 자료로 보완할 경우 해당 자료를 다시 독립 시험이라고 부르지 않고 새 시험을 분리해야 한다.
+
 <a id="wi-03"></a>
 
 ### SPEC-004-WI-03: 음성 품질·입력 건전성과 불확실성

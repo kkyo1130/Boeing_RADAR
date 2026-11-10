@@ -138,3 +138,7 @@ SPEC-004-WI-02의 요청 범위 추가 구현을 `origin/dev` `4a6fd74` 기반 `
 2026-11-09 숫자 동음어 후속: 명시 숫자 슬롯 후보만 보완. 실제 모델 포함549 passed. 동일 원본 WAV3개 재전사 불변, 마지막 녹음은 구조PASS·복창NORMAL, 앞의 약신호/누락2개는 보류 유지. PR #21 reviewing, 실제 음성 정확도 개선 수치로 일반화하지 않는다.
 
 2026-11-09 PR #21 병합 전 확인: 최초98e6015 자동리뷰 지적없음, 이후e7b1e9e까지 자체 추가검토 지적없음. 원격 Python Ubuntu/macOS 성공, Linux frontend E2E의 기존 `/private/tmp` 캡처 경로3건 실패를 testInfo.outputPath로 수정. 로컬 Node24+Chromium E2E6 passed. 최신 원격 CI를 확인한 뒤 사용자 지시에 따라 squash merge하며 전체 AC 완료와 구분한다.
+
+## 관제 전사 후단 추출 평가 · 2026-11-10
+
+SPEC-004-WI-02 reviewing 유지. `codex/atc-slot-evaluation`에서 실제 UWB88개 정답/관제용 Whisper 전사에 기존 BERT+규칙을 적용했다. 추가 실제 음원28개 ASR·두 조건176회 추출·전용6개 테스트와 입력/점수 감사를 완료했다. 방위13개는 이전 평가 원본 그룹과 겹치는 진단임을 분리한다. 제품 코드 변경·전체 WI 완료·병합은 하지 않는다. 상세 결과와 미실행 범위는 [WI-02 기록](004-speech-communication.md#wi-02), [평가 보고서](../atc-slot-evaluation.md)를 따른다.
