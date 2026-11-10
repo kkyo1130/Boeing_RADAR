@@ -131,6 +131,17 @@ PR #21 자동 Codex 리뷰는 최초 구현 `98e6015`에 지적 없음으로 완
 - 자체 리뷰: 기존 조건/부정·상한·급변·호출부호·품질 gate 유지, 추출 후보와 서버 채택 구분, 360 변환은 음성 원문에만 제한, 361/720/음수·한 자리FL·불명확 꼬리 거부, 같은 평가 자료 재사용을 새 정확도로 주장하지 않음 확인. 기존 baseline/가중치/ASR 코드는 불변. 원음/가중치/DB는 Git 제외. 새 마이크·STT 재실행·브라우저·전문가/외부 리뷰는 미실행.
 - 인수인계: 구현/재시험 커밋 `dfb25c7`, [PR #28](https://github.com/kkyo1130/Boeing_RADAR/pull/28) 제출, reviewing. PR #27에 의존하며 선행 병합 후 dev로 base를 전환한다. WI 전체 AC-02 완료나 실제 운항 인수로 보지 않는다. 남은 핵심은 호출부호 STT 손상이며 이번 요청에서 추가 모델/규칙 튜닝으로 평가 표본을 반복 맞추지 않는다.
 
+#### 사람이 관제사 역할을 하는 시연 · 2026-11-10
+
+- 범위·기준: 사용자 요청에 따라 SPEC-004-WI-02의 데모 입력을 확장했다. 최신 origin/dev 확인 후 선행 숫자 규칙 PR #28의 `39063eb`를 fast-forward한 `codex/atc-live-demo`에서 작업했다. 원래 작업 폴더의 미커밋 변경은 유지했다. 실제 RF 수신·화자 자동 분리·새 모델 학습은 이번 범위가 아니다.
+- 구현: `DemoPanel.jsx`는 관제사 직접 발화를 기본값으로 두고 녹음 재생 시험은 선택 기능으로 보존한다. 역할·입력 방식·ATC ID는 녹음 시작 때 고정한다. `demo-audio.js`는 직접 발화/Pilot에 소음 억제·에코 제거를 요청하고 재생에는 끈다. `api/demo.py`/`adapters.py`는 `microphone_live`를 실제 ASR 경로로 전달한다. `SpeechSegmentV2`/JSON Schema는 ATC 역할의 `ATC_DEMO_MICROPHONE` 근거를 추가했으며 Pilot 역할과 섞으면 거부한다. DB payload에 역할 근거·원음 ref가 저장되고 스키마 버전은 2를 유지한다. 기존 소비자는 새 enum을 배포하기 전에 함께 갱신해야 한다.
+- 입력→결과: 마이크 PCM→Whisper→BERT 호출부호+고도/방위 규칙→기존 서버 검사로 이어진다. 예시 문장/정답을 ASR 요청에 보내지 않으며 등록 시나리오는 STT 미사용 예비 기능으로 분리한다. `DemoResults.jsx`의 재생 전용 안내를 음성 입력 안내로 바꿨다. 무음·취소·새 ATC 미채택 시 이전 정상 복창을 재사용하지 못한다. 기존 callsign context opt-in 보류 조건은 유지한다.
+- 실행: `scripts/run-live-demo.sh`는 준비된 모델/설정으로 backend8018와 frontend5178을 실행한다. 최초8014 실행 시 기존 서버와 충돌한 것을 확인해 포트 사전 확인과 backend 준비 대기를 추가했다. 기존 프로세스는 종료하지 않았으며 이 작업의 잘못 연결된 frontend만 중지했다. 새 서버의 실제 모델은 기존 base.en + BERT rules-v3, context 비활성이다. 경로와 상세 사용법은 [사람 관제사 데모](../atc-live-demo.md)에 있다.
+- 자동 검증: worktree 루트에서 `RADAR_TEST_BERT_MODEL=<prepared-bert> RADAR_TEST_NER_MODEL=<v7> .venv/bin/python scripts/verify.py --component backend`의 backend **627 passed**(skip0, 기존 Starlette 경고1). 같은 실행의 HTTP47개는 sandbox bind 금지로 setup 실패했으므로 권한 있는 실행 환경에서 backend 기준 `../.venv/bin/python -m pytest ../tests/integration -q`로 별도 실행해 **47 passed**를 확인했다. `contracts/check_v2.py`는 **6 schema/22 fixture PASS**. frontend Node24.22.2에서 `npm test`: **54 passed**, `npm run build`: PASS. `npx playwright test e2e/speech-modes.spec.js`는 설치된 Chromium 경로를 지정해 **2 passed**. 초기 브라우저 실행의 번들 미설치 오류는 기존 설치 경로를 명시해 해결했다. 실제 장치 음성 대신 fake media/ASR 경계를 사용하는 브라우저 테스트임을 구분한다.
+- 실제 모델 재생 검증: `scripts/test-live-atc.py --wav <기존-사용자-마이크.wav> --wrong-heading-wav .demo/audio/heading.wav --output .demo/live-replay.json`을 로컬 서버에 실행했다. 요청 시각은 API 순서 검증용 합성 시각이며 원래 수음 시각이 아니다. 저장된 사용자 음성에서 `Radar, one, two, three, climb and maintain, three thousand feet, heading to seven, zero.`를 받아 RADAR123/3000/270을 채택했다. 같은 파일 Pilot은 NORMAL, 합성290도 Pilot은 MISMATCH. 새 ATC 무음은 silence_or_weak_signal + LATEST_ATC_NOT_ADOPTED, 이전 ID의 복창 HTTP409. 과거 불일치 이력 자체는 보존된다. 처음 재생 도구가 UTC +00:00을 보낸422는 제품 계약에 맞춰 Z 형식으로 수정했다. 원음·모델·DB·원시 JSON은 Git에 제외했다.
+- 자체 리뷰: 직접 발화를 ATC_PLAYBACK으로 잘못 저장하는 문제, 역할/입력 방식 변경 경쟁, 정답 전사 주입, 취소 후 이전 지시 채택, context 보류 우회, 기존 재생 경로 회귀를 점검했다. provenance·역할 거부 테스트와 직접/재생 브라우저 테스트가 통과했다. 실행 중인 새 UI의 기본 직접 발화 선택과 안내 문구를 눈으로 확인했다. 외부 PR 리뷰는 아직 미수행이다.
+- 미실행·인수인계: 새 실시간 2인 마이크 발화, 소음 있는 현장·실무전, 카메라 동시 전체 시연은 미실행이다. 기존 녹음 재생 성공을 현장 인식률로 일반화하지 않는다. 이번 PR은 #28 위에 쌓으며 선행 병합 뒤 dev로 retarget한다. WI 전체 done이 아닌 reviewing으로 유지한다. 구현 커밋과 PR 링크는 제출 후 아래에 기록한다.
+
 <a id="wi-03"></a>
 
 ### SPEC-004-WI-03: 음성 품질·입력 건전성과 불확실성

@@ -85,10 +85,10 @@ def speech_payload(flight, revision, segment, transcript, score, registry, audio
     return payload
 
 
-def register(db, flight, body, audio, role):
+def register(db, flight, body, audio, role, atc_mode=None):
     segment = dict(schema_version='2', flight_id=flight, segment_id='seg-'+uuid4().hex,
                    attempt_id='try-'+uuid4().hex, atc_input_id=body['atc_input_id'] if role == 'PILOT' else 'atc-'+uuid4().hex,
-                   role=role, role_basis='PILOT_PTT' if role == 'PILOT' else 'ATC_PLAYBACK',
+                   role=role, role_basis='PILOT_PTT' if role == 'PILOT' else ('ATC_DEMO_MICROPHONE' if atc_mode == 'microphone_live' else 'ATC_PLAYBACK'),
                    started_at=body['started_at'], ended_at=body['ended_at'], complete=True,
                    interruption_reason=None, audio_ref=audio['ref'], audio_unavailable_reason=None)
     receipt = intake.register_segment(db, flight, SpeechSegmentV2.model_validate(segment))
@@ -106,7 +106,7 @@ def receive_speech(db, flight, body, data, *, scenario=None, atc_mode=None):
     # Reserve BEFORE media/segment writes. A competing upload must not create
     # a new ATC input or invalidate an in-flight readback while ASR is busy.
     if scenario and atc_mode: error('Choose one ATC input path')
-    if atc_mode not in (None, 'microphone_playback', 'file_upload'): error('Unknown ATC input mode')
+    if atc_mode not in (None, 'microphone_live', 'microphone_playback', 'file_upload'): error('Unknown ATC input mode')
     if not STT_LOCK.acquire(blocking=False): error('Speech recognition is busy; retry recording', 409)
     try:
         return _receive_speech(db, flight, body, data, scenario=scenario, atc_mode=atc_mode)
@@ -127,7 +127,7 @@ def _receive_speech(db, flight, body, data, *, scenario=None, atc_mode=None):
     if intake.parsed(body['ended_at']) > intake.utc_now() or intake.parsed(body['started_at']) >= intake.parsed(body['ended_at']):
         error('Invalid capture interval')
     audio = media_v2.upload(db, flight, data, 'audio/wav')
-    segment = register(db, flight, body, audio, 'ATC' if scenario or atc_mode else 'PILOT')
+    segment = register(db, flight, body, audio, 'ATC' if scenario or atc_mode else 'PILOT', atc_mode)
     reason = 'silence_or_weak_signal' if rms < .01 else 'clipped_audio' if clipped > .01 else None
     transcript, score = '', None
     stt_context = None

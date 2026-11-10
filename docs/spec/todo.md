@@ -158,3 +158,5 @@ SPEC-004-WI-02의 요청 범위를 `codex/atc-numeric-rules`에서 reviewing. �
 완료 근거: 고정224조건/실제 BERT222회, 고도11/15→13/15·방위7/13→10/13, 이전 정답 필드 회귀0. backend623 passed·공통 계약 검사 PASS. 숫자 후보와 자동 채택의 차이·재사용 자료 한계는 [숫자 규칙 보고서](../atc-numeric-rules.md) 및 WI-02를 따른다.
 
 제출: `dfb25c7`, [PR #28](https://github.com/kkyo1130/Boeing_RADAR/pull/28). PR #27 의존, 외부 리뷰·병합 대기.
+
+2026-11-10 SPEC-004-WI-02 후속: `codex/atc-live-demo`에서 사람 관제사 직접 발화 모드/역할 근거/실행기 추가. backend627·HTTP47·frontend54·브라우저2·계약22 검증 통과, 실제 모델의 기존 마이크 파일 재생 검증 통과. 새 2인 실시간 녹음은 미실행. 선행 PR #28에 의존하며 reviewing 유지. 상세 근거는 SPEC-004-WI-02 수행 기록을 따른다.

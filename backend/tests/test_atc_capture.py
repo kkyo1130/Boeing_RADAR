@@ -22,9 +22,15 @@ def asr(monkeypatch, text=TEXT, raises=False):
     monkeypatch.setattr(demo, 'MODEL', Model())
     return calls
 
-@pytest.mark.parametrize('mode', ['microphone_playback', 'file_upload'])
+@pytest.mark.parametrize('mode', ['microphone_live', 'microphone_playback', 'file_upload'])
 def test_atc_asr_then_bound_pilot(client, flight, monkeypatch, mode):
     calls = asr(monkeypatch)
+    segments = []
+    original = intake.register_segment
+    def capture_segment(db, flight, segment):
+        segments.append(segment)
+        return original(db, flight, segment)
+    monkeypatch.setattr(intake, 'register_segment', capture_segment)
     atc = client.post(f'/api/demo/{flight}/atc', json=body(input_mode=mode))
     assert atc.status_code == 200, atc.text
     result = atc.json()
@@ -44,13 +50,14 @@ def test_atc_asr_then_bound_pilot(client, flight, monkeypatch, mode):
     state = client.get(f'/api/v2/flights/{flight}/state').json()
     assert state['validation']['readback']['result'] == 'NORMAL'
     assert len(calls) == 2
+    assert [s.role_basis for s in segments] == [('ATC_DEMO_MICROPHONE' if mode == 'microphone_live' else 'ATC_PLAYBACK'), 'PILOT_PTT']
 
 @pytest.mark.parametrize('text,raises', [('unintelligible',False), (TEXT+' if able',False), ('',True)])
 def test_failed_atc_blocks_old_pilot(client, flight, monkeypatch, text, raises):
     asr(monkeypatch)
     old = client.post(f'/api/demo/{flight}/atc', json=body(input_mode='file_upload')).json()
     asr(monkeypatch, text, raises)
-    payload = body(input_mode='microphone_playback'); now = intake.utc_now()
+    payload = body(input_mode='microphone_live'); now = intake.utc_now()
     payload.update(started_at=intake.stamp(now-timedelta(seconds=.8)), ended_at=intake.stamp(now-timedelta(seconds=.2)))
     new = client.post(f'/api/demo/{flight}/atc', json=payload)
     assert new.status_code == 200, new.text

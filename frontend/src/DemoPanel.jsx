@@ -11,6 +11,7 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
   const video=useRef(null), canvas=useRef(null), camera=useRef(null), mic=useRef(null), drag=useRef(null), loop=useRef(null), capture=useRef(null), busyRef=useRef(false), alive=useRef(true);
   const [devices,setDevices]=useState([]),[cameraId,setCameraId]=useState(''),[micId,setMicId]=useState(''),[preview,setPreview]=useState(false),[micReady,setMicReady]=useState(false),[level,setLevel]=useState(0);
   const [rois,setRois]=useState({}),[field,setField]=useState('ALT'),[frozen,setFrozen]=useState(null),[running,setRunning]=useState(false),[result,setResult]=useState(null),[message,setMessage]=useState('장치를 선택하고 미리보기를 연결하세요.'),[error,setError]=useState(''),[busy,setBusy]=useState(false),[recording,setRecording]=useState(false),[transcript,setTranscript]=useState(''),[scenario,setScenario]=useState('baseline'),[status,setStatus]=useState(null);
+  const [atcSource,setAtcSource]=useState('microphone_live');
   const [speechMode,setSpeechMode]=useState('ATC'),[atcTranscript,setAtcTranscript]=useState(''),[atcAttempt,setAtcAttempt]=useState(null),[atcFile,setAtcFile]=useState(null);
   const pilotPending=(recording||busy)&&capture.current?.kind==='PILOT';
   const speechPending=pilotPending || !!(atcAttempt && snapshot.readback_required?.atc_input_id!==atcAttempt);
@@ -68,21 +69,21 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
       const data=await api(`scenario/${scenario}`,{started_at,ended_at:new Date().toISOString()},15000);setAtcAttempt(data.atc_input_id);setMessage('등록 관제 전송 완료 · 서버 지시가 표시되면 복창을 녹음하세요.');
     }finally{clearTimeout(item.timer);audio.pause();capture.current=null;await audioFocus.end(focus);}}
   async function startRecording(playFile=false){
-    const kind=speechMode;
+    const kind=speechMode, inputMode=kind==='ATC'?atcSource:null;
     if(capture.current)throw new Error('기존 입력이 끝날 때까지 기다리세요.');
     if(!mic.current || (kind==='PILOT'&&!canReadback))throw new Error('마이크 연결과 현재 관제 지시를 확인하세요.');
-    if(playFile && (!atcFile || kind!=='ATC'))throw new Error('재생할 관제 녹음파일을 선택하세요.');
-    await mic.current.setCaptureMode(kind);
+    if(playFile && (!atcFile || kind!=='ATC' || inputMode!=='microphone_playback'))throw new Error('재생할 관제 녹음파일을 선택하세요.');
+    await mic.current.setCaptureMode(kind,inputMode);
     await health('MICROPHONE','AVAILABLE');await health('SPEECH_API','AVAILABLE');
     const focus=await audioFocus.begin(kind);if(!focus)throw new Error('음성 입력 예약 실패');
     if(!alive.current||!latest.current.connected){await audioFocus.end(focus);return;}
-    const item={kind,focus,microphone:true,atc_input_id:kind==='PILOT'?latest.current.snapshot.readback_required.atc_input_id:null};
+    const item={kind,inputMode,focus,microphone:true,atc_input_id:kind==='PILOT'?latest.current.snapshot.readback_required.atc_input_id:null};
     capture.current=item;
     try{
       item.started_at=mic.current.start();setRecording(true);
       if(kind==='ATC'){setAtcTranscript('');setTranscript('');setAtcAttempt('pending');}
       else setTranscript('');
-      setMessage(kind==='ATC'?'ATC 수음 중 · 별도 기기에서 관제 녹음을 재생하거나 선택한 파일을 들려주세요.':'파일럿 복창 녹음 중 · 완료하면 녹음 종료를 누르세요.');
+      setMessage(kind==='ATC'?(inputMode==='microphone_live'?'마이크 켜짐 · 관제사 역할 문장을 말한 뒤 녹음 종료를 누르세요.':'ATC 수음 중 · 별도 기기에서 관제 녹음을 재생하거나 선택한 파일을 들려주세요.'):'파일럿 복창 녹음 중 · 완료하면 녹음 종료를 누르세요.');
       item.timer=setTimeout(()=>{if(capture.current===item)action(async()=>{await cancelInput();throw new Error('녹음 시간 제한(29초)을 넘었습니다. 짧은 관제 구간으로 다시 수음하세요.');});},29000);
       if(playFile){
         const audio=new Audio(atcFile.url);item.audio=audio;
@@ -99,7 +100,7 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
     try{
       const audio=base64(mic.current.stop());
       const body={audio,started_at:item.started_at,ended_at:new Date().toISOString()};
-      if(item.kind==='ATC')body.input_mode='microphone_playback';else body.atc_input_id=item.atc_input_id;
+      if(item.kind==='ATC')body.input_mode=item.inputMode;else body.atc_input_id=item.atc_input_id;
       const data=await api(item.kind==='ATC'?'atc':'readback',body,120000);
       if(!alive.current||capture.current!==item)return;
       if(item.kind==='ATC'){setAtcTranscript(data.transcript||'(인식된 발화 없음)');setAtcAttempt(data.atc_input_id);}
@@ -112,17 +113,19 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
       <div className="demo-live-status"><span>{running?'● 카메라 수신 중':'○ 카메라 중지 · 장치 설정에서 연결'}</span><span>{micReady?'● 마이크 연결됨':'○ 마이크 미연결'}</span></div>
     </div>
     <div id="demo-speech" className="demo-speech">
-      <h2>① ATC 수음 → ② 파일럿 복창 → ③ 설정 확인</h2>
-      <label>음성 입력 모드<select value={speechMode} disabled={busy||recording} onChange={e=>setSpeechMode(e.target.value)}><option value="ATC">ATC 수음</option><option value="PILOT">파일럿 복창</option></select></label>
-      <p>{speechMode==='ATC'?'관제 녹음을 스피커로 재생하면 선택한 마이크로 받아씁니다. 파일 원문을 STT에 전달하지 않습니다.':'확인된 현재 관제 지시에 대해 호출부호와 지시 값을 복창하세요.'}</p>
-      {speechMode==='ATC'&&<><label>재생할 실제 관제 녹음파일<input type="file" accept="audio/*" disabled={busy||recording} onChange={e=>{const file=e.target.files?.[0];setAtcFile(file?{name:file.name,url:URL.createObjectURL(file)}:null);}}/></label>
+      <h2>① 관제사 발화 → ② 파일럿 복창 → ③ 설정 확인</h2>
+      <label>음성 입력 모드<select value={speechMode} disabled={busy||recording} onChange={e=>setSpeechMode(e.target.value)}><option value="ATC">관제사 지시 (ATC)</option><option value="PILOT">파일럿 복창</option></select></label>
+      <p>{speechMode==='ATC'?'관제사 역할과 파일럿 역할이 번갈아 말하는 모의 시연입니다. 역할을 선택한 후 한 사람씩 말하세요.':'확인된 현재 관제 지시에 대해 호출부호와 지시 값을 복창하세요.'}</p>
+      {speechMode==='ATC'&&<><label>관제 음성 입력 방식<select value={atcSource} disabled={busy||recording} onChange={e=>setAtcSource(e.target.value)}><option value="microphone_live">관제사 직접 발화</option><option value="microphone_playback">녹음 재생 시험</option></select></label>
+        {atcSource==='microphone_live'&&<p>마이크를 연결하고 ‘관제사 발화 시작’을 누르세요. ‘마이크 켜짐’ 안내 후 호출부호와 고도·방위를 말하고 ‘녹음 종료 · 검증’을 누르세요. 인식된 지시를 확인한 뒤 파일럿 복창으로 전환하세요.</p>}</>}
+      {speechMode==='ATC'&&atcSource==='microphone_playback'&&<><label>재생할 실제 관제 녹음파일<input type="file" accept="audio/*" disabled={busy||recording} onChange={e=>{const file=e.target.files?.[0];setAtcFile(file?{name:file.name,url:URL.createObjectURL(file)}:null);}}/></label>
         <p>{atcFile?.name||'별도 휴대폰·스피커에서 재생할 때는 파일 선택 없이 ATC 수음을 시작하세요.'}</p></>}
       <div className="op-row-actions">
-        <button className="primary" disabled={disabled||busy||!micReady||recording||!status?.speech_ready||(speechMode==='PILOT'&&!canReadback)} onClick={()=>action(()=>startRecording())}>{speechMode==='ATC'?'ATC 수음 시작':'파일럿 복창 시작'}</button>
-        {speechMode==='ATC'&&<button disabled={disabled||busy||recording||!micReady||!status?.speech_ready||!atcFile} onClick={()=>action(()=>startRecording(true))}>선택 파일 재생 + 마이크 수음</button>}
+        <button className="primary" disabled={disabled||busy||!micReady||recording||!status?.speech_ready||(speechMode==='PILOT'&&!canReadback)} onClick={()=>action(()=>startRecording())}>{speechMode==='ATC'?(atcSource==='microphone_live'?'관제사 발화 시작':'ATC 수음 시작'):'파일럿 복창 시작'}</button>
+        {speechMode==='ATC'&&atcSource==='microphone_playback'&&<button disabled={disabled||busy||recording||!micReady||!status?.speech_ready||!atcFile} onClick={()=>action(()=>startRecording(true))}>선택 파일 재생 + 마이크 수음</button>}
         <button disabled={!recording||busy} onClick={()=>action(stopRecording)}>녹음 종료 · 검증</button><button disabled={!recording} onClick={()=>action(cancelInput)}>녹음 취소</button>
       </div>
-      <p><b>실제 ATC 인식 문장</b><br/>{atcTranscript||'아직 수음한 관제 문장이 없습니다.'}</p>
+      <p><b>관제 음성 인식 문장</b><br/>{atcTranscript||'아직 수음한 관제 문장이 없습니다.'}</p>
       {!status?.speech_ready&&<p>로컬 음성 모델 준비가 필요합니다.</p>}
       <details><summary>예비: 사전 등록 시나리오 (ATC STT 사용 안 함)</summary><label>사전 등록 관제<select value={scenario} disabled={busy||recording} onChange={e=>setScenario(e.target.value)}><option value="baseline">ALT 3000 / HDG 270</option><option value="altitude">ALT 3500 / HDG 270</option><option value="heading">ALT 3000 / HDG 290</option></select></label><p lang="en">{status?.scenarios?.[scenario]}</p><button disabled={disabled||busy||recording} onClick={()=>action(playScenario)}>관제 재생 및 지시 등록</button></details>
     </div>
