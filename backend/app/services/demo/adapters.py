@@ -130,6 +130,10 @@ def _receive_speech(db, flight, body, data, *, scenario=None, atc_mode=None):
     segment = register(db, flight, body, audio, 'ATC' if scenario or atc_mode else 'PILOT')
     reason = 'silence_or_weak_signal' if rms < .01 else 'clipped_audio' if clipped > .01 else None
     transcript, score = '', None
+    stt_context = None
+    if not scenario and os.getenv('RADAR_STT_CALLSIGN_CONTEXT') == '1':
+        from app.services.speech.context import callsign_context
+        stt_context = callsign_context(registry, revision)
     if scenario:
         transcript = SCENARIOS[scenario]
     else:
@@ -140,8 +144,13 @@ def _receive_speech(db, flight, body, data, *, scenario=None, atc_mode=None):
                 MODEL = LocalWhisper(os.environ.get('RADAR_WHISPER_MODEL', ''))
             with TemporaryDirectory() as temp:
                 path = Path(temp)/'input.wav'; path.write_bytes(data)
-                result = MODEL.transcribe(path)
+                result = (MODEL.transcribe(path, callsign_context=stt_context)
+                          if stt_context and stt_context["enabled"] else MODEL.transcribe(path))
             transcript, score = result['transcript'], result['model_score']
+            # A vocabulary hint is not independent evidence that this aircraft was addressed.
+            # Keep contextual decoding diagnostic until wrong-aircraft bias is validated.
+            if stt_context and stt_context['enabled']:
+                reason = reason or 'callsign_context_requires_review'
             if score is None or score < .5: reason = reason or 'low_or_unknown_model_score'
         except Exception as exc:
             reason = 'speech_engine_unavailable'
@@ -161,6 +170,7 @@ def _receive_speech(db, flight, body, data, *, scenario=None, atc_mode=None):
         reason = reason or 'ner_or_grammar_needs_review'
     receipt, _ = intake.receive(db, flight, ObservationV2.model_validate(payload), 'OBSERVATION')
     return dict(receipt=receipt, transcript=transcript, model_score=score, quality_reason=reason, ner=ner_result,
+                stt_context=stt_context,
                 input_mode='registered_scenario' if scenario else atc_mode or 'uploaded_wav_local_whisper',
                 role=segment['role'], atc_input_id=segment['atc_input_id'],
                 instruction_id=segment['instruction_id'])
