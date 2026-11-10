@@ -67,11 +67,18 @@ test(`${inputMode}: ATC and pilot freeze role during capture; cancellation canno
   await page.getByRole('button',{name:'녹음 종료 · 검증',exact:true}).click();
   await expect(page.getByText('PILOT fixture transcript',{exact:false})).toBeVisible();
   expect(pilotBody.atc_input_id).toBeTruthy();expect(pilotBody.input_mode).toBeUndefined();
-  await mode.selectOption('ATC');await start.click();
+  await mode.selectOption('ATC');await sourceMode.selectOption(inputMode);await start.click();
   await page.getByRole('button',{name:'녹음 취소',exact:true}).click();
   await expect(mode).toBeEnabled();await mode.selectOption('PILOT');
   await expect(pilot).toBeDisabled();
   await expect(page.locator('.demo-verdict').first()).toHaveText('판단 보류');
+  // Real cancellation state must survive reload without spoofing server state.
+  await page.reload();await page.getByRole('button',{name:'마이크 연결',exact:true}).click();
+  await mode.selectOption('PILOT');await expect(pilot).toBeDisabled();
+  await mode.selectOption('ATC');await sourceMode.selectOption(inputMode);await start.click();
+  await page.getByRole('button',{name:'녹음 종료 · 검증',exact:true}).click();
+  await expect(page.getByText('ATC fixture transcript',{exact:false})).toBeVisible();
+  await mode.selectOption('PILOT');await expect(pilot).toBeEnabled();
   // A reload must not re-enable a retained instruction after a newer ATC failed.
   const retained=await (await request.get(`/api/v2/flights/${flight}/state`)).json();
   retained.validation.reason='LATEST_ATC_NOT_ADOPTED';

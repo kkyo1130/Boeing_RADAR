@@ -4,6 +4,7 @@ import {audioFocus} from './audio-focus.js';
 import {microphone,base64} from './demo-audio.js';
 import './demo.css';
 import DemoResults from './DemoResults.jsx';
+import {readAtcAttempt,writeAtcAttempt,atcAttemptKey} from './atc-attempt.js';
 
 export default function DemoPanel({snapshot,connected,onSpeech}) {
   const flight=snapshot.flight_id, latest=useRef({snapshot,connected});latest.current={snapshot,connected};
@@ -12,7 +13,14 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
   const [devices,setDevices]=useState([]),[cameraId,setCameraId]=useState(''),[micId,setMicId]=useState(''),[preview,setPreview]=useState(false),[micReady,setMicReady]=useState(false),[level,setLevel]=useState(0);
   const [rois,setRois]=useState({}),[field,setField]=useState('ALT'),[frozen,setFrozen]=useState(null),[running,setRunning]=useState(false),[result,setResult]=useState(null),[message,setMessage]=useState('장치를 선택하고 미리보기를 연결하세요.'),[error,setError]=useState(''),[busy,setBusy]=useState(false),[recording,setRecording]=useState(false),[transcript,setTranscript]=useState(''),[scenario,setScenario]=useState('baseline'),[status,setStatus]=useState(null);
   const [atcSource,setAtcSource]=useState('microphone_live');
-  const [speechMode,setSpeechMode]=useState('ATC'),[atcTranscript,setAtcTranscript]=useState(''),[atcAttempt,setAtcAttempt]=useState(null),[atcFile,setAtcFile]=useState(null);
+  const [speechMode,setSpeechMode]=useState('ATC'),[atcTranscript,setAtcTranscript]=useState(''),[atcAttempt,updateAtcAttempt]=useState(()=>readAtcAttempt(flight)),[atcFile,setAtcFile]=useState(null);
+  function setAtcAttempt(value){writeAtcAttempt(flight,value);updateAtcAttempt(value);}
+  useEffect(()=>{
+    updateAtcAttempt(readAtcAttempt(flight));
+    const sync=e=>{if(e.key===atcAttemptKey(flight)||e.key===null)updateAtcAttempt(readAtcAttempt(flight));};
+    window.addEventListener('storage',sync);
+    return()=>window.removeEventListener('storage',sync);
+  },[flight]);
   const pilotPending=(recording||busy)&&capture.current?.kind==='PILOT';
   const speechPending=pilotPending || !!(atcAttempt && snapshot.readback_required?.atc_input_id!==atcAttempt);
   const canReadback=!!snapshot.readback_required && snapshot.validation.reason!=='LATEST_ATC_NOT_ADOPTED' && (!atcAttempt || snapshot.readback_required.atc_input_id===atcAttempt);
@@ -61,9 +69,9 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
     tick();
   }
   async function cancelInput(){const item=capture.current;if(!item)return;capture.current=null;clearTimeout(item.timer);item.audio?.pause();item.reject?.(new Error('입력 취소'));if(item.microphone)mic.current?.stop();setRecording(false);await audioFocus.end(item.focus);await health('MICROPHONE','DEGRADED','capture_cancelled').catch(fail);}
-  async function playScenario(){const focus=await audioFocus.begin('ATC');if(!focus)throw new Error('관제 재생 예약 실패 · 음성 안내 연결을 확인하세요.');
+  async function playScenario(){setAtcAttempt('pending');const focus=await audioFocus.begin('ATC');if(!focus)throw new Error('관제 재생 예약 실패 · 음성 안내 연결을 확인하세요.');
     const audio=new Audio(`/api/demo/scenarios/${scenario}/audio`),item={focus,audio,kind:'ATC'};capture.current=item;
-    setAtcAttempt('pending');setTranscript('');const started_at=new Date().toISOString();setMessage('사전 등록 관제 음성 재생 중 · ATC 음성 인식은 사용하지 않습니다.');
+    setTranscript('');const started_at=new Date().toISOString();setMessage('사전 등록 관제 음성 재생 중 · ATC 음성 인식은 사용하지 않습니다.');
     try{await new Promise((resolve,reject)=>{audio.onended=resolve;audio.onerror=()=>reject(new Error('관제 음성 재생 실패'));item.reject=reject;audio.play().catch(reject);item.timer=setTimeout(()=>reject(new Error('관제 재생 시간 초과')),30000);});
       if(capture.current!==item)throw new Error('관제 재생 취소');
       const data=await api(`scenario/${scenario}`,{started_at,ended_at:new Date().toISOString()},15000);setAtcAttempt(data.atc_input_id);setMessage('등록 관제 전송 완료 · 서버 지시가 표시되면 복창을 녹음하세요.');
@@ -73,6 +81,7 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
     if(capture.current)throw new Error('기존 입력이 끝날 때까지 기다리세요.');
     if(!mic.current || (kind==='PILOT'&&!canReadback))throw new Error('마이크 연결과 현재 관제 지시를 확인하세요.');
     if(playFile && (!atcFile || kind!=='ATC' || inputMode!=='microphone_playback'))throw new Error('재생할 관제 녹음파일을 선택하세요.');
+    if(kind==='ATC')setAtcAttempt('pending');
     await mic.current.setCaptureMode(kind,inputMode);
     await health('MICROPHONE','AVAILABLE');await health('SPEECH_API','AVAILABLE');
     const focus=await audioFocus.begin(kind);if(!focus)throw new Error('음성 입력 예약 실패');
@@ -81,7 +90,7 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
     capture.current=item;
     try{
       item.started_at=mic.current.start();setRecording(true);
-      if(kind==='ATC'){setAtcTranscript('');setTranscript('');setAtcAttempt('pending');}
+      if(kind==='ATC'){setAtcTranscript('');setTranscript('');}
       else setTranscript('');
       setMessage(kind==='ATC'?(inputMode==='microphone_live'?'마이크 켜짐 · 관제사 역할 문장을 말한 뒤 녹음 종료를 누르세요.':'ATC 수음 중 · 별도 기기에서 관제 녹음을 재생하거나 선택한 파일을 들려주세요.'):'파일럿 복창 녹음 중 · 완료하면 녹음 종료를 누르세요.');
       item.timer=setTimeout(()=>{if(capture.current===item)action(async()=>{await cancelInput();throw new Error('녹음 시간 제한(29초)을 넘었습니다. 짧은 관제 구간으로 다시 수음하세요.');});},29000);
