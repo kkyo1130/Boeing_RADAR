@@ -37,7 +37,7 @@ def arguments():
 
 
 def descendants(root):
-    return [root, *[o for o in bpy.data.objects if root in o.parent_recursive]]
+    return [root, *root.children_recursive]
 
 
 def box_points(obj):
