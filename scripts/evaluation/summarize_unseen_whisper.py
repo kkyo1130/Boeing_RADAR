@@ -68,6 +68,7 @@ def main():
     p.add_argument('--plan',type=Path,required=True);p.add_argument('--results',type=Path,required=True)
     p.add_argument('--source',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
     p.add_argument('--communication',type=Path,required=True)
+    p.add_argument('--fallback',type=Path)
     a=p.parse_args();plan=json.loads(a.plan.read_text());r=json.loads(a.results.read_text())
     assert r['plan_sha256']==sha(a.plan)
     clips={c['id']:c for c in plan['clips']};assert len(clips)==60
@@ -100,6 +101,21 @@ def main():
                   'Numeric metric is ordered number-word token comparison across the whole utterance, not callsign/ALT/HDG value accuracy.',
                   'Same-corpus TWR sample, not new airport or speaker-disjoint guarantee; no new microphone capture.',
                   'No downstream NER, server adoption or operational accuracy evaluation.']}
+    if a.fallback:
+        follow=json.loads(a.fallback.read_text())
+        assert follow['primary_sha256']==sha(a.results) and follow['plan_sha256']==sha(a.plan)
+        selected={x['id'] for x in r['rows'] if x['metrics']['errors']>x['metrics']['reference_words']}
+        expected_follow={(i,m) for i in selected for m in ['generic','specialist']}
+        assert len(follow['rows'])==len(expected_follow)
+        assert {(x['id'],x['model']) for x in follow['rows']}==expected_follow
+        for x in follow['rows']:
+            assert x['reference']==clips[x['id']]['reference']
+            assert x['metrics']==metrics(x['reference'],x['transcript'])
+            x['duration']=clips[x['id']]['duration']
+        follow['summary']={m:summary([x for x in follow['rows'] if x['model']==m]) for m in ['generic','specialist']}
+        follow['primary_same_subset']={m:summary([x for x in r['rows'] if x['id'] in selected and x['model']==m]) for m in ['generic','specialist']}
+        out['posthoc_fallback']=follow
+        print('POSTHOC',json.dumps(follow['summary'],indent=2))
     a.output.parent.mkdir(parents=True,exist_ok=True);a.output.write_text(json.dumps(out,ensure_ascii=False,indent=2)+'\n')
     print(json.dumps({k:out[k] for k in ('summary','paired_bootstrap','pair_counts')},indent=2))
 
