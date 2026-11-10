@@ -160,7 +160,7 @@ def main():
             (output / label_rel).parent.mkdir(parents=True, exist_ok=True)
             scene.render.filepath = str(output / image_rel)
             bpy.ops.render.render(write_still=True)
-            (output / label_rel).write_text("0 " + " ".join(f"{v:.6f}" for v in bbox) + "\\n", encoding="utf-8")
+            (output / label_rel).write_text("0 " + " ".join(f"{v:.6f}" for v in bbox) + "\n", encoding="utf-8")
             manifest.append(dict(source_path=str(image_rel), image_path=str(image_rel),
                                  label_path=str(label_rel), session_id=f"session{session:03d}",
                                  split=split, x=bbox[0], y=bbox[1], width=bbox[2], height=bbox[3]))
