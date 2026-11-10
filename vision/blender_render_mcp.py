@@ -29,7 +29,7 @@ def arguments():
     parser.add_argument("--width", type=int, default=1280)
     parser.add_argument("--height", type=int, default=720)
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--engine", choices=("BLENDER_EEVEE_NEXT", "CYCLES"), default="BLENDER_EEVEE_NEXT")
+    parser.add_argument("--engine", choices=("BLENDER_EEVEE", "BLENDER_EEVEE_NEXT", "CYCLES"), default="BLENDER_EEVEE")
     parser.add_argument("--samples", type=int, default=32)
     parser.add_argument("--max-attempts", type=int, default=40,
                         help="Camera framing attempts per requested frame")
@@ -79,7 +79,16 @@ def main():
     if not mcp_objects:
         raise ValueError("mcp_root has no mesh descendants")
     scene = bpy.context.scene
-    scene.render.engine = args.engine
+    available_engines = {item.identifier for item in scene.render.bl_rna.properties["engine"].enum_items}
+    selected_engine = args.engine
+    if selected_engine not in available_engines:
+        if selected_engine == "BLENDER_EEVEE_NEXT" and "BLENDER_EEVEE" in available_engines:
+            selected_engine = "BLENDER_EEVEE"
+        elif selected_engine == "BLENDER_EEVEE" and "BLENDER_EEVEE_NEXT" in available_engines:
+            selected_engine = "BLENDER_EEVEE_NEXT"
+        else:
+            raise RuntimeError(f"Unsupported render engine {args.engine}; available: {sorted(available_engines)}")
+    scene.render.engine = selected_engine
     if args.engine == "CYCLES":
         scene.cycles.samples = args.samples
     else:
