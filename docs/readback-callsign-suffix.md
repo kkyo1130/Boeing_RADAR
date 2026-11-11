@@ -2,6 +2,8 @@
 
 기준 dev `0e80cb4`, 작업 `codex/readback-callsign-suffix`, SPEC-004-WI-02 추가 수정.
 
+제출: 구현 `7416738`, [PR #34](https://github.com/kkyo1130/Boeing_RADAR/pull/34). 로컬 8018 데모에는 기존 Pilot 표시 PR #33과 함께 별도 `codex/demo-readback-preview` 브랜치로 적용했다. 기존 비행·원음은 유지하며 이 작업에서 PR을 병합하지 않았다.
+
 ## 문제와 변경
 
 실제 사용자 DELTA123 녹음의 전사는 `3,000 feet heading, two, seven, zero, delta, one, two, three.`였다. 기존 adapter/구조 검사는 호출부호 접두어만 허용했고 BERT도 뒤쪽 호출부호를 놓쳐 복창을 해석하지 못했다.
