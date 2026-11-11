@@ -122,8 +122,73 @@ def parse_command(command):
     return values, issues
 
 
+def split_callsign(text, registry, *, readback=False):
+    """Exact registered words at a boundary; no target-based/fuzzy completion.
+
+    A readback must contain exactly one registered occurrence, including aliases
+    in the middle, to avoid accepting a second aircraft or overlapping aliases.
+    ATC retains its existing prefix-only contract.
+    """
+    matches = []
+    for canonical, aliases in registry.items():
+        for alias, spelling in aliases.items():
+            raw = normalize(spelling)
+            if not raw:
+                continue
+            if not readback:
+                if text.startswith(raw + ' '):
+                    matches.append((canonical, alias, raw, text[len(raw)+1:]))
+                continue
+            for occurrence in re.finditer(r'(?<!\S)' + re.escape(raw) + r'(?!\S)', text):
+                start, end = occurrence.span()
+                command = text[end:].strip() if start == 0 else text[:start].strip() if end == len(text) else None
+                matches.append((canonical, alias, raw, command))
+    if len(matches) != 1 or not matches[0][3]:
+        return None
+    return matches[0]
+
+
+READBACK_ALT = r'(?:(?P<action>climb(?:ing)?(?: and maintain)?|descend(?:ing)?(?: and maintain)?|maintain(?:ing)?)(?: to)? (?:altitude )?)?(?P<alt>.+?)'
+READBACK_HEADING = r'(?:turn(?:ing)? (?:left|right) )?(?:fly(?:ing)? )?heading (?P<hdg>.+)'
+
+
+def readback_parts(command):
+    # Units are mandatory for an altitude-only number, including short readbacks.
+    match = re.fullmatch(READBACK_ALT + r'(?: (?:and )?' + READBACK_HEADING + r')?', command)
+    if match and re.fullmatch(r'(?:.+ feet|(?:flight level |fl(?:\s+|(?=[0-9]))).+)', match['alt']):
+        return match
+    return re.fullmatch(READBACK_HEADING, command)
+
+
+def parse_readback(command):
+    """Bounded readback grammar; bare values are candidates, not full approval."""
+    if len(command) > 2048:
+        return {}, [(None, 'NEEDS_REVIEW', 'COMMAND_EXCEEDS_PARSER_LIMIT')]
+    match = readback_parts(command)
+    if not match:
+        return {}, [(None, 'NEEDS_REVIEW', 'UNSUPPORTED_SYNTAX')]
+    groups = match.groupdict()
+    clauses = []
+    if groups.get('alt'):
+        clauses.append('maintain ' + groups['alt'])
+    if groups.get('hdg'):
+        clauses.append('heading ' + groups['hdg'])
+    values, issues = parse_command(' '.join(clauses))
+    if groups.get('alt') and not groups.get('action') and not issues:
+        issues.append(('ALT', 'NEEDS_REVIEW', 'READBACK_ALTITUDE_ACTION_MISSING'))
+    return values, issues
+
+
+def phraseology(command):
+    """Only vertical/turn direction; not a complete ICAO phraseology checker."""
+    altitude = re.search(r'\b(climb(?:ing)?|descend(?:ing)?)\b', command)
+    turn = re.search(r'\bturn(?:ing)? (left|right)\b', command)
+    return dict(vertical=('CLIMB' if altitude[1].startswith('climb') else 'DESCEND') if altitude else None,
+                turn=turn[1] if turn else None)
+
+
 def check_structure(data, *, target_callsign, registry, segment, instruction_id,
-                    previous_targets, policy: StructurePolicy | None):
+                    previous_targets, policy: StructurePolicy | None, expected_phraseology=None):
     checks, derived = [], {}
 
     def add(rule, status, reason, field=None):
@@ -162,12 +227,11 @@ def check_structure(data, *, target_callsign, registry, segment, instruction_id,
         add("grammar", "NEEDS_REVIEW", "TRANSCRIPT_UNAVAILABLE")
         return finish()
     text = normalize(transcript)
-    matches = [(canonical, alias, normalize(raw)) for canonical, aliases in registry.items()
-        for alias, raw in aliases.items() if text.startswith(normalize(raw)+" ")]
-    if len(matches) != 1:
-        add("callsign", "NEEDS_REVIEW", "CALLSIGN_PREFIX_NOT_UNIQUE", "CALLSIGN")
+    matched = split_callsign(text, registry, readback=data['source'] == 'READBACK')
+    if matched is None:
+        add("callsign", "NEEDS_REVIEW", "CALLSIGN_BOUNDARY_NOT_UNIQUE" if data['source'] == 'READBACK' else "CALLSIGN_PREFIX_NOT_UNIQUE", "CALLSIGN")
         return finish()
-    canonical, alias, raw = matches[0]
+    canonical, alias, raw, command = matched
     if call["validity"] != "VALID":
         add("callsign", "NEEDS_REVIEW", "CALLSIGN_UNREADABLE", "CALLSIGN")
     elif call["value"] != canonical or call["alias_key"] != alias or normalize(call["raw_text"] or "") != raw:
@@ -176,11 +240,19 @@ def check_structure(data, *, target_callsign, registry, segment, instruction_id,
         add("callsign", "NEEDS_REVIEW", "CALLSIGN_OUT_OF_TARGET", "CALLSIGN")
     else:
         add("callsign", "PASS", "REGISTERED_CALLSIGN_MATCH", "CALLSIGN")
-    command = text[len(raw)+1:]
     if re.search(r"\b(if|after|before|until|when|then|unless)\b", command):
         add("conditions", "NEEDS_REVIEW", "UNSUPPORTED_CONDITION_OR_SEQUENCE")
         return finish()
-    derived, issues = parse_command(command)
+    derived, issues = (parse_readback(command) if data['source'] == 'READBACK' else parse_command(command))
+    if data['source'] == 'READBACK' and expected_phraseology:
+        actual_phraseology = phraseology(command)
+        if expected_phraseology.get('context_missing'):
+            add('readback_phraseology', 'NEEDS_REVIEW', 'READBACK_PHRASEOLOGY_CONTEXT_UNAVAILABLE')
+        for name, field in (('vertical', 'ALT'), ('turn', 'HDG')):
+            expected = expected_phraseology.get(name)
+            if field in derived and expected and actual_phraseology.get(name) != expected:
+                add('readback_phraseology', 'NEEDS_REVIEW',
+                    'READBACK_' + name.upper() + '_MISSING_OR_CONFLICT')
     if re.search(r"\bheading (?:ah|uh|um)\b", command):
         add("numeric_cleanup", "NEEDS_REVIEW", "HEADING_HESITATION_REQUIRES_REVIEW", "HDG")
     for field, status, reason in issues:

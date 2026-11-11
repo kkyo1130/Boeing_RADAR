@@ -118,7 +118,7 @@ def test_confirmed_readback_error_keeps_other_readback_quality_hold(scenario):
     s = scenario
     atc = s.adopt(); s.tick()
     data = s.speech(s.segment(atc))
-    data["transcript"] = "Radar one two three maintain four thousand feet heading two seven zero"
+    data["transcript"] = "Radar one two three climb and maintain four thousand feet heading two seven zero"
     data["fields"]["ALT"].update(value=4000, raw_text="4000")
     data["fields"]["HDG"]["quality"].update(input_quality="INSUFFICIENT", reason="fixture_overlap")
     assert s.send(data).status_code == 201

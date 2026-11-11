@@ -147,7 +147,7 @@ def test_colon_attempt_id_and_expired_reservation_can_be_replaced(scenario):
 
 def test_readback_guidance_unknown_input_and_strict_playback_dto(scenario):
     s=scenario;a=s.adopt();s.tick();data=s.speech(s.segment(a))
-    data['transcript']='Radar one two three maintain four thousand feet heading two seven zero'
+    data['transcript']='Radar one two three climb and maintain four thousand feet heading two seven zero'
     data['fields']['ALT'].update(value=4000,raw_text='4000');assert s.send(data).status_code==201
     assert queue(s)[0]['phrase_key']=='READBACK'
     item=claim(s).json()
