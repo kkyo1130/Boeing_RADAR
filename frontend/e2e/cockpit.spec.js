@@ -1,6 +1,8 @@
 import {test,expect} from '@playwright/test';
 
 test('GLB loads and supports 3D picking, controls and capture without photo toggle',async({page})=>{
+ // CI renders the full GLB in software; keep all assertions but allow the sequence to finish.
+ test.setTimeout(90_000);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('/');
  await expect(page.locator('.cockpit-3d')).toHaveAttribute('data-state','ready');
