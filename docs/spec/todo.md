@@ -158,3 +158,11 @@ SPEC-004-WI-02의 요청 범위를 `codex/atc-numeric-rules`에서 reviewing. �
 완료 근거: 고정224조건/실제 BERT222회, 고도11/15→13/15·방위7/13→10/13, 이전 정답 필드 회귀0. backend623 passed·공통 계약 검사 PASS. 숫자 후보와 자동 채택의 차이·재사용 자료 한계는 [숫자 규칙 보고서](../atc-numeric-rules.md) 및 WI-02를 따른다.
 
 제출: `dfb25c7`, [PR #28](https://github.com/kkyo1130/Boeing_RADAR/pull/28). PR #27 의존, 외부 리뷰·병합 대기.
+
+## 2026-11-11 사용자 요청: 조종석 + OCR v3 로컬 실행
+
+`feat/vision-ai`에서 기존 GLB/Three.js와 별도 웹캠 ROI·v3 추론 연결. 상태: verifying (실제 촬영 OCR 정확도 미검증, 미커밋). 기존 SPEC-003/006 WI의 전체 인수 상태는 유지한다. 변경·검증·실행·제약 원본은 [실행 기록](../development/vision-webcam-v3.md).
+
+2026-11-11 후속 요청: 웹캠 수동 ROI 선택을 제거하고 전체 프레임의 HDG·ALT 자동 탐지와 연속 v3 OCR을 연결했다. verifying 유지. 단위6·frontend56·합성 카메라 자동 탐지 smoke 통과, 실제 촬영 인수는 미실행. 변경·한계는 [실행 기록](../development/vision-webcam-v3.md#2026-11-11-자동-숫자-창-탐지-후속)에 기록했다.
+
+2026-11-11 웹캠 수집 후속: 학습용 고정 캡처·HDG/ALT 사람 정답 확인·로컬 저장 추가. verifying 유지. Vision 관련12·frontend56·수집 UI smoke·빌드 통과. 실제 사용자 정답 샘플 수집과 재학습/평가는 미실행. [실행/검증 기록](../development/vision-webcam-v3.md#웹캠-학습용-캡처와-사람-확인-정답-수집).

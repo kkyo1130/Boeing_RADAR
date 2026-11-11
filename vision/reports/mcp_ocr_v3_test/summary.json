@@ -1,0 +1,23 @@
+{
+  "hdg": {
+    "samples": 134,
+    "exact_correct": 130,
+    "exact_accuracy": 0.9701492537313433,
+    "digit_accuracy": 0.9900497512437811,
+    "errors": 4,
+    "checkpoint_epoch": 8
+  },
+  "alt": {
+    "samples": 134,
+    "exact_correct": 128,
+    "exact_accuracy": 0.9552238805970149,
+    "digit_accuracy": 0.991044776119403,
+    "errors": 6,
+    "checkpoint_epoch": 11
+  },
+  "overall": {
+    "samples": 268,
+    "exact_accuracy": 0.9626865671641791,
+    "errors": 10
+  }
+}

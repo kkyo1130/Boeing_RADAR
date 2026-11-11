@@ -99,3 +99,11 @@ END FLIGHT 후 같은 `/operations` 화면에서 v2 종료 요약과 JSON 다운
 복명복창·MCP 설정별 오류 항목과 출처별 비교값을 크게 표시한다. 보류·오래된 관측·연결 끊김에는 현재 비교값/정상 표시를 내리지 않는다. 화면은 서버 판정만 표시하며 설정을 변경하지 않는다. 상세 근거와 비행 시작/종료·음성 안내는 운영 화면을 사용한다. 소형 화면을 추가로 열어도 음성을 중복 재생하지 않는다.
 
 화면 테스트: `npx playwright test --config playwright.pilot.config.js` (API fixture 사용). 설치된 Chromium 실행 파일을 쓰려면 `RADAR_CHROMIUM_PATH`를 지정한다. 실제 디바이스의 장착 거리·가독성 및 실제 카메라/마이크 검증은 별도다.
+
+## Three.js 조종석 + 웹캠 OCR v3
+
+`/cockpit`에서 GLB 조종석 수동 조작과 웹캠 HDG/ALT ROI 선택·판독·STABLE/CHECK를 제공한다. 서버 8000/8765와 Vite5173을 함께 실행하며 모델은 재학습하지 않는다. [실행·검증·권한 안내](../docs/development/vision-webcam-v3.md)를 따른다. 기존 `/`, `/operations`, `/pilot` 경로는 유지한다.
+
+웹캠 자동 OCR: `/cockpit`에서 웹캠 시작만 누르면 HDG·ALT 창을 매 프레임 탐지한다. 수동 영역 지정은 제거했다. 주황색 숫자와 HDG→ALT 순서의 현재 MCP 배치에 한정한 실험 규칙이며 위치 불명확 시 값을 비운다. 자세한 검증·한계는 `../docs/development/vision-webcam-v3.md` 참고.
+
+학습 데이터 수집: `/cockpit`의 학습용 장면 캡처 → 고정 영상과 두 crop 확인 → HDG 3자리·ALT 5자리 직접 입력 → 확인 체크 → 저장. `vision/data/webcam_labeled`에만 저장하며 기존 모델 재학습이나 교체는 하지 않는다. 자세한 세션 분리·검증은 `docs/development/vision-webcam-v3.md` 참고.

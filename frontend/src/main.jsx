@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './style.css';
 import Operations from './Operations.jsx';
+import CockpitVision from './CockpitVision.jsx';
 import Pilot from './Pilot.jsx';
 import cockpitReference from '../../docs/vision/assets/mcp-reference.png';
 
@@ -155,4 +156,4 @@ function App() {
   </main>;
 }
 
-createRoot(document.getElementById('root')).render(window.location.pathname === '/pilot' ? <Pilot /> : window.location.pathname === '/operations' ? <Operations /> : <App />);
+createRoot(document.getElementById('root')).render(window.location.pathname === '/cockpit' ? <CockpitVision /> : window.location.pathname === '/pilot' ? <Pilot /> : window.location.pathname === '/operations' ? <Operations /> : <App />);

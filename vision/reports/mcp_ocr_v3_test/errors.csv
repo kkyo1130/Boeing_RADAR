@@ -1,0 +1,11 @@
+kind,image_path,truth,prediction,correct
+hdg,test/hdg/batch_01_session002_frame0002.png,298,258,False
+hdg,test/hdg/batch_01_session002_frame0004.png,316,312,False
+hdg,test/hdg/batch_01_session002_frame0026.png,236,232,False
+hdg,test/hdg/batch_03_session002_frame0025.png,114,174,False
+alt,test/alt/batch_03_session002_frame0002.png,37400,39400,False
+alt,test/alt/batch_03_session002_frame0005.png,01100,00100,False
+alt,test/alt/batch_03_session002_frame0006.png,35400,35600,False
+alt,test/alt/batch_03_session002_frame0012.png,13200,13600,False
+alt,test/alt/batch_03_session002_frame0017.png,03400,09400,False
+alt,test/alt/batch_03_session002_frame0032.png,04800,00800,False

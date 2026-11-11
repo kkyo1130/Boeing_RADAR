@@ -71,15 +71,20 @@ def look_at(obj, target):
 def make_display_text(display, name, digits, material):
     """Add centered emission text just in front of an imported display face.
 
-    Imported glTF display geometry is authored in local XY, with depth in Z.
+    Support local XY faces (depth Z) and imported XZ faces (depth Y).
     Parenting preserves the GLB object's rotation (including glTF Y-up conversion).
     """
     local = [Vector(v) for v in display.bound_box]
     low = [min(v[i] for v in local) for i in range(3)]
     high = [max(v[i] for v in local) for i in range(3)]
     width = high[0] - low[0]
-    height = high[1] - low[1]
-    depth = high[2] - low[2]
+    dimensions = [high[i] - low[i] for i in range(3)]
+    depth_axis = min(range(3), key=lambda i: dimensions[i])
+    if depth_axis not in (1, 2):
+        raise RuntimeError(f"Unsupported display face axes: {display.name}, {dimensions}")
+    up_axis = 2 if depth_axis == 1 else 1
+    height = dimensions[up_axis]
+    depth = dimensions[depth_axis]
     if not (width > 0 and height > 0 and depth < min(width, height)):
         raise RuntimeError(
             f"Unexpected display geometry {display.name}: "
@@ -94,9 +99,15 @@ def make_display_text(display, name, digits, material):
     obj = bpy.data.objects.new(name, font)
     bpy.context.scene.collection.objects.link(obj)
     obj.parent = display
-    obj.location = ((low[0] + high[0]) / 2,
-                    (low[1] + high[1]) / 2,
-                    high[2] + max(0.012, depth * 0.25))
+    location = [(low[i] + high[i]) / 2 for i in range(3)]
+    offset = max(0.012, depth * 0.25)
+    if depth_axis == 1:
+        # XZ face: X is text right, Z is text up; front faces negative Y.
+        obj.rotation_euler = (math.pi / 2, 0, 0)
+        location[1] = low[1] - offset
+    else:
+        location[2] = high[2] + offset
+    obj.location = location
     obj.data.materials.append(material)
     return obj
 
@@ -244,6 +255,16 @@ def main():
                     camera.data.lens = rng.uniform(20, 34)
                 look_at(camera, target)
                 bpy.context.view_layer.update()
+                # Fit the complete MCP in the frame without moving the pilot eye.
+                # The panel is ~12 units wide; fixed 20-34mm lenses can clip it.
+                projected = [world_to_camera_view(scene, camera, point)
+                             for obj in mcp_objects for point in box_points(obj)]
+                if projected and all(point.z > 0 for point in projected):
+                    extent = max(max(abs(point.x - .5), abs(point.y - .5))
+                                 for point in projected)
+                    if extent > .46:
+                        camera.data.lens *= .46 / extent
+                        bpy.context.view_layer.update()
                 bbox = projected_bbox(scene, camera, [mcp_face])
                 heading_box = display_bbox(scene, camera, displays["heading"])
                 altitude_box = display_bbox(scene, camera, displays["altitude"])
