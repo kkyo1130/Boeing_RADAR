@@ -54,7 +54,7 @@ def main():
     # Write a portable, local training config without modifying the source dataset.
     yaml_path = args.data.resolve() / "dataset_local.yaml"
     yaml_path.write_text(
-        f"path: {args.data.resolve()}\\ntrain: images/train\\nval: images/val\\ntest: images/test\\nnames:\\n  0: mcp\\n",
+        f"path: {args.data.resolve()}\ntrain: images/train\nval: images/val\ntest: images/test\nnames:\n  0: mcp\n",
         encoding="utf-8",
     )
     print("Dataset counts:", counts, flush=True)
