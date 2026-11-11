@@ -37,6 +37,7 @@
     "role_basis": {
       "enum": [
         "ATC_PLAYBACK",
+        "ATC_DEMO_MICROPHONE",
         "PILOT_PTT"
       ],
       "title": "Role Basis",

@@ -1,0 +1,4467 @@
+{
+  "plan": {
+    "context": {
+      "source": "flight_callsign_registry",
+      "revision": 3,
+      "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+      "enabled": true,
+      "reason": null,
+      "aliases": [
+        "german wings seven papa",
+        "lufthansa one kilo k",
+        "Radar one two three",
+        "speed bird eight two zero",
+        "speedbird eight two zero"
+      ],
+      "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+    },
+    "registry": {
+      "RADAR123": {
+        "radar-one-two-three": "Radar one two three"
+      },
+      "GWI7P": {
+        "spoken": "german wings seven papa"
+      },
+      "DLH1KK": {
+        "spoken": "lufthansa one kilo k"
+      },
+      "BAW820": {
+        "spoken": "speed bird eight two zero",
+        "joined": "speedbird eight two zero"
+      }
+    },
+    "config_sha256": "1dbd6c60c28661bcc31246d9d2c0ebede6cdfda9bd21d804beab0dcdaa9a404a",
+    "gold_sha256": "dbf99ebe74b9f1f25ff985f53dab0d01c967a09edccd6aeb6416f0e3113fe9dc",
+    "manifest_sha256": "61973f2e93652775fd3e0f42abc5605c982d385343b020f7548505174ec5b56d",
+    "model_sha256": "3d7f0e3511b74a74dbeb0cdf94966ad1a19c0ae8318961e6a80321d397bbd851",
+    "bert_sha256": "a398526501a4d7bdca67709570bcc666025f0562cdf996bf794314c8893c4e03",
+    "seed": 20261112,
+    "caveat": "Registered three clips are previous curated demo replay; 20 other real clips are regression negatives, not fresh accuracy test.",
+    "clips": [
+      {
+        "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+        "cohort": "registered_demo_replay",
+        "reference": "german wings seven papa turn left heading zero four zero",
+        "CALLSIGN": [
+          "german wings seven papa"
+        ],
+        "ALT": [],
+        "HDG": [
+          40
+        ],
+        "audio_sha256": "cab1c7c8cf8484e6d210ab52c426dc9f64b5d2581df4f0488bec9d332d15035f"
+      },
+      {
+        "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+        "cohort": "registered_demo_replay",
+        "reference": "lufthansa one kilo k turn left heading three zero zero",
+        "CALLSIGN": [
+          "lufthansa one kilo k"
+        ],
+        "ALT": [],
+        "HDG": [
+          300
+        ],
+        "audio_sha256": "76355cff008a4f4d03490b618d77b0c1a00c43eac866d07943a8cdc5a7533cdb"
+      },
+      {
+        "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+        "cohort": "registered_demo_replay",
+        "reference": "speed bird eight two zero turn left heading zero eight zero",
+        "CALLSIGN": [
+          "speed bird eight two zero"
+        ],
+        "ALT": [],
+        "HDG": [
+          80
+        ],
+        "audio_sha256": "3df6cfa1718f2ec31aa0aa491cc45605051f095fc716bc41ad0c31f8fc777e4a"
+      },
+      {
+        "id": "uwb-atcc_TWR-hb2QLO_001447_001697_AT",
+        "set": "tower60",
+        "reference": "jobair zero six one ruzyne tower",
+        "audio_sha256": "3c7319e9bacdf61ad19b74c356ddecf17d88c64d27e70fd66ab28c759dda3c82",
+        "CALLSIGN": [
+          "jobair zero six one"
+        ],
+        "ALT": [],
+        "HDG": [],
+        "notes": "",
+        "cohort": "outside_registry"
+      },
+      {
+        "id": "uwb-atcc_TWR-RggWaO_000522_000896_AT",
+        "set": "tower60",
+        "reference": "french navy five five alfa two tower good morning continue approach",
+        "audio_sha256": "4a6c0c3afcdef02bc3a973a47b505147b8559e02e3298264d9a9bb08b36f0617",
+        "CALLSIGN": [
+          "french navy five five alfa two"
+        ],
+        "ALT": [],
+        "HDG": [],
+        "notes": "",
+        "cohort": "outside_registry"
+      },
+      {
+        "id": "uwb-atcc_TWR-V4DR1t_002112_002395_AT",
+        "set": "tower60",
+        "reference": "romeo echo mike echo india ruzyne tower hello roger",
+        "audio_sha256": "02867a55bd39f725977c6d89ec205bf848e39b05a22d4e92766fc4bc6348a638",
+        "CALLSIGN": [
+          "romeo echo mike echo india"
+        ],
+        "ALT": [],
+        "HDG": [],
+        "notes": "",
+        "cohort": "outside_registry"
+      },
+      {
+        "id": "uwb-atcc_TWR-ByTq2w_000098_000538_AT",
+        "set": "tower60",
+        "reference": "csa seven five nine runway three one clear to land wind one eight zero degrees six knots",
+        "audio_sha256": "8baa9ebe79bb45d4006fd6da3df31d6598f7dc2fe266d451b586d4946fa088d1",
+        "CALLSIGN": [
+          "csa seven five nine"
+        ],
+        "ALT": [],
+        "HDG": [],
+        "notes": "",
+        "cohort": "outside_registry"
+      },
+      {
+        "id": "uwb-atcc_TWR-MgoekB_000488_000772_AT",
+        "set": "tower60",
+        "reference": "air france one three eight two tower good morning continue approach",
+        "audio_sha256": "5e98fd6737b42ebe895287969cbc30985adc293fdc7e4e56d0b7ab1c9f372e35",
+        "CALLSIGN": [
+          "air france one three eight two"
+        ],
+        "ALT": [],
+        "HDG": [],
+        "notes": "",
+        "cohort": "outside_registry"
+      },
+      {
+        "id": "uwb-atcc_TWR-O5prwK_000666_001109_AT",
+        "set": "tower60",
+        "reference": "csa eight five seven runway one three clear to land wind zero one zero degrees seven knots",
+        "audio_sha256": "e599b024e406779173dbf7f29ad29d2626d3d002116158493a0b2125666fe4b3",
+        "CALLSIGN": [
+          "csa eight five seven"
+        ],
+        "ALT": [],
+        "HDG": [],
+        "notes": "",
+        "cohort": "outside_registry"
+      },
+      {
+        "id": "uwb-atcc_ACCU-0iyG6P_000000_000605_AT",
+        "set": "altitude15",
+        "reference": "csa two nine six proceed to pepik climb to flight level three nine zero",
+        "audio_sha256": "d74d2287cea0d2b86a6a57ab086283a732402ca748f10246c809a96379fdc1df",
+        "CALLSIGN": [
+          "csa two nine six"
+        ],
+        "ALT": [
+          39000
+        ],
+        "HDG": [],
+        "notes": "",
+        "cohort": "outside_registry"
+      },
+      {
+        "id": "uwb-atcc_ACCU-VQAATY_000955_001589_AT",
+        "set": "altitude15",
+        "reference": "charter ukraine five nine six praha good morning radar contact climb flight level two five zero",
+        "audio_sha256": "c09ba89d08a7a078c4c4ae095739d51947f547b241b3cbcf7b8579a7d80ad04c",
+        "CALLSIGN": [
+          "charter ukraine five nine six"
+        ],
+        "ALT": [
+          25000
+        ],
+        "HDG": [],
+        "notes": "",
+        "cohort": "outside_registry"
+      },
+      {
+        "id": "uwb-atcc_ACCU-5tsu1H_002196_002639_AT",
+        "set": "altitude15",
+        "reference": "turkish one seven six nine descend flight level two nine zero",
+        "audio_sha256": "69d5305dffb524fab648c8809a7046546cf47b60736ba705475cceff9791ec06",
+        "CALLSIGN": [
+          "turkish one seven six nine"
+        ],
+        "ALT": [
+          29000
+        ],
+        "HDG": [],
+        "notes": "",
+        "cohort": "outside_registry"
+      },
+      {
+        "id": "uwb-atcc_APP-MSUPxM_000098_000698_AT",
+        "set": "heading13_diagnostic",
+        "reference": "lot five two five to the right heading two seven zero vectoring for sequence",
+        "audio_sha256": "fe264568d4e975ee54d5ba2c047b7cd0b342f9d457fa11f94b33faa4f553255f",
+        "CALLSIGN": [
+          "lot five two five"
+        ],
+        "ALT": [],
+        "HDG": [
+          270
+        ],
+        "notes": "",
+        "cohort": "outside_registry"
+      },
+      {
+        "id": "uwb-atcc_APP-mJGsJT_003343_003801_AT",
+        "set": "heading13_diagnostic",
+        "reference": "csa three charlie zulu right heading one one zero cleared for ils approach runway one three",
+        "audio_sha256": "49c7e6c4311d2eb91be03df6e5287f335e5dc829cfdf8e2d7f8d4f2b8595c324",
+        "CALLSIGN": [
+          "csa three charlie zulu"
+        ],
+        "ALT": [],
+        "HDG": [
+          110
+        ],
+        "notes": "",
+        "cohort": "outside_registry"
+      },
+      {
+        "id": "uwb-atcc_APP-5B6FPZ_005960_006401_AT",
+        "set": "heading13_diagnostic",
+        "reference": "channex eight eight papa romeo turn left heading three one zero radar departure",
+        "audio_sha256": "71e31ef7a3f5ab187881354786379ee5019cae071b606ad7086867134abf41cc",
+        "CALLSIGN": [
+          "channex eight eight papa romeo"
+        ],
+        "ALT": [],
+        "HDG": [
+          310
+        ],
+        "notes": "",
+        "cohort": "outside_registry"
+      },
+      {
+        "id": "uwb-atcc_TWR-FJ5hyZ_001080_001791_AT",
+        "set": "tower60",
+        "reference": "so stop at the holding point runway one three there is one more landing traffic runway three one expect five minutes delay",
+        "audio_sha256": "cb237faef1a6b179526dceec035c2d44c23c3cc13f8839df95ab99577979a5b1",
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": [],
+        "notes": "",
+        "cohort": "no_callsign"
+      },
+      {
+        "id": "uwb-atcc_TWR-QuV24w_000448_000563_AT",
+        "set": "tower60",
+        "reference": "stand five one",
+        "audio_sha256": "9a208ede6b2871382910d5f1279a588fd272273cf009fef431f79c20fad2b1b8",
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": [],
+        "notes": "",
+        "cohort": "no_callsign"
+      },
+      {
+        "id": "uwb-atcc_TWR-ElE08x_001128_001366_AT",
+        "set": "tower60",
+        "reference": "there is runway inspection ahead i ll call you",
+        "audio_sha256": "563ed3dcb2f1bd61b55ac85db8aa699260df6c4c127acbce0d528b5c77e72b75",
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": [],
+        "notes": "",
+        "cohort": "no_callsign"
+      },
+      {
+        "id": "uwb-atcc_TWR-cXln8e_000457_000553_AT",
+        "set": "tower60",
+        "reference": "roger",
+        "audio_sha256": "0268e67054fab1d9c585bc428dd9582ec7a4b1423e44ebb65c358d65da2033d0",
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": [],
+        "notes": "",
+        "cohort": "no_callsign"
+      },
+      {
+        "id": "uwb-atcc_TWR-pPtjY9_000670_000875_AT",
+        "set": "tower60",
+        "reference": "contact one two zero five two five",
+        "audio_sha256": "8f0f5014d8f693aea53bb5eebd90c10ad278053597bc2877e1fa1fe0bbc984ea",
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": [],
+        "notes": "",
+        "cohort": "no_callsign"
+      },
+      {
+        "id": "uwb-atcc_TWR-rZ8jDS_000361_000733_AT",
+        "set": "tower60",
+        "reference": "continue via lima and contact ground one point nine",
+        "audio_sha256": "8441553d2ee18ae11d7dbe769559df31bdfc9d7e9108bbde653d8217e17f11cd",
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": [],
+        "notes": "",
+        "cohort": "no_callsign"
+      },
+      {
+        "id": "uwb-atcc_TWR-qltAgU_000620_000810_AT",
+        "set": "tower60",
+        "reference": "via lima holding point runway three one",
+        "audio_sha256": "cbb11d0383b2df5e838a56d880cf304e1c34a19bca24cc2b5778a726f7953406",
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": [],
+        "notes": "",
+        "cohort": "no_callsign"
+      },
+      {
+        "id": "uwb-atcc_TWR-hFvm1Y_001834_002257_AT",
+        "set": "tower60",
+        "reference": "via one bravo departure squawk one four zer",
+        "audio_sha256": "c35e544367bb080fb869f51e7681ef89a88a9de33504511bebe386d41e7fb345",
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": [],
+        "notes": "",
+        "cohort": "no_callsign"
+      },
+      {
+        "id": "synthetic-silence-3s",
+        "cohort": "synthetic_silence",
+        "reference": "",
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": [],
+        "audio_sha256": "d303811b8c84619667cd0501342f84ec6cbe69f7aa3856dcf52fabda374c92b8"
+      }
+    ]
+  },
+  "plan_sha256": "5d9657ff769a10cd6156064f3970f225f7ea5fbbbb4f00883addd4db2a8215d8",
+  "script_sha256": "0fb5226242812a543441b116596ee9a06741c21df073c52a553cfa3d760620bb",
+  "source_hashes": {
+    "backend/app/services/speech/local.py": "1d69162533741d9024834b4cfe424c44882bb01052efcfac85ffc18df252e4eb",
+    "backend/app/services/speech/hybrid.py": "0f2a10fadfea9fe1bc58c271ab556aa1b28b75ba2bf04d77441212f6157716b7",
+    "backend/app/services/speech/hybrid_baseline.py": "7dc2d52e73c8c46c6d44a283e691ac17af3fc6a7cd2611aff95e5c9059e39c6b",
+    "backend/app/services/speech/context.py": "fdf6fdb879e33920983f16b93a78499046f855d12090898a1f226949e9923e71",
+    "backend/app/services/speech/numeric_slots.py": "a00eefcc20075cb9a9c5573394ba43733e20eaf2e109ceaf51def06930e60a40",
+    "backend/app/services/speech/ner.py": "06398ddb32571d7048dab782384a41f2262716c0ed5549a9a4bc1908a2b566d1",
+    "backend/app/services/speech/hybrid_rules.py": "c7bcff0254d5dd588fb7fd016c324aea5ccebce0c29956eabc64ba45262c835a"
+  },
+  "rows": [
+    {
+      "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+      "cohort": "registered_demo_replay",
+      "condition": "without_context",
+      "transcript": "german wing seven papa turn level heading zero four zero",
+      "model_score": 0.6004869503907763,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.8,
+          "text": " german wing seven papa turn level heading zero four zero",
+          "no_speech_prob": 1.646557445944552e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 22,
+          "text": "german wing seven papa",
+          "model_score": 0.9979379773139954,
+          "source": "bert"
+        },
+        {
+          "label": "HDG",
+          "start": 42,
+          "end": 56,
+          "text": "zero four zero",
+          "model_score": null,
+          "source": "rule"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "germanwing7p"
+        ],
+        "ALT": [],
+        "HDG": [
+          40
+        ]
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 1
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 23.34208299999591
+    },
+    {
+      "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+      "cohort": "registered_demo_replay",
+      "condition": "with_context",
+      "transcript": "german wing seven papa turn level heading zero four zero",
+      "model_score": 0.6679934827822935,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.8,
+          "text": " german wing seven papa turn level heading zero four zero",
+          "no_speech_prob": 2.4843374024641207e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 22,
+          "text": "german wing seven papa",
+          "model_score": 0.9979379773139954,
+          "source": "bert"
+        },
+        {
+          "label": "HDG",
+          "start": 42,
+          "end": 56,
+          "text": "zero four zero",
+          "model_score": null,
+          "source": "rule"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "germanwing7p"
+        ],
+        "ALT": [],
+        "HDG": [
+          40
+        ]
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 1
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 12.355487583903596
+    },
+    {
+      "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+      "cohort": "registered_demo_replay",
+      "condition": "without_context",
+      "transcript": "lufansa one kilo kilo turn left heading three zero zero",
+      "model_score": 0.6649001665118005,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.05,
+          "end": 3.17,
+          "text": "lufansa one kilo kilo turn left heading three zero zero",
+          "no_speech_prob": 1.2679783889524288e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 21,
+          "text": "lufansa one kilo kilo",
+          "model_score": 0.9969275593757629,
+          "source": "bert"
+        },
+        {
+          "label": "ACTION",
+          "start": 22,
+          "end": 31,
+          "text": "turn left",
+          "model_score": null,
+          "source": "rule"
+        },
+        {
+          "label": "HDG",
+          "start": 40,
+          "end": 55,
+          "text": "three zero zero",
+          "model_score": null,
+          "source": "rule"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "lufansa1kk"
+        ],
+        "ALT": [],
+        "HDG": [
+          300
+        ]
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 1
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 10.528985250042751
+    },
+    {
+      "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+      "cohort": "registered_demo_replay",
+      "condition": "with_context",
+      "transcript": "lufthansa one kilo kilo turn left heading three zero zero",
+      "model_score": 0.785905389363313,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.05,
+          "end": 3.15,
+          "text": " lufthansa one kilo kilo turn left heading three zero zero",
+          "no_speech_prob": 1.6970599370225159e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 23,
+          "text": "lufthansa one kilo kilo",
+          "model_score": 0.9973219037055969,
+          "source": "bert"
+        },
+        {
+          "label": "ACTION",
+          "start": 24,
+          "end": 33,
+          "text": "turn left",
+          "model_score": null,
+          "source": "rule"
+        },
+        {
+          "label": "HDG",
+          "start": 42,
+          "end": 57,
+          "text": "three zero zero",
+          "model_score": null,
+          "source": "rule"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "lufthansa1kk"
+        ],
+        "ALT": [],
+        "HDG": [
+          300
+        ]
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 1
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [
+        "lufthansa1kk"
+      ],
+      "seconds": 10.798278625006787
+    },
+    {
+      "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+      "cohort": "registered_demo_replay",
+      "condition": "without_context",
+      "transcript": "speedway eight six zero turn left heading zero eight zero",
+      "model_score": 0.7635936177053236,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.02,
+          "end": 2.42,
+          "text": " speedway eight six zero turn left heading zero eight zero",
+          "no_speech_prob": 2.1463781862962605e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 23,
+          "text": "speedway eight six zero",
+          "model_score": 0.9972133040428162,
+          "source": "bert"
+        },
+        {
+          "label": "ACTION",
+          "start": 24,
+          "end": 33,
+          "text": "turn left",
+          "model_score": null,
+          "source": "rule"
+        },
+        {
+          "label": "HDG",
+          "start": 42,
+          "end": 57,
+          "text": "zero eight zero",
+          "model_score": null,
+          "source": "rule"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "speedway860"
+        ],
+        "ALT": [],
+        "HDG": [
+          80
+        ]
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 1
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 12.564518374972977
+    },
+    {
+      "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+      "cohort": "registered_demo_replay",
+      "condition": "with_context",
+      "transcript": "speedbird eight six zero turn left heading zero eight zero",
+      "model_score": 0.8124485006469709,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.02,
+          "end": 2.42,
+          "text": " speedbird eight six zero turn left heading zero eight zero",
+          "no_speech_prob": 3.659914371567652e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 24,
+          "text": "speedbird eight six zero",
+          "model_score": 0.9977001547813416,
+          "source": "bert"
+        },
+        {
+          "label": "ACTION",
+          "start": 25,
+          "end": 34,
+          "text": "turn left",
+          "model_score": null,
+          "source": "rule"
+        },
+        {
+          "label": "HDG",
+          "start": 43,
+          "end": 58,
+          "text": "zero eight zero",
+          "model_score": null,
+          "source": "rule"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "speedbird860"
+        ],
+        "ALT": [],
+        "HDG": [
+          80
+        ]
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 1
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 14.579705500043929
+    },
+    {
+      "id": "uwb-atcc_TWR-hb2QLO_001447_001697_AT",
+      "cohort": "outside_registry",
+      "condition": "without_context",
+      "transcript": "geopair zero six one or if you are ready to lead in",
+      "model_score": 0.4285493685198954,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.4,
+          "text": " geopair zero six one or if you are ready to lead in",
+          "no_speech_prob": 2.186367309420234e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 20,
+          "text": "geopair zero six one",
+          "model_score": 0.9944705963134766,
+          "source": "bert"
+        }
+      ],
+      "issues": [
+        "HYBRID_CONDITION_SCOPE_NOT_RESOLVED"
+      ],
+      "predicted": {
+        "CALLSIGN": [
+          "geopair061"
+        ],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 15.852781250025146
+    },
+    {
+      "id": "uwb-atcc_TWR-hb2QLO_001447_001697_AT",
+      "cohort": "outside_registry",
+      "condition": "with_context",
+      "transcript": "geopair zero six one ruf nato ready to lead in",
+      "model_score": 0.4403513484531135,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.4,
+          "text": " geopair zero six one ruf nato ready to lead in",
+          "no_speech_prob": 5.212485998384864e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 20,
+          "text": "geopair zero six one",
+          "model_score": 0.996334433555603,
+          "source": "bert"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "geopair061"
+        ],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 16.836849959101528
+    },
+    {
+      "id": "uwb-atcc_TWR-RggWaO_000522_000896_AT",
+      "cohort": "outside_registry",
+      "condition": "without_context",
+      "transcript": "french navy five five alfa two tower good morning continue approach",
+      "model_score": 0.7722226983161491,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 3.72,
+          "text": " french navy five five alfa two tower good morning continue approach",
+          "no_speech_prob": 1.5105879880294992e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 30,
+          "text": "french navy five five alfa two",
+          "model_score": 0.9945281147956848,
+          "source": "bert"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "frenchnavy55a2"
+        ],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 14.70763345900923
+    },
+    {
+      "id": "uwb-atcc_TWR-RggWaO_000522_000896_AT",
+      "cohort": "outside_registry",
+      "condition": "with_context",
+      "transcript": "french navy five five alfa two tower good morning continue approach",
+      "model_score": 0.7759272561802961,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 3.72,
+          "text": " french navy five five alfa two tower good morning continue approach",
+          "no_speech_prob": 2.3071555776965624e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 30,
+          "text": "french navy five five alfa two",
+          "model_score": 0.9945281147956848,
+          "source": "bert"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "frenchnavy55a2"
+        ],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 14.225510915974155
+    },
+    {
+      "id": "uwb-atcc_TWR-V4DR1t_002112_002395_AT",
+      "cohort": "outside_registry",
+      "condition": "without_context",
+      "transcript": "air mike echo mike lima india do you tell hello roger",
+      "model_score": 0.6536078865266017,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.8,
+          "text": " air mike echo mike lima india do you tell hello roger",
+          "no_speech_prob": 2.6867703617483585e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 23,
+          "text": "air mike echo mike lima",
+          "model_score": 0.9937971830368042,
+          "source": "bert"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "airmeml"
+        ],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 12.203312582918443
+    },
+    {
+      "id": "uwb-atcc_TWR-V4DR1t_002112_002395_AT",
+      "cohort": "outside_registry",
+      "condition": "with_context",
+      "transcript": "air mike echo mike lima india rus you tell hello roger",
+      "model_score": 0.6582949233108623,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.76,
+          "text": " air mike echo mike lima india rus you tell hello roger",
+          "no_speech_prob": 4.578684098532904e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 29,
+          "text": "air mike echo mike lima india",
+          "model_score": 0.7734971642494202,
+          "source": "bert"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "airmemli"
+        ],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 13.724474792019464
+    },
+    {
+      "id": "uwb-atcc_TWR-ByTq2w_000098_000538_AT",
+      "cohort": "outside_registry",
+      "condition": "without_context",
+      "transcript": "swiss say seven five nine runway three one cleared to land wind one eight degrees six knots",
+      "model_score": 0.7924581707309631,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.4,
+          "text": " swiss say seven five nine runway three one cleared to land wind one eight degrees six knots",
+          "no_speech_prob": 1.2715546393593513e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 25,
+          "text": "swiss say seven five nine",
+          "model_score": 0.6573482751846313,
+          "source": "bert"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "swisssay759"
+        ],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 14.156111582997255
+    },
+    {
+      "id": "uwb-atcc_TWR-ByTq2w_000098_000538_AT",
+      "cohort": "outside_registry",
+      "condition": "with_context",
+      "transcript": "swiss say seven five nine runway three one cleared to land wind one eight degrees six knots",
+      "model_score": 0.7767880776850404,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.4,
+          "text": " swiss say seven five nine runway three one cleared to land wind one eight degrees six knots",
+          "no_speech_prob": 2.3452764175146967e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 25,
+          "text": "swiss say seven five nine",
+          "model_score": 0.6573482751846313,
+          "source": "bert"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "swisssay759"
+        ],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 14.461733125033788
+    },
+    {
+      "id": "uwb-atcc_TWR-MgoekB_000488_000772_AT",
+      "cohort": "outside_registry",
+      "condition": "without_context",
+      "transcript": "airfrans one three two tower good morning continue approach",
+      "model_score": 0.7829804262851752,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.11,
+          "end": 2.83,
+          "text": " airfrans one three two tower good morning continue approach",
+          "no_speech_prob": 2.8138216201512023e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 22,
+          "text": "airfrans one three two",
+          "model_score": 0.9961282014846802,
+          "source": "bert"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "airfrans132"
+        ],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 15.758618875057437
+    },
+    {
+      "id": "uwb-atcc_TWR-MgoekB_000488_000772_AT",
+      "cohort": "outside_registry",
+      "condition": "with_context",
+      "transcript": "airfrans one three two tower good morning continue approach",
+      "model_score": 0.7941742239317076,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.11,
+          "end": 2.81,
+          "text": " airfrans one three two tower good morning continue approach",
+          "no_speech_prob": 5.015698079091635e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 22,
+          "text": "airfrans one three two",
+          "model_score": 0.9961282014846802,
+          "source": "bert"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "airfrans132"
+        ],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 20.47697670897469
+    },
+    {
+      "id": "uwb-atcc_TWR-O5prwK_000666_001109_AT",
+      "cohort": "outside_registry",
+      "condition": "without_context",
+      "transcript": "swiss eight five seven runway one three cleared one twenty zero one zero degrees seven knots",
+      "model_score": 0.731710899417803,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.02,
+          "end": 4.4,
+          "text": " swiss eight five seven runway one three cleared one twenty zero one zero degrees seven knots",
+          "no_speech_prob": 5.000685976419561e-10
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 22,
+          "text": "swiss eight five seven",
+          "model_score": 0.998293936252594,
+          "source": "bert"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "swiss857"
+        ],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 19.431277916999534
+    },
+    {
+      "id": "uwb-atcc_TWR-O5prwK_000666_001109_AT",
+      "cohort": "outside_registry",
+      "condition": "with_context",
+      "transcript": "swiss eight five seven runway one three cleared one wind zero one zero degrees seven knots",
+      "model_score": 0.7553678234523914,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.02,
+          "end": 4.4,
+          "text": " swiss eight five seven runway one three cleared one wind zero one zero degrees seven knots",
+          "no_speech_prob": 7.950011760016196e-10
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 22,
+          "text": "swiss eight five seven",
+          "model_score": 0.99834144115448,
+          "source": "bert"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "swiss857"
+        ],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 15.174998166970909
+    },
+    {
+      "id": "uwb-atcc_ACCU-0iyG6P_000000_000605_AT",
+      "cohort": "outside_registry",
+      "condition": "without_context",
+      "transcript": "csa two nine six proceed to pepik climb to flight level three nine zero",
+      "model_score": 0.8080688488968056,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 6.06,
+          "text": " csa two nine six proceed to pepik climb to flight level three nine zero",
+          "no_speech_prob": 7.976506677387363e-10
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 16,
+          "text": "csa two nine six",
+          "model_score": 0.9984626770019531,
+          "source": "bert"
+        },
+        {
+          "label": "ACTION",
+          "start": 34,
+          "end": 39,
+          "text": "climb",
+          "model_score": null,
+          "source": "rule"
+        },
+        {
+          "label": "ALT",
+          "start": 43,
+          "end": 71,
+          "text": "flight level three nine zero",
+          "model_score": null,
+          "source": "rule"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "csa296"
+        ],
+        "ALT": [
+          39000
+        ],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 1
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 15.772950707934797
+    },
+    {
+      "id": "uwb-atcc_ACCU-0iyG6P_000000_000605_AT",
+      "cohort": "outside_registry",
+      "condition": "with_context",
+      "transcript": "csa two nine six proceed to pepik climb to flight level three nine zero",
+      "model_score": 0.818221551325058,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 6.06,
+          "text": " csa two nine six proceed to pepik climb to flight level three nine zero",
+          "no_speech_prob": 1.3323859793246129e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 16,
+          "text": "csa two nine six",
+          "model_score": 0.9984626770019531,
+          "source": "bert"
+        },
+        {
+          "label": "ACTION",
+          "start": 34,
+          "end": 39,
+          "text": "climb",
+          "model_score": null,
+          "source": "rule"
+        },
+        {
+          "label": "ALT",
+          "start": 43,
+          "end": 71,
+          "text": "flight level three nine zero",
+          "model_score": null,
+          "source": "rule"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "csa296"
+        ],
+        "ALT": [
+          39000
+        ],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 1
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 13.352474333019927
+    },
+    {
+      "id": "uwb-atcc_ACCU-VQAATY_000955_001589_AT",
+      "cohort": "outside_registry",
+      "condition": "without_context",
+      "transcript": "charlie ukraine five nine six praha good morning radar contact climb flight level two five zero",
+      "model_score": 0.6648728178659596,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.02,
+          "end": 6.26,
+          "text": " charlie ukraine five nine six praha good morning radar contact climb flight level two five zero",
+          "no_speech_prob": 6.713728462059976e-10
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 29,
+          "text": "charlie ukraine five nine six",
+          "model_score": 0.9648953080177307,
+          "source": "bert"
+        },
+        {
+          "label": "ACTION",
+          "start": 63,
+          "end": 68,
+          "text": "climb",
+          "model_score": null,
+          "source": "rule"
+        },
+        {
+          "label": "ALT",
+          "start": 69,
+          "end": 95,
+          "text": "flight level two five zero",
+          "model_score": null,
+          "source": "rule"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "cukraine596"
+        ],
+        "ALT": [
+          25000
+        ],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 1
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 13.49278879200574
+    },
+    {
+      "id": "uwb-atcc_ACCU-VQAATY_000955_001589_AT",
+      "cohort": "outside_registry",
+      "condition": "with_context",
+      "transcript": "charlie ukraine five nine six brah good morning radar contact climb flight level two five zero",
+      "model_score": 0.6956377479757783,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.02,
+          "end": 6.34,
+          "text": " charlie ukraine five nine six brah good morning radar contact climb flight level two five zero",
+          "no_speech_prob": 1.1965058943630424e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 29,
+          "text": "charlie ukraine five nine six",
+          "model_score": 0.9599207043647766,
+          "source": "bert"
+        },
+        {
+          "label": "ACTION",
+          "start": 62,
+          "end": 67,
+          "text": "climb",
+          "model_score": null,
+          "source": "rule"
+        },
+        {
+          "label": "ALT",
+          "start": 68,
+          "end": 94,
+          "text": "flight level two five zero",
+          "model_score": null,
+          "source": "rule"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "cukraine596"
+        ],
+        "ALT": [
+          25000
+        ],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 1
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 14.213929416961037
+    },
+    {
+      "id": "uwb-atcc_ACCU-5tsu1H_002196_002639_AT",
+      "cohort": "outside_registry",
+      "condition": "without_context",
+      "transcript": "Turkish one seven six nine descend flight level two nine zero",
+      "model_score": 0.774206901018701,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.44,
+          "text": " Turkish one seven six nine descend flight level two nine zero",
+          "no_speech_prob": 1.6707711880670217e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 26,
+          "text": "Turkish one seven six nine",
+          "model_score": 0.9983149766921997,
+          "source": "bert"
+        },
+        {
+          "label": "ACTION",
+          "start": 27,
+          "end": 34,
+          "text": "descend",
+          "model_score": null,
+          "source": "rule"
+        },
+        {
+          "label": "ALT",
+          "start": 35,
+          "end": 61,
+          "text": "flight level two nine zero",
+          "model_score": null,
+          "source": "rule"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "turkish1769"
+        ],
+        "ALT": [
+          29000
+        ],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 1
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 12.780154541949742
+    },
+    {
+      "id": "uwb-atcc_ACCU-5tsu1H_002196_002639_AT",
+      "cohort": "outside_registry",
+      "condition": "with_context",
+      "transcript": "Turkish one seven six nine descend flight level two nine zero",
+      "model_score": 0.7316968605650079,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.44,
+          "text": " Turkish one seven six nine descend flight level two nine zero",
+          "no_speech_prob": 2.5268085401819462e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 26,
+          "text": "Turkish one seven six nine",
+          "model_score": 0.9983149766921997,
+          "source": "bert"
+        },
+        {
+          "label": "ACTION",
+          "start": 27,
+          "end": 34,
+          "text": "descend",
+          "model_score": null,
+          "source": "rule"
+        },
+        {
+          "label": "ALT",
+          "start": 35,
+          "end": 61,
+          "text": "flight level two nine zero",
+          "model_score": null,
+          "source": "rule"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "turkish1769"
+        ],
+        "ALT": [
+          29000
+        ],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 1
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 15.645560582983308
+    },
+    {
+      "id": "uwb-atcc_APP-MSUPxM_000098_000698_AT",
+      "cohort": "outside_registry",
+      "condition": "without_context",
+      "transcript": "slot five two five at right heading ah two seven zero vectoring for sequence",
+      "model_score": 0.6871299204722031,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 6.0,
+          "text": " slot five two five at right heading ah two seven zero vectoring for sequence",
+          "no_speech_prob": 9.526661681746873e-10
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 18,
+          "text": "slot five two five",
+          "model_score": 0.9971174001693726,
+          "source": "bert"
+        },
+        {
+          "label": "ACTION",
+          "start": 22,
+          "end": 27,
+          "text": "right",
+          "model_score": null,
+          "source": "rule"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "slot525"
+        ],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 12.760350958094932
+    },
+    {
+      "id": "uwb-atcc_APP-MSUPxM_000098_000698_AT",
+      "cohort": "outside_registry",
+      "condition": "with_context",
+      "transcript": "slot five two five at right heading ah two seven zero vectoring for sequence",
+      "model_score": 0.7066133569589184,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 6.0,
+          "text": " slot five two five at right heading ah two seven zero vectoring for sequence",
+          "no_speech_prob": 2.001718568678257e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 18,
+          "text": "slot five two five",
+          "model_score": 0.9971174001693726,
+          "source": "bert"
+        },
+        {
+          "label": "ACTION",
+          "start": 22,
+          "end": 27,
+          "text": "right",
+          "model_score": null,
+          "source": "rule"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "slot525"
+        ],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 12.758729333989322
+    },
+    {
+      "id": "uwb-atcc_APP-mJGsJT_003343_003801_AT",
+      "cohort": "outside_registry",
+      "condition": "without_context",
+      "transcript": "s s eight three charlie zulu right heading one one zero cleared for l s approach runway one three",
+      "model_score": 0.7293186975927738,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.56,
+          "text": " s s eight three charlie zulu right heading one one zero cleared for l s approach runway one three",
+          "no_speech_prob": 4.825655430806819e-10
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 28,
+          "text": "s s eight three charlie zulu",
+          "model_score": 0.9802002906799316,
+          "source": "bert"
+        },
+        {
+          "label": "ACTION",
+          "start": 29,
+          "end": 34,
+          "text": "right",
+          "model_score": null,
+          "source": "rule"
+        },
+        {
+          "label": "HDG",
+          "start": 43,
+          "end": 55,
+          "text": "one one zero",
+          "model_score": null,
+          "source": "rule"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "ss83cz"
+        ],
+        "ALT": [],
+        "HDG": [
+          110
+        ]
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 1
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 17.0587592079537
+    },
+    {
+      "id": "uwb-atcc_APP-mJGsJT_003343_003801_AT",
+      "cohort": "outside_registry",
+      "condition": "with_context",
+      "transcript": "s s eight three charlie zulu right heading one one zero cleared for l s approach runway one three",
+      "model_score": 0.7465331007968161,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.56,
+          "text": " s s eight three charlie zulu right heading one one zero cleared for l s approach runway one three",
+          "no_speech_prob": 9.488869689988633e-10
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 28,
+          "text": "s s eight three charlie zulu",
+          "model_score": 0.9802002906799316,
+          "source": "bert"
+        },
+        {
+          "label": "ACTION",
+          "start": 29,
+          "end": 34,
+          "text": "right",
+          "model_score": null,
+          "source": "rule"
+        },
+        {
+          "label": "HDG",
+          "start": 43,
+          "end": 55,
+          "text": "one one zero",
+          "model_score": null,
+          "source": "rule"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "ss83cz"
+        ],
+        "ALT": [],
+        "HDG": [
+          110
+        ]
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 1
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 16.08509458298795
+    },
+    {
+      "id": "uwb-atcc_APP-5B6FPZ_005960_006401_AT",
+      "cohort": "outside_registry",
+      "condition": "without_context",
+      "transcript": "chain x eight eight papa romeo turn left heading ah three one zero radar departure",
+      "model_score": 0.7498806442166507,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.02,
+          "end": 4.42,
+          "text": " chain x eight eight papa romeo turn left heading ah three one zero radar departure",
+          "no_speech_prob": 5.81167558522111e-10
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 30,
+          "text": "chain x eight eight papa romeo",
+          "model_score": 0.9978768825531006,
+          "source": "bert"
+        },
+        {
+          "label": "ACTION",
+          "start": 31,
+          "end": 40,
+          "text": "turn left",
+          "model_score": null,
+          "source": "rule"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "chainx88pr"
+        ],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 17.54860354203265
+    },
+    {
+      "id": "uwb-atcc_APP-5B6FPZ_005960_006401_AT",
+      "cohort": "outside_registry",
+      "condition": "with_context",
+      "transcript": "chain x eight eight papa romeo turn left heading ah three one zero radar departure",
+      "model_score": 0.7480861828045444,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.02,
+          "end": 4.42,
+          "text": " chain x eight eight papa romeo turn left heading ah three one zero radar departure",
+          "no_speech_prob": 1.3470669024684412e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 30,
+          "text": "chain x eight eight papa romeo",
+          "model_score": 0.9978768825531006,
+          "source": "bert"
+        },
+        {
+          "label": "ACTION",
+          "start": 31,
+          "end": 40,
+          "text": "turn left",
+          "model_score": null,
+          "source": "rule"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "chainx88pr"
+        ],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "exact": false,
+          "support": 1
+        }
+      },
+      "gold_callsign_present": false,
+      "registered_callsign_mentions": [],
+      "seconds": 24.309831790975295
+    },
+    {
+      "id": "uwb-atcc_TWR-FJ5hyZ_001080_001791_AT",
+      "cohort": "no_callsign",
+      "condition": "without_context",
+      "transcript": "so stop at holding point runway one three that is one more landing traffic runway three one expect five minute delay",
+      "model_score": 0.8212816880273425,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.02,
+          "end": 7.02,
+          "text": " so stop at holding point runway one three that is one more landing traffic runway three one expect five minute delay",
+          "no_speech_prob": 1.2183192232839701e-09
+        }
+      ],
+      "entities": [],
+      "issues": [
+        "HYBRID_MISSING_OR_MULTIPLE_CALLSIGNS"
+      ],
+      "predicted": {
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 15.720104249892756
+    },
+    {
+      "id": "uwb-atcc_TWR-FJ5hyZ_001080_001791_AT",
+      "cohort": "no_callsign",
+      "condition": "with_context",
+      "transcript": "so stop at holding point runway one three that is one more landing traffic runway three one expect five minute delay",
+      "model_score": 0.8277969930896227,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.02,
+          "end": 7.02,
+          "text": " so stop at holding point runway one three that is one more landing traffic runway three one expect five minute delay",
+          "no_speech_prob": 2.5014899041053695e-09
+        }
+      ],
+      "entities": [],
+      "issues": [
+        "HYBRID_MISSING_OR_MULTIPLE_CALLSIGNS"
+      ],
+      "predicted": {
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 13.070823415997438
+    },
+    {
+      "id": "uwb-atcc_TWR-QuV24w_000448_000563_AT",
+      "cohort": "no_callsign",
+      "condition": "without_context",
+      "transcript": "ten five one",
+      "model_score": 0.47982296549916614,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " ten five one",
+          "no_speech_prob": 9.122708699571547e-10
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 12,
+          "text": "ten five one",
+          "model_score": 0.9554099440574646,
+          "source": "bert"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "ten51"
+        ],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "exact": false,
+          "support": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 12.316879000049084
+    },
+    {
+      "id": "uwb-atcc_TWR-QuV24w_000448_000563_AT",
+      "cohort": "no_callsign",
+      "condition": "with_context",
+      "transcript": "ten five one",
+      "model_score": 0.5028873572771315,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " ten five one",
+          "no_speech_prob": 1.818029393696463e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 0,
+          "end": 12,
+          "text": "ten five one",
+          "model_score": 0.9554099440574646,
+          "source": "bert"
+        }
+      ],
+      "issues": [],
+      "predicted": {
+        "CALLSIGN": [
+          "ten51"
+        ],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "exact": false,
+          "support": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 16.017464292002842
+    },
+    {
+      "id": "uwb-atcc_TWR-ElE08x_001128_001366_AT",
+      "cohort": "no_callsign",
+      "condition": "without_context",
+      "transcript": "there is only inspection ahead ill call you",
+      "model_score": 0.742093897922003,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.4,
+          "text": " there is only inspection ahead ill call you",
+          "no_speech_prob": 1.1223276752403422e-09
+        }
+      ],
+      "entities": [],
+      "issues": [
+        "HYBRID_MISSING_OR_MULTIPLE_CALLSIGNS"
+      ],
+      "predicted": {
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 13.6211218329845
+    },
+    {
+      "id": "uwb-atcc_TWR-ElE08x_001128_001366_AT",
+      "cohort": "no_callsign",
+      "condition": "with_context",
+      "transcript": "there is only inspection ahead ill call you",
+      "model_score": 0.7620224630998672,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.4,
+          "text": " there is only inspection ahead ill call you",
+          "no_speech_prob": 3.3720639613932235e-09
+        }
+      ],
+      "entities": [],
+      "issues": [
+        "HYBRID_MISSING_OR_MULTIPLE_CALLSIGNS"
+      ],
+      "predicted": {
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 15.053839666070417
+    },
+    {
+      "id": "uwb-atcc_TWR-cXln8e_000457_000553_AT",
+      "cohort": "no_callsign",
+      "condition": "without_context",
+      "transcript": "roger",
+      "model_score": 0.6716590478447895,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 1.0,
+          "text": " roger",
+          "no_speech_prob": 4.2698364288717983e-10
+        }
+      ],
+      "entities": [],
+      "issues": [
+        "HYBRID_MISSING_OR_MULTIPLE_CALLSIGNS"
+      ],
+      "predicted": {
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 14.850975916953757
+    },
+    {
+      "id": "uwb-atcc_TWR-cXln8e_000457_000553_AT",
+      "cohort": "no_callsign",
+      "condition": "with_context",
+      "transcript": "roger",
+      "model_score": 0.6623293683666904,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 1.0,
+          "text": " roger",
+          "no_speech_prob": 1.0223635271700005e-09
+        }
+      ],
+      "entities": [],
+      "issues": [
+        "HYBRID_MISSING_OR_MULTIPLE_CALLSIGNS"
+      ],
+      "predicted": {
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 11.722011666977778
+    },
+    {
+      "id": "uwb-atcc_TWR-pPtjY9_000670_000875_AT",
+      "cohort": "no_callsign",
+      "condition": "without_context",
+      "transcript": "contact one two zero five two five",
+      "model_score": 0.7686413578461477,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " contact one two zero five two five",
+          "no_speech_prob": 1.7014248898661322e-09
+        }
+      ],
+      "entities": [],
+      "issues": [
+        "HYBRID_MISSING_OR_MULTIPLE_CALLSIGNS",
+        "HYBRID_MODEL_INVALID_BIO",
+        "HYBRID_OUTPUT_INVALID_BIO",
+        "INVALID_BIO"
+      ],
+      "predicted": {
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 12.657403000048362
+    },
+    {
+      "id": "uwb-atcc_TWR-pPtjY9_000670_000875_AT",
+      "cohort": "no_callsign",
+      "condition": "with_context",
+      "transcript": "contact one two zero five two five",
+      "model_score": 0.7851832646021785,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " contact one two zero five two five",
+          "no_speech_prob": 3.821312155594114e-09
+        }
+      ],
+      "entities": [],
+      "issues": [
+        "HYBRID_MISSING_OR_MULTIPLE_CALLSIGNS",
+        "HYBRID_MODEL_INVALID_BIO",
+        "HYBRID_OUTPUT_INVALID_BIO",
+        "INVALID_BIO"
+      ],
+      "predicted": {
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 17.975314458017237
+    },
+    {
+      "id": "uwb-atcc_TWR-rZ8jDS_000361_000733_AT",
+      "cohort": "no_callsign",
+      "condition": "without_context",
+      "transcript": "continue via lima and contact ground one point nine",
+      "model_score": 0.6615132437644564,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 3.68,
+          "text": " continue via lima and contact ground one point nine",
+          "no_speech_prob": 1.990895226455791e-09
+        }
+      ],
+      "entities": [],
+      "issues": [
+        "HYBRID_MISSING_OR_MULTIPLE_CALLSIGNS"
+      ],
+      "predicted": {
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 15.53210983297322
+    },
+    {
+      "id": "uwb-atcc_TWR-rZ8jDS_000361_000733_AT",
+      "cohort": "no_callsign",
+      "condition": "with_context",
+      "transcript": "continue via lima and contact ground one point nine",
+      "model_score": 0.7080701544887841,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 3.68,
+          "text": " continue via lima and contact ground one point nine",
+          "no_speech_prob": 5.41052447289303e-09
+        }
+      ],
+      "entities": [],
+      "issues": [
+        "HYBRID_MISSING_OR_MULTIPLE_CALLSIGNS"
+      ],
+      "predicted": {
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 14.492451124940999
+    },
+    {
+      "id": "uwb-atcc_TWR-qltAgU_000620_000810_AT",
+      "cohort": "no_callsign",
+      "condition": "without_context",
+      "transcript": "yeah lima holding point runway three one",
+      "model_score": 0.7756456169403878,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " yeah lima holding point runway three one",
+          "no_speech_prob": 1.8506716159549796e-09
+        }
+      ],
+      "entities": [],
+      "issues": [
+        "HYBRID_MISSING_OR_MULTIPLE_CALLSIGNS"
+      ],
+      "predicted": {
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 11.576565541094169
+    },
+    {
+      "id": "uwb-atcc_TWR-qltAgU_000620_000810_AT",
+      "cohort": "no_callsign",
+      "condition": "with_context",
+      "transcript": "yeah lima holding point runway three one",
+      "model_score": 0.788532292132466,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " yeah lima holding point runway three one",
+          "no_speech_prob": 4.143190235339489e-09
+        }
+      ],
+      "entities": [],
+      "issues": [
+        "HYBRID_MISSING_OR_MULTIPLE_CALLSIGNS"
+      ],
+      "predicted": {
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 13.933995165978558
+    },
+    {
+      "id": "uwb-atcc_TWR-hFvm1Y_001834_002257_AT",
+      "cohort": "no_callsign",
+      "condition": "without_context",
+      "transcript": "to antalia via hojite one bravo departure squawk one four zero",
+      "model_score": 0.6753798580052545,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.24,
+          "text": " to antalia via hojite one bravo departure squawk one four zero",
+          "no_speech_prob": 1.4432445238909963e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 3,
+          "end": 10,
+          "text": "antalia",
+          "model_score": 0.7310631275177002,
+          "source": "bert"
+        }
+      ],
+      "issues": [
+        "HYBRID_MODEL_INVALID_BIO",
+        "HYBRID_OUTPUT_INVALID_BIO",
+        "INVALID_BIO"
+      ],
+      "predicted": {
+        "CALLSIGN": [
+          "antalia"
+        ],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "exact": false,
+          "support": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 14.26955966593232
+    },
+    {
+      "id": "uwb-atcc_TWR-hFvm1Y_001834_002257_AT",
+      "cohort": "no_callsign",
+      "condition": "with_context",
+      "transcript": "to antalia via hojite one bravo departure squawk one four zero",
+      "model_score": 0.683800717275849,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 4.24,
+          "text": " to antalia via hojite one bravo departure squawk one four zero",
+          "no_speech_prob": 3.288574523807597e-09
+        }
+      ],
+      "entities": [
+        {
+          "label": "CALLSIGN",
+          "start": 3,
+          "end": 10,
+          "text": "antalia",
+          "model_score": 0.7310631275177002,
+          "source": "bert"
+        }
+      ],
+      "issues": [
+        "HYBRID_MODEL_INVALID_BIO",
+        "HYBRID_OUTPUT_INVALID_BIO",
+        "INVALID_BIO"
+      ],
+      "predicted": {
+        "CALLSIGN": [
+          "antalia"
+        ],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 0,
+          "exact": false,
+          "support": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 11.498254459002055
+    },
+    {
+      "id": "synthetic-silence-3s",
+      "cohort": "synthetic_silence",
+      "condition": "without_context",
+      "transcript": "",
+      "model_score": null,
+      "score_calibrated": false,
+      "callsign_context": null,
+      "segments": [],
+      "entities": [],
+      "issues": [
+        "NO_SPEECH"
+      ],
+      "predicted": {
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 0.10369995806831867
+    },
+    {
+      "id": "synthetic-silence-3s",
+      "cohort": "synthetic_silence",
+      "condition": "with_context",
+      "transcript": "",
+      "model_score": null,
+      "score_calibrated": false,
+      "callsign_context": {
+        "source": "flight_callsign_registry",
+        "revision": 3,
+        "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+        "enabled": true,
+        "reason": null,
+        "aliases": [
+          "german wings seven papa",
+          "lufthansa one kilo k",
+          "Radar one two three",
+          "speed bird eight two zero",
+          "speedbird eight two zero"
+        ],
+        "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+      },
+      "segments": [],
+      "entities": [],
+      "issues": [
+        "NO_SPEECH"
+      ],
+      "predicted": {
+        "CALLSIGN": [],
+        "ALT": [],
+        "HDG": []
+      },
+      "scores": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "exact": true,
+          "support": 0
+        }
+      },
+      "gold_callsign_present": true,
+      "registered_callsign_mentions": [],
+      "seconds": 0.09465795801952481
+    }
+  ],
+  "summary": {
+    "no_callsign": {
+      "without_context": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 2,
+          "fn": 0,
+          "support": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": 0.0,
+          "positive_rows": 0,
+          "positive_exact": 0,
+          "absent_rows": 8,
+          "false_positive_rows": 2
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "support": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "positive_rows": 0,
+          "positive_exact": 0,
+          "absent_rows": 8,
+          "false_positive_rows": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "support": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "positive_rows": 0,
+          "positive_exact": 0,
+          "absent_rows": 8,
+          "false_positive_rows": 0
+        },
+        "count": 8,
+        "complete_callsign_correct": 6,
+        "gold_callsign_present": 0,
+        "registered_call_insertions": 0,
+        "all_fields_correct": 6
+      },
+      "with_context": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 2,
+          "fn": 0,
+          "support": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": 0.0,
+          "positive_rows": 0,
+          "positive_exact": 0,
+          "absent_rows": 8,
+          "false_positive_rows": 2
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "support": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "positive_rows": 0,
+          "positive_exact": 0,
+          "absent_rows": 8,
+          "false_positive_rows": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "support": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "positive_rows": 0,
+          "positive_exact": 0,
+          "absent_rows": 8,
+          "false_positive_rows": 0
+        },
+        "count": 8,
+        "complete_callsign_correct": 6,
+        "gold_callsign_present": 0,
+        "registered_call_insertions": 0,
+        "all_fields_correct": 6
+      }
+    },
+    "outside_registry": {
+      "without_context": {
+        "CALLSIGN": {
+          "tp": 3,
+          "fp": 9,
+          "fn": 9,
+          "support": 12,
+          "precision": 0.25,
+          "recall": 0.25,
+          "f1": 0.25,
+          "positive_rows": 12,
+          "positive_exact": 3,
+          "absent_rows": 0,
+          "false_positive_rows": 0
+        },
+        "ALT": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "support": 3,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "positive_rows": 3,
+          "positive_exact": 3,
+          "absent_rows": 9,
+          "false_positive_rows": 0
+        },
+        "HDG": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 2,
+          "support": 3,
+          "precision": 1.0,
+          "recall": 0.3333333333333333,
+          "f1": 0.5,
+          "positive_rows": 3,
+          "positive_exact": 1,
+          "absent_rows": 9,
+          "false_positive_rows": 0
+        },
+        "count": 12,
+        "complete_callsign_correct": 3,
+        "gold_callsign_present": 3,
+        "registered_call_insertions": 0,
+        "all_fields_correct": 3
+      },
+      "with_context": {
+        "CALLSIGN": {
+          "tp": 3,
+          "fp": 9,
+          "fn": 9,
+          "support": 12,
+          "precision": 0.25,
+          "recall": 0.25,
+          "f1": 0.25,
+          "positive_rows": 12,
+          "positive_exact": 3,
+          "absent_rows": 0,
+          "false_positive_rows": 0
+        },
+        "ALT": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "support": 3,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "positive_rows": 3,
+          "positive_exact": 3,
+          "absent_rows": 9,
+          "false_positive_rows": 0
+        },
+        "HDG": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 2,
+          "support": 3,
+          "precision": 1.0,
+          "recall": 0.3333333333333333,
+          "f1": 0.5,
+          "positive_rows": 3,
+          "positive_exact": 1,
+          "absent_rows": 9,
+          "false_positive_rows": 0
+        },
+        "count": 12,
+        "complete_callsign_correct": 3,
+        "gold_callsign_present": 3,
+        "registered_call_insertions": 0,
+        "all_fields_correct": 3
+      }
+    },
+    "registered_demo_replay": {
+      "without_context": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 3,
+          "fn": 3,
+          "support": 3,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "positive_rows": 3,
+          "positive_exact": 0,
+          "absent_rows": 0,
+          "false_positive_rows": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "support": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "positive_rows": 0,
+          "positive_exact": 0,
+          "absent_rows": 3,
+          "false_positive_rows": 0
+        },
+        "HDG": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "support": 3,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "positive_rows": 3,
+          "positive_exact": 3,
+          "absent_rows": 0,
+          "false_positive_rows": 0
+        },
+        "count": 3,
+        "complete_callsign_correct": 0,
+        "gold_callsign_present": 0,
+        "registered_call_insertions": null,
+        "all_fields_correct": 0
+      },
+      "with_context": {
+        "CALLSIGN": {
+          "tp": 1,
+          "fp": 2,
+          "fn": 2,
+          "support": 3,
+          "precision": 0.3333333333333333,
+          "recall": 0.3333333333333333,
+          "f1": 0.3333333333333333,
+          "positive_rows": 3,
+          "positive_exact": 1,
+          "absent_rows": 0,
+          "false_positive_rows": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "support": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "positive_rows": 0,
+          "positive_exact": 0,
+          "absent_rows": 3,
+          "false_positive_rows": 0
+        },
+        "HDG": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "support": 3,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "positive_rows": 3,
+          "positive_exact": 3,
+          "absent_rows": 0,
+          "false_positive_rows": 0
+        },
+        "count": 3,
+        "complete_callsign_correct": 1,
+        "gold_callsign_present": 1,
+        "registered_call_insertions": null,
+        "all_fields_correct": 1
+      }
+    },
+    "synthetic_silence": {
+      "without_context": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "support": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "positive_rows": 0,
+          "positive_exact": 0,
+          "absent_rows": 1,
+          "false_positive_rows": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "support": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "positive_rows": 0,
+          "positive_exact": 0,
+          "absent_rows": 1,
+          "false_positive_rows": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "support": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "positive_rows": 0,
+          "positive_exact": 0,
+          "absent_rows": 1,
+          "false_positive_rows": 0
+        },
+        "count": 1,
+        "complete_callsign_correct": 1,
+        "gold_callsign_present": 0,
+        "registered_call_insertions": 0,
+        "all_fields_correct": 1
+      },
+      "with_context": {
+        "CALLSIGN": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "support": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "positive_rows": 0,
+          "positive_exact": 0,
+          "absent_rows": 1,
+          "false_positive_rows": 0
+        },
+        "ALT": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "support": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "positive_rows": 0,
+          "positive_exact": 0,
+          "absent_rows": 1,
+          "false_positive_rows": 0
+        },
+        "HDG": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "support": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "positive_rows": 0,
+          "positive_exact": 0,
+          "absent_rows": 1,
+          "false_positive_rows": 0
+        },
+        "count": 1,
+        "complete_callsign_correct": 1,
+        "gold_callsign_present": 0,
+        "registered_call_insertions": 0,
+        "all_fields_correct": 1
+      }
+    }
+  },
+  "api_checks": [
+    {
+      "case": "actual_lufthansa_file",
+      "audio_sha256": "76355cff008a4f4d03490b618d77b0c1a00c43eac866d07943a8cdc5a7533cdb",
+      "response": {
+        "receipt": {
+          "schema_version": "2",
+          "flight_id": "FLT2-750979eae31d4f95b5cdd56c336700e3",
+          "input_id": "obs-d0d27012977a43fc964cba3ac2ba660d",
+          "event_id": "v2-event-7",
+          "received_at": "2026-11-10T11:26:39.315558Z",
+          "disposition": "ACCEPTED"
+        },
+        "transcript": "lufthansa one kilo kilo turn left heading three zero zero",
+        "model_score": 0.785905389363313,
+        "quality_reason": "callsign_context_requires_review",
+        "ner": {
+          "transcript": "lufthansa one kilo kilo turn left heading three zero zero",
+          "tokens": [
+            {
+              "word": "lufthansa",
+              "start": 0,
+              "end": 9,
+              "label": "B-CALLSIGN",
+              "model_score": 0.9981523156166077,
+              "source": "bert"
+            },
+            {
+              "word": "one",
+              "start": 10,
+              "end": 13,
+              "label": "I-CALLSIGN",
+              "model_score": 0.9986557960510254,
+              "source": "bert"
+            },
+            {
+              "word": "kilo",
+              "start": 14,
+              "end": 18,
+              "label": "I-CALLSIGN",
+              "model_score": 0.9982128143310547,
+              "source": "bert"
+            },
+            {
+              "word": "kilo",
+              "start": 19,
+              "end": 23,
+              "label": "I-CALLSIGN",
+              "model_score": 0.9973219037055969,
+              "source": "bert"
+            },
+            {
+              "word": "turn",
+              "start": 24,
+              "end": 28,
+              "label": "B-ACTION",
+              "model_score": null,
+              "source": "rule"
+            },
+            {
+              "word": "left",
+              "start": 29,
+              "end": 33,
+              "label": "I-ACTION",
+              "model_score": null,
+              "source": "rule"
+            },
+            {
+              "word": "heading",
+              "start": 34,
+              "end": 41,
+              "label": "O",
+              "model_score": null,
+              "source": null
+            },
+            {
+              "word": "three",
+              "start": 42,
+              "end": 47,
+              "label": "B-HDG",
+              "model_score": null,
+              "source": "rule"
+            },
+            {
+              "word": "zero",
+              "start": 48,
+              "end": 52,
+              "label": "I-HDG",
+              "model_score": null,
+              "source": "rule"
+            },
+            {
+              "word": "zero",
+              "start": 53,
+              "end": 57,
+              "label": "I-HDG",
+              "model_score": null,
+              "source": "rule"
+            }
+          ],
+          "entities": [
+            {
+              "label": "CALLSIGN",
+              "start": 0,
+              "end": 23,
+              "text": "lufthansa one kilo kilo",
+              "model_score": 0.9973219037055969,
+              "source": "bert"
+            },
+            {
+              "label": "ACTION",
+              "start": 24,
+              "end": 33,
+              "text": "turn left",
+              "model_score": null,
+              "source": "rule"
+            },
+            {
+              "label": "HDG",
+              "start": 42,
+              "end": 57,
+              "text": "three zero zero",
+              "model_score": null,
+              "source": "rule"
+            }
+          ],
+          "issues": [],
+          "model_version": "bert-hybrid-rules-v2",
+          "score_calibrated": false,
+          "instruction_check": "NEEDS_REVIEW",
+          "numeric_validation": "NOT_PERFORMED",
+          "model_tokens": [
+            {
+              "word": "lufthansa",
+              "start": 0,
+              "end": 9,
+              "label": "B-CALLSIGN",
+              "model_score": 0.9981523156166077
+            },
+            {
+              "word": "one",
+              "start": 10,
+              "end": 13,
+              "label": "I-CALLSIGN",
+              "model_score": 0.9986557960510254
+            },
+            {
+              "word": "kilo",
+              "start": 14,
+              "end": 18,
+              "label": "I-CALLSIGN",
+              "model_score": 0.9982128143310547
+            },
+            {
+              "word": "kilo",
+              "start": 19,
+              "end": 23,
+              "label": "I-CALLSIGN",
+              "model_score": 0.9973219037055969
+            },
+            {
+              "word": "turn",
+              "start": 24,
+              "end": 28,
+              "label": "B-ACTION",
+              "model_score": 0.9971799850463867
+            },
+            {
+              "word": "left",
+              "start": 29,
+              "end": 33,
+              "label": "I-ACTION",
+              "model_score": 0.9975727200508118
+            },
+            {
+              "word": "heading",
+              "start": 34,
+              "end": 41,
+              "label": "O",
+              "model_score": 0.9987213015556335
+            },
+            {
+              "word": "three",
+              "start": 42,
+              "end": 47,
+              "label": "B-HDG",
+              "model_score": 0.9968429803848267
+            },
+            {
+              "word": "zero",
+              "start": 48,
+              "end": 52,
+              "label": "I-HDG",
+              "model_score": 0.9970355033874512
+            },
+            {
+              "word": "zero",
+              "start": 53,
+              "end": 57,
+              "label": "I-HDG",
+              "model_score": 0.9974437952041626
+            }
+          ],
+          "model_input_tokens": [
+            "lufthansa",
+            "one",
+            "kilo",
+            "kilo",
+            "turn",
+            "left",
+            "heading",
+            "three",
+            "zero",
+            "zero"
+          ],
+          "numeric_candidate_policy": "slot-homophones-v1",
+          "numeric_normalizations": [],
+          "rule_changes": [],
+          "conflicts": []
+        },
+        "stt_context": {
+          "source": "flight_callsign_registry",
+          "revision": 0,
+          "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+          "enabled": true,
+          "reason": null,
+          "aliases": [
+            "german wings seven papa",
+            "lufthansa one kilo k",
+            "Radar one two three",
+            "speed bird eight two zero",
+            "speedbird eight two zero"
+          ],
+          "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+        },
+        "input_mode": "file_upload",
+        "role": "ATC",
+        "atc_input_id": "atc-7d56bc17c9d44370b5325fe188d89859",
+        "instruction_id": "INS-450f38d9646d445cbc93026689d37506"
+      },
+      "targets": {
+        "ALT": null,
+        "HDG": null
+      },
+      "result": "UNVERIFIED"
+    },
+    {
+      "case": "synthetic_silence",
+      "audio_sha256": "d303811b8c84619667cd0501342f84ec6cbe69f7aa3856dcf52fabda374c92b8",
+      "response": {
+        "receipt": {
+          "schema_version": "2",
+          "flight_id": "FLT2-8e4ce8e37d34478da0a373d79f799347",
+          "input_id": "obs-ffab3f8c7a394ffabded13ee1e3099dd",
+          "event_id": "v2-event-12",
+          "received_at": "2026-11-10T11:26:39.582149Z",
+          "disposition": "ACCEPTED"
+        },
+        "transcript": "",
+        "model_score": null,
+        "quality_reason": "silence_or_weak_signal",
+        "ner": {
+          "entities": [],
+          "tokens": [],
+          "issues": [
+            "NER_UNAVAILABLE"
+          ],
+          "instruction_check": "NEEDS_REVIEW",
+          "score_calibrated": false,
+          "numeric_validation": "NOT_PERFORMED",
+          "model_version": "bert-hybrid",
+          "transcript": ""
+        },
+        "stt_context": {
+          "source": "flight_callsign_registry",
+          "revision": 0,
+          "registry_sha256": "8506ccbefac42ceab50a5c0cf383c15187e0679086d766949dee68550cc8679a",
+          "enabled": true,
+          "reason": null,
+          "aliases": [
+            "german wings seven papa",
+            "lufthansa one kilo k",
+            "Radar one two three",
+            "speed bird eight two zero",
+            "speedbird eight two zero"
+          ],
+          "hotwords": "german wings seven papa, lufthansa one kilo k, Radar one two three, speed bird eight two zero, speedbird eight two zero"
+        },
+        "input_mode": "file_upload",
+        "role": "ATC",
+        "atc_input_id": "atc-afc08611262c41fba63bdfd08c355e23",
+        "instruction_id": "INS-bc5a4f640400468c8fe2407205dafd41"
+      },
+      "targets": {
+        "ALT": null,
+        "HDG": null
+      },
+      "result": "UNVERIFIED"
+    }
+  ],
+  "data_attribution": "University of West Bohemia UWB-ATCC; Jzuluaga Hugging Face redistribution",
+  "data_license": "CC-BY-NC-SA-4.0",
+  "audit": {
+    "real_recordings": 23,
+    "synthetic_silence": 1,
+    "paired_inferences": 48,
+    "actual_api_requests": 2,
+    "frozen_plan_and_weight_hashes": true,
+    "recomputed_scores": true,
+    "independent_test": false,
+    "reference_derived_new_hints": false,
+    "existing_demo_aliases_previously_curated_from_known_clips": true
+  },
+  "packages": {
+    "faster-whisper": "1.2.1",
+    "ctranslate2": "4.8.5",
+    "torch": "2.8.0",
+    "transformers": "4.57.1"
+  }
+}

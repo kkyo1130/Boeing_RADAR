@@ -346,7 +346,7 @@ class SpeechSegmentV2(ContractModel):
     atc_input_id: Identifier
     attempt_id: Identifier
     role: Literal["ATC", "PILOT"]
-    role_basis: Literal["ATC_PLAYBACK", "PILOT_PTT"]
+    role_basis: Literal["ATC_PLAYBACK", "ATC_DEMO_MICROPHONE", "PILOT_PTT"]
     started_at: UtcTimestamp
     ended_at: UtcTimestamp
     complete: StrictBool
@@ -356,7 +356,7 @@ class SpeechSegmentV2(ContractModel):
 
     @model_validator(mode="after")
     def check_segment(self):
-        if (self.role == "ATC") != (self.role_basis == "ATC_PLAYBACK"):
+        if (self.role == "ATC") != (self.role_basis in ("ATC_PLAYBACK", "ATC_DEMO_MICROPHONE")):
             raise ValueError("role must match the controlling action")
         if _time(self.ended_at) <= _time(self.started_at):
             raise ValueError("ended_at must be after started_at")
