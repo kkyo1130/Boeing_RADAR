@@ -19,6 +19,8 @@ def main():
     p.add_argument("--auto-interval",type=float,default=0.6,help="Automatically save a pair every N seconds; 0 disables auto capture")
     p.add_argument("--hdg",default="270")
     p.add_argument("--alt",default="03000")
+    p.add_argument("--yolo-weights",type=Path,help="Trained MCP YOLO best.pt for panel localization")
+    p.add_argument("--yolo-conf",type=float,default=0.25)
     args=p.parse_args()
     import cv2
     from PIL import Image
@@ -33,6 +35,12 @@ def main():
         if not (len(h)==3 and h.isascii() and h.isdigit() and len(a)==5 and a.isascii() and a.isdigit()):
             raise ValueError("HDG must be 3 digits and ALT must be 5 digits")
     validate(args.hdg,args.alt)
+    yolo = None
+    if args.yolo_weights:
+        if not args.yolo_weights.is_file():
+            p.error(f"Missing YOLO weights: {args.yolo_weights}")
+        from ultralytics import YOLO
+        yolo = YOLO(str(args.yolo_weights))
     source=int(args.source) if args.source.isdecimal() else args.source
     cap=cv2.VideoCapture(source)
     if not cap.isOpened():
@@ -73,7 +81,20 @@ def main():
                 ok,frame=cap.read()
                 if not ok:
                     break
-                boxes=detect_readouts(frame)
+                if yolo is None:
+                    boxes=detect_readouts(frame)
+                else:
+                    boxes={}
+                    results=yolo.predict(frame,conf=args.yolo_conf,verbose=False)
+                    candidates=results[0].boxes
+                    if candidates is not None and len(candidates):
+                        idx=int(candidates.conf.argmax().item())
+                        x1,y1,x2,y2=map(int,candidates.xyxy[idx].tolist())
+                        fh,fw=frame.shape[:2]
+                        x1,y1,x2,y2=max(0,x1),max(0,y1),min(fw,x2),min(fh,y2)
+                        if x2>x1 and y2>y1:
+                            local=detect_readouts(frame[y1:y2,x1:x2])
+                            boxes={kind:(box[0]+x1,box[1]+y1,box[2],box[3]) for kind,box in local.items()}
                 preview=frame.copy()
                 for kind,color in (("hdg",(0,230,255)),("alt",(255,190,40))):
                     if kind in boxes:
@@ -94,6 +115,8 @@ def main():
                         args.hdg,args.alt=h,a
                     except (ValueError,EOFError) as exc:
                         print("Invalid labels; keeping previous values:",exc)
+                    last_saved=time.monotonic()
+                    continue
                 now = time.monotonic()
                 should_capture = key == 32 or (args.auto_interval > 0 and now - last_saved >= args.auto_interval)
                 if not should_capture or set(boxes)!={"hdg","alt"}:
