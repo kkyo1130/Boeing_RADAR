@@ -18,6 +18,8 @@ def main():
     p.add_argument("--stable-frames", type=int, default=3)
     p.add_argument("--width", type=int, default=0, help="Optional camera capture width")
     p.add_argument("--manual", action="store_true", help="Disable automatic detection; select ROIs with H and A")
+    p.add_argument("--yolo-weights", type=Path, default=None, help="Optional trained YOLO MCP best.pt")
+    p.add_argument("--yolo-conf", type=float, default=0.25)
     args = p.parse_args()
     if args.stable_frames < 1:
         p.error("--stable-frames must be positive")
@@ -61,6 +63,16 @@ def main():
         model.load_state_dict(checkpoint["model"])
         model.to(args.device).eval()
         models[kind] = model
+
+    yolo = None
+    if args.yolo_weights:
+        if not args.yolo_weights.is_file():
+            p.error(f"Missing YOLO weights: {args.yolo_weights}")
+        try:
+            from ultralytics import YOLO
+        except ImportError:
+            p.error("Install ultralytics for --yolo-weights")
+        yolo = YOLO(str(args.yolo_weights))
 
     source = int(args.source) if args.source.isdecimal() else args.source
     capture = cv2.VideoCapture(source)
@@ -106,7 +118,25 @@ def main():
                 print("End of video or camera read failed.")
                 break
             if not args.manual and not manual_override:
-                detected = detect_readouts(frame)
+                if yolo is None:
+                    detected = detect_readouts(frame)
+                else:
+                    predictions = yolo.predict(frame, conf=args.yolo_conf, device=args.device, verbose=False)
+                    boxes = predictions[0].boxes
+                    detected = {}
+                    if boxes is not None and len(boxes):
+                        idx = int(boxes.conf.argmax().item())
+                        x1, y1, x2, y2 = map(int, boxes.xyxy[idx].tolist())
+                        fh, fw = frame.shape[:2]
+                        x1, y1, x2, y2 = max(0, x1), max(0, y1), min(fw, x2), min(fh, y2)
+                        if x2 > x1 and y2 > y1:
+                            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                            cv2.putText(frame, f"MCP {float(boxes.conf[idx]):.2f}",
+                                        (x1, max(20, y1 - 8)), cv2.FONT_HERSHEY_SIMPLEX,
+                                        .55, (0, 255, 0), 2, cv2.LINE_AA)
+                            local = detect_readouts(frame[y1:y2, x1:x2])
+                            detected = {kind: (box[0] + x1, box[1] + y1, box[2], box[3])
+                                        for kind, box in local.items()}
                 auto_history.append(detected)
                 if not detected:
                     regions = {"hdg": None, "alt": None}
