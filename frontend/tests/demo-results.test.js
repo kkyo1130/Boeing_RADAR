@@ -13,4 +13,9 @@ function render(result, reason, connected=true, pending=false){
 test('different setting remains pending until server confirms readback',()=>{const h=render('UNVERIFIED','READBACK_NOT_CONFIRMED');assert.match(h,/복창 확인이 먼저/);assert.match(h,/270°/);assert.match(h,/260°/);assert.doesNotMatch(h,/op-MISMATCH/);});
 test('server mismatch highlights both values and recognized sentence',()=>{const h=render('MISMATCH','VALUE_MISMATCH');assert.match(h,/op-MISMATCH/);assert.match(h,/불일치/);assert.match(h,/heading 260/);});
 test('disconnection and new recording remove previous normal presentation',()=>{for(const h of [render('NORMAL','VALUE_MATCH',false),render('NORMAL','VALUE_MATCH',true,true)]){assert.doesNotMatch(h,/op-NORMAL/);assert.match(h,/판단 보류/);}});
-test('unrecognized callsign gives actionable explanation',()=>{assert.match(render('UNVERIFIED','callsign_not_recognized'),/호출부호를 인식하지 못했습니다/);});
+test('unrecognized callsign guidance uses the current flight rather than hardcoded Radar',()=>{
+  const h=render('UNVERIFIED','callsign_not_recognized');
+  assert.match(h,/호출부호를 확인할 수 없습니다/);
+  assert.match(h,/현재 비행의 호출부호를 포함해/);
+  assert.doesNotMatch(h,/Radar one two three/);
+});

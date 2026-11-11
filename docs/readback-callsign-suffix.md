@@ -50,3 +50,13 @@
 ## 자체 리뷰와 남은 범위
 
 원문/모델 결과 보존, 잘못된 호출부호 강제 교정 금지, 동작 누락의 거짓 정상 방지, fresh segment/지시 연결, 카메라 부재 보류 및 실제 음원/fixture 구분을 확인했다. 독립적인 두 안전 채널이나 새 데이터 정확도 평가로 주장하지 않는다. 속도·조건부 지시·제약·정정·전체 phraseology 검증은 지원하지 않으며 입력 보류를 유지한다. PR 외부 리뷰 및 병합은 별도다.
+
+## PR #34 CI 실패 후속 수정
+
+`3621435`의 원격 run `43002860489`에서 Linux/macOS 모두 HTTP 통합 fixture 4건이 실패했다. 숫자 불일치를 시험하는 입력이 상승 지시에 대해 `maintain`만 복창해 새 동작 검사에 보류됐기 때문이다. 숫자 오류·incident·복구 기대값은 유지하고 해당 fixture에 `climb and maintain`을 명시했다. 상승 표현 누락 및 반대 방향이 계속 UNVERIFIED인지, 뒤쪽 호출부호가 있는 정상 복창은 NORMAL인지 HTTP 회귀 3건을 추가했다.
+
+프런트는 호출부호 안내를 바꾼 뒤 옛 문구를 검사하던 단위 테스트 1건이 실패했다. 현재 비행 호출부호 안내가 나오고 Radar가 고정되지 않는지 검사하도록 수정했다. 제품 판정 로직과 보류 기준은 변경하지 않았다.
+
+처음 로컬 검증에서 `backend/tests`만 실행하고 별도 `tests/integration` 및 프런트 단위 테스트를 누락한 범위 차이를 확인했다. CI와 같은 `scripts/verify.py --component backend --component vision --component frontend --http-smoke`로 재검증: backend/HTTP 713 passed, 6 skipped(모델 opt-in), Vision45, frontend60, build 및 legacy/v2 HTTP smoke 통과. 브라우저 첫 실행은 로컬 기본 Chromium 실행 파일 부재로 시작하지 못했으며 설치된 Chromium 경로를 지정해 재실행한다. 새 녹음이나 모델 추론 재검증은 이번 테스트 수정 범위에 포함하지 않는다.
+
+Local Chromium fixture E2E: `RADAR_CHROMIUM_PATH=<installed-headless-shell> npm run test:e2e` — 9 passed (42.6s).

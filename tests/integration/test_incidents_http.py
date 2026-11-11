@@ -68,7 +68,7 @@ def test_partial_altitude_replacement_keeps_heading_history(producer):
 def test_readback_correction_does_not_claim_global_completion(producer):
     p = producer; atc, _ = p.adopt()
     data = p.speech(p.segment(atc))
-    data["transcript"] = "Radar one two three maintain four thousand feet heading two seven zero"
+    data["transcript"] = "Radar one two three climb and maintain four thousand feet heading two seven zero"
     data["fields"]["ALT"].update(value=4000, raw_text="4000")
     p.send(data)
     original = rows(p)[0]
@@ -92,7 +92,7 @@ def test_end_keeps_unresolved_and_explicit_revalidate_is_versioned(producer):
 def test_retained_old_heading_readback_correction_over_http(producer):
     p = producer; a, _ = p.adopt()
     data = p.speech(p.segment(a))
-    data["transcript"] = "Radar one two three maintain three thousand feet heading zero nine zero"
+    data["transcript"] = "Radar one two three climb and maintain three thousand feet heading zero nine zero"
     data["fields"]["HDG"].update(value=90, raw_text="090")
     p.send(data)
     occurrence = rows(p)[0]["occurrence_id"]

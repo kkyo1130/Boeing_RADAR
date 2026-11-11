@@ -49,7 +49,7 @@ def test_readback_mismatch_quality_hold_and_camera_unreadable_coexist_over_http(
     p = producer
     atc, _ = p.adopt()
     data = p.speech(p.segment(atc))
-    data["transcript"] = "Radar one two three maintain four thousand feet heading two seven zero"
+    data["transcript"] = "Radar one two three climb and maintain four thousand feet heading two seven zero"
     data["fields"]["ALT"].update(value=4000, raw_text="4000")
     data["fields"]["HDG"]["quality"].update(input_quality="INSUFFICIENT", reason="fixture_overlap")
     p.send(data)
