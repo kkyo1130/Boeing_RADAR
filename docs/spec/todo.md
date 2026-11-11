@@ -140,3 +140,31 @@ SPEC-004-WI-02의 요청 범위 추가 구현을 `origin/dev` `4a6fd74` 기반 `
 2026-11-09 PR #21 병합 전 확인: 최초98e6015 자동리뷰 지적없음, 이후e7b1e9e까지 자체 추가검토 지적없음. 원격 Python Ubuntu/macOS 성공, Linux frontend E2E의 기존 `/private/tmp` 캡처 경로3건 실패를 testInfo.outputPath로 수정. 로컬 Node24+Chromium E2E6 passed. 최신 원격 CI를 확인한 뒤 사용자 지시에 따라 squash merge하며 전체 AC 완료와 구분한다.
 
 2026-11-10 새 관제 녹음 비교: [PR #25](https://github.com/kkyo1130/Boeing_RADAR/pull/25), 결과 `92fa330`. `codex/atc-unseen-whisper`에서 기존 사용 기록과 원본 그룹이 겹치지 않는 UWB test 관제사60구간의 일반/관제용 Whisper 비교를 reviewing. 기본120회+추가진단28회 완료, 전용6 tests·컴파일·결과 감사 통과. 운영 모델은 유지한다. SPEC-004-WI-02의 추가 실험 범위이며 다른 WI는 변경하지 않는다. 최종 근거는 [WI-02](004-speech-communication.md#wi-02)에 기록한다.
+
+2026-11-10 관제 특화 STT 비교: [PR #24](https://github.com/kkyo1130/Boeing_RADAR/pull/24), 코드·실측 `dfdd8ac`, `codex/atc-specialist-comparison`, 기준 dev `d267d4b`. 동일 실제 발화3개×원음/기존 마이크 녹음에서 특화 모델3종·Whisper 안내문2조건,24회 실측. 전용 테스트2개·컴파일·결과 해시/채점 감사 통과. 운영 모델은 유지하며 SPEC-004-WI-02 reviewing. 결과·학습 중복 위험·PR 인수인계는 [WI-02](004-speech-communication.md#wi-02)와 [보고서](../atc-specialist-comparison.md)에 기록한다. 다른 WI 상태는 변경하지 않는다.
+
+## 동일 실제 관제 음원 STT 비교 · 2026-11-10
+
+SPEC-004-WI-02의 모델 선택 추가 실험을 `codex/atc-stt-comparison`·커밋 `fe2cf3e`·[PR #23](https://github.com/kkyo1130/Boeing_RADAR/pull/23)에서 reviewing으로 제출했다. Whisper4종×원음/기존 마이크 녹음×3발화×안내문2조건의 실제 로컬48회 처리 완료, 올바른 채택0·잘못된 채택0이다. 정답 텍스트의 별도 추출 진단3/3 PASS, 채점 테스트5개 통과. 운영 모델은 유지했다. [상세 결과/재현](../atc-stt-comparison.md), [WI-02 기록](004-speech-communication.md#wi-02). 새 제품 기능·전체 독립 성능평가 완료를 의미하지 않으며 다른 WI 상태를 변경하지 않는다.
+
+## ATC 마이크 수음 모드 · 2026-11-10
+
+SPEC-004-WI-02 추가 요청 범위를 `d267d4b` 기반 `codex/atc-microphone-modes`의 구현 커밋 `67852b8`·[PR #22](https://github.com/kkyo1130/Boeing_RADAR/pull/22)를 reviewing으로 제출했다. ATC 수음/Pilot 복창을 분리하고 실제 ATC WAV→STT 경로, 파일 재생→마이크 캡처 UI, 취소·실패 후 과거 지시 재사용 차단을 구현했다. backend560/frontend53/브라우저7/빌드 통과. 실제 UWB-ATCC3개 원음 및 물리 스피커→마이크 각3개는 처리·보류 경로를 확인했으나 지시 채택0/3이며 실제 STT 성능 개선이 남았다. [WI-02 상세 기록](004-speech-communication.md#wi-02)과 [재현 안내](../atc-microphone-modes.md)를 따른다. 다른 WI 상태와 미완료 전체 인수 범위는 유지한다.
+
+## 호출부호 STT 문맥 · 2026-11-10
+
+SPEC-004-WI-02 요청 범위를 `codex/atc-callsign-context`에서 reviewing. 최신 dev d267d4b에서 시작해 ATC 수음 의존 PR #22의 da0f219를 가져왔다. 세션에 등록된 호출부호 발음을 Whisper hotwords로 전달하고 동일 실제 음원으로 전후/목록 밖 음성/호출부호 부재를 비교한다. 외부 교통 목록 연동이나 평가 정답에서 힌트 생성은 제외한다.
+
+완료 근거: 실제23개+합성무음1개 두 조건48회, 실제 모델 ASGI2건, backend571 passed. 등록 데모 호출부호0/3→1/3, 목록 밖3/12 유지; 상세 한계·보류 정책은 [문맥 보고서](../atc-callsign-context.md)와 WI-02를 따른다.
+
+제출: `7a5da03`, [PR #27](https://github.com/kkyo1130/Boeing_RADAR/pull/27). PR #22에 의존하는 별도 PR이며 외부 리뷰·병합 대기.
+
+## 고도·방위 음성 숫자 규칙 보완 · 2026-11-10
+
+SPEC-004-WI-02의 요청 범위를 `codex/atc-numeric-rules`에서 reviewing. 최신 dev d267d4b에서 시작해 앞 단계 PR #27의203e5e0을 의존성으로 가져왔다. FL2/3자리·완전한 백 단위·음성 heading360→0을 지원하며 wire/OCR 범위는 유지한다. heading 직후 단일 머뭇거림은 후보 추출만 허용하고 구조 보류한다. 기존88개와 문맥 시험24개의 고정 전사를 사용해 규칙 변경만 대조한다.
+
+완료 근거: 고정224조건/실제 BERT222회, 고도11/15→13/15·방위7/13→10/13, 이전 정답 필드 회귀0. backend623 passed·공통 계약 검사 PASS. 숫자 후보와 자동 채택의 차이·재사용 자료 한계는 [숫자 규칙 보고서](../atc-numeric-rules.md) 및 WI-02를 따른다.
+
+제출: `dfb25c7`, [PR #28](https://github.com/kkyo1130/Boeing_RADAR/pull/28). PR #27 의존, 외부 리뷰·병합 대기.
+
+2026-11-10 SPEC-004-WI-02 후속: `codex/atc-live-demo`에서 사람 관제사 직접 발화 모드/역할 근거/실행기 추가. backend627·HTTP47·frontend54·브라우저2·계약22 검증 통과, 실제 모델의 기존 마이크 파일 재생 검증 통과. 새 2인 실시간 녹음은 미실행. [PR #29](https://github.com/kkyo1130/Boeing_RADAR/pull/29), 구현 `3ece4fd`. 선행 PR #28에 의존하며 reviewing 유지. 상세 근거는 SPEC-004-WI-02 수행 기록을 따른다.

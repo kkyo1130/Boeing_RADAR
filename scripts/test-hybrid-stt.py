@@ -41,7 +41,7 @@ def main():
             assert comparison.get('result')=='MISMATCH',comparison
         elif name=='silence':
             assert not rb['transcript'] and check.get('result')=='NEEDS_REVIEW',rb
-        assert rb['ner']['model_version']=='bert-hybrid-rules-v2' or not rb['transcript']
+        assert rb['ner']['model_version']=='bert-hybrid-rules-v3' or not rb['transcript']
         item={'case':name,'input_kind':'previous_real_microphone_recording' if name=='previous_user_microphone' else 'synthetic_audio_fixture','elapsed_seconds':time.monotonic()-start,'atc':atc,'readback':rb,'state':state}
         (a.output/(name+'.json')).write_text(json.dumps(item,ensure_ascii=False,indent=2))
         reports.append({'case':name,'transcript':rb['transcript'],'quality_reason':rb['quality_reason'],'ner_issues':rb['ner']['issues'],'structure':state['structure_checks'].get('READBACK'),'readback_validation':state['validation'].get('readback'),'state_result':state['result'],'elapsed_seconds':item['elapsed_seconds']})

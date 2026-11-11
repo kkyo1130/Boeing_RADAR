@@ -230,6 +230,7 @@ def test_partial_targets_keep_provenance_and_only_new_readback_scope():
 
 @pytest.mark.parametrize("path,value", [
     ("role_basis", "ATC_PLAYBACK"),
+    ("role_basis", "ATC_DEMO_MICROPHONE"),
     ("complete", True),
     ("interruption_reason", None),
     ("ended_at", "2026-10-17T01:00:00Z"),
@@ -307,3 +308,12 @@ def test_unknown_mention_scope_requires_review_in_dto_and_schema(source, check):
     else:
         with pytest.raises(ValidationError, match="UNKNOWN mention scope"):
             ObservationV2.model_validate(payload)
+
+
+def test_demo_controller_basis_is_explicit_and_not_pilot():
+    payload = fixture("speech-complete.json")
+    payload["role_basis"] = "ATC_DEMO_MICROPHONE"
+    assert SpeechSegmentV2.model_validate(payload).role == "ATC"
+    payload["role"] = "PILOT"
+    with pytest.raises(ValidationError):
+        SpeechSegmentV2.model_validate(payload)

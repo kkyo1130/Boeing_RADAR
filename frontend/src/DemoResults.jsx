@@ -21,7 +21,7 @@ export default function DemoResults({snapshot, connected, transcript = '', pendi
       const group=snapshot.validation[key];
       const result=live && !pending ? group.result : 'UNVERIFIED';
       const reason=key==='readback' && issue ? issue.reason : group.fields.find(r=>r.result!=='NORMAL')?.reason;
-      const detail=!live ? '현재 연결을 확인할 수 없습니다. 아래 숫자는 마지막 기록입니다.' : pending ? '복창 녹음·인식 중입니다. 새 결과를 기다리세요.' : explanations[reason] || (result==='MISMATCH' ? '표시된 항목이 관제 지시와 다릅니다. 다시 확인하세요.' : result==='NORMAL' ? '관제 지시와 일치합니다.' : '발화 전체를 해석할 수 없습니다. 아래 인식 문장을 확인하고 다시 복창하세요.');
+      const detail=!live ? '현재 연결을 확인할 수 없습니다. 아래 숫자는 마지막 기록입니다.' : pending ? '새 음성 입력을 확인 중입니다. 유효한 관제 지시와 복창 결과를 기다리세요.' : explanations[reason] || (result==='MISMATCH' ? '표시된 항목이 관제 지시와 다릅니다. 다시 확인하세요.' : result==='NORMAL' ? '관제 지시와 일치합니다.' : '발화 전체를 해석할 수 없습니다. 아래 인식 문장을 확인하고 다시 복창하세요.');
       return <article key={key} className={`demo-result op-${result}`}>
         <div className="op-section-heading"><h2>{title}</h2><strong className="demo-verdict" role="status">{statusLabel(result)}</strong></div>
         <p className="demo-result-help">{detail}</p>
@@ -29,8 +29,8 @@ export default function DemoResults({snapshot, connected, transcript = '', pendi
           <span>{names[row.field]}</span><small>관제 {numberLabel(row.expected,row.field)}</small>
           <strong>{numberLabel(row.actual,row.field)}</strong><small>{source} · {live && !pending ? statusLabel(row.result) : '판단 보류'}</small>
         </div>)}</div>
-        {!group.fields.length && <p>관제 지시를 재생하고 복창을 시작하세요.</p>}
-        {key==='readback' && <p className="demo-transcript"><b>실제 인식 문장</b><br/>{pending ? '새 복창을 처리하고 있습니다…' : transcript || '아직 이 화면에서 녹음한 문장이 없습니다.'}</p>}
+        {!group.fields.length && <p>관제 음성을 입력하고, 인식된 지시를 확인한 뒤 복창을 시작하세요.</p>}
+        {key==='readback' && <p className="demo-transcript"><b>실제 인식 문장</b><br/>{pending ? '새 음성 입력을 확인하고 있습니다…' : transcript || '아직 이 화면에서 녹음한 문장이 없습니다.'}</p>}
         {key==='setting' && <p className="op-muted">아이패드 숫자를 바꾸면 카메라 인식값이 갱신됩니다. 동일 값 3회 관측 후 반영됩니다.</p>}
 
       </article>;
