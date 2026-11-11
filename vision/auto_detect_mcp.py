@@ -19,8 +19,8 @@ def detect_readouts(frame):
     bright = cv2.inRange(hsv, (0, 0, 140), (179, 125, 255))
     bright = cv2.bitwise_and(bright, cv2.inRange(gray, 150, 255))
     # Merge characters into a display candidate without merging nearby readouts.
-    scale = max(1., width / 960.)
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (max(5, int(13*scale)), max(2, int(3*scale))))
+    # Fixed small kernel avoids merging neighboring MCP windows in HD webcam frames.
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (13, 3))
     merged = cv2.morphologyEx(bright, cv2.MORPH_CLOSE, kernel)
     contours, _ = cv2.findContours(merged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     candidates = []
