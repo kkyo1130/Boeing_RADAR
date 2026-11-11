@@ -3,11 +3,12 @@
 Example:
  python vision/collect_camera_mcp.py --source 0 --output vision/data/camera_batches/batch_001 --pairs 150
 Every accepted frame produces 2 OCR crops (HDG and ALT).
-Press SPACE to save the current pair, N to update labels, Q to quit.
+Automatically saves one pair every 0.6 seconds (adjust --auto-interval).\nPress SPACE for manual save, N to update labels, Q to quit.
 Only save when the physical display actually matches the entered labels.
 """
 import argparse
 import csv
+import time
 from pathlib import Path
 
 def main():
@@ -15,6 +16,7 @@ def main():
     p.add_argument("--source",default="0")
     p.add_argument("--output",type=Path,required=True)
     p.add_argument("--pairs",type=int,default=150)
+    p.add_argument("--auto-interval",type=float,default=0.6,help="Automatically save a pair every N seconds; 0 disables auto capture")
     p.add_argument("--hdg",default="270")
     p.add_argument("--alt",default="03000")
     args=p.parse_args()
@@ -23,6 +25,8 @@ def main():
     from auto_detect_mcp import detect_readouts
     from camera_digit_preprocess import camera_to_amber
     from preprocess_mcp_ocr import align
+    if args.auto_interval < 0:
+        p.error("--auto-interval must be >= 0")
     if args.pairs < 1:
         p.error("--pairs must be positive")
     def validate(h,a):
@@ -59,6 +63,7 @@ def main():
         print("Batch already complete.")
         cap.release()
         return
+    last_saved = 0.0
     try:
         with labels.open("a",newline="",encoding="utf-8") as fp:
             writer=csv.DictWriter(fp,fieldnames=fields)
@@ -75,7 +80,7 @@ def main():
                         x,y,w,h=boxes[kind]
                         cv2.rectangle(preview,(x,y),(x+w,y+h),color,2)
                 cv2.putText(preview,f"HDG {args.hdg} ALT {args.alt}  {count}/{args.pairs} pairs", (15,35),cv2.FONT_HERSHEY_SIMPLEX,.7,(0,255,255),2)
-                cv2.putText(preview,"SPACE save | N labels | Q quit",(15,65),cv2.FONT_HERSHEY_SIMPLEX,.65,(255,255,255),2)
+                cv2.putText(preview,"AUTO capture | SPACE save | N labels/pause | Q quit",(15,65),cv2.FONT_HERSHEY_SIMPLEX,.58,(255,255,255),2)
                 cv2.imshow("Camera OCR data collection",preview)
                 key=cv2.waitKey(20)&255
                 if key in (ord("q"),27):
@@ -89,7 +94,9 @@ def main():
                         args.hdg,args.alt=h,a
                     except (ValueError,EOFError) as exc:
                         print("Invalid labels; keeping previous values:",exc)
-                if key!=32 or set(boxes)!={"hdg","alt"}:
+                now = time.monotonic()
+                should_capture = key == 32 or (args.auto_interval > 0 and now - last_saved >= args.auto_interval)
+                if not should_capture or set(boxes)!={"hdg","alt"}:
                     continue
                 crops={}
                 for kind in ("hdg","alt"):
@@ -114,6 +121,7 @@ def main():
                                          split="train",session_id=session,source_image=f"webcam_{count:05d}"))
                 fp.flush()
                 count+=1
+                last_saved = time.monotonic()
                 print(f"Saved {count}/{args.pairs} pairs, {2*count} crops")
     finally:
         cap.release()
