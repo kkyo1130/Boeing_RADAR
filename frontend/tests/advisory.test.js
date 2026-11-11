@@ -96,3 +96,9 @@ test('startup failure with lost END preserves visible suppression and retry toke
   await f.p.begin('ATC',()=>{throw new Error('failed');});assert.equal(f.p.inputs.size,1);
   const input=[...f.p.inputs.values()][0];f.p.request=original;await f.p.end(input);assert.equal(f.p.inputs.size,0);f.p.close();
 });
+test('new server capture snapshot stops already-playing evidence before ending its token',async()=>{
+  const f=fixture(),unregister=audioFocus.register(f.p);let paused=0;
+  const media={pause(){paused++;},async play(){}};await audioFocus.startEvidence(media);
+  audioFocus.syncInputs([{token:'remote-atc',kind:'ATC'}]);assert.equal(paused,2);
+  assert.ok(f.calls.some(c=>c.body.kind==='EVIDENCE'&&c.body.action==='END'));unregister();f.p.close();
+});

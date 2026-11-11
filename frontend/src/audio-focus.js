@@ -17,6 +17,11 @@ export const audioFocus = {
     await player?.end(input);
     if (input && !player?.inputs.has(input.token)) inputOwners.delete(input.token);
   },
+  syncInputs(inputs = []) {
+    if (inputs.some(input => ['ATC', 'PILOT'].includes(input.kind))) {
+      for (const element of evidence.keys()) { element.pause(); this.endEvidence(element); }
+    }
+  },
   async startEvidence(element) {
     if (evidence.has(element)) return;
     element.pause();

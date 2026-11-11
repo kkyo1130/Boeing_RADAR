@@ -13,7 +13,7 @@ export default function VoicePanel({ snapshot, connected }) {
     const timer = setInterval(() => { p.update(latest.current.snapshot, latest.current.connected); p.tick(); }, 250);
     return () => { clearInterval(timer); unregister(); p.close(); player.current = null; };
   }, [snapshot.flight_id]);
-  useEffect(() => { player.current?.update(snapshot, connected); }, [snapshot, connected]);
+  useEffect(() => { audioFocus.syncInputs(snapshot.voice?.inputs); player.current?.update(snapshot, connected); }, [snapshot, connected]);
   async function simulate(kind) { setError(''); const input = await audioFocus.begin(kind); if (!input) setError('입력이 차단되었거나 연결을 확인할 수 없습니다'); }
   const inputs = new Map((snapshot.voice?.inputs || []).map(i => [i.token, i]));
   view.inputs.forEach(i => inputs.set(i.token, i));
