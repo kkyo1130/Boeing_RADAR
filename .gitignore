@@ -24,3 +24,6 @@ htmlcov/
 .demo/
 
 /frontend/node_modules
+vision/data/
+vision/roi.local.json
+vision/checkpoints/
