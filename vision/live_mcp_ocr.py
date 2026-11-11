@@ -29,6 +29,7 @@ def main():
         from PIL import Image
         from preprocess_mcp_ocr import align
         from auto_detect_mcp import detect_readouts
+        from camera_digit_preprocess import camera_to_amber
     except ImportError as exc:
         p.error(f"Missing dependency: {exc}. Install opencv-python, torch, pillow, numpy")
 
@@ -67,7 +68,7 @@ def main():
         p.error(f"Could not open video source: {args.source}")
     if args.width:
         capture.set(cv2.CAP_PROP_FRAME_WIDTH, args.width)
-    window = "MCP OCR v3 - H:HDG ROI A:ALT ROI R:Reset Q:Quit"
+    window = "MCP OCR v3 AUTO - Q:Quit R:Reset"
     cv2.namedWindow(window, cv2.WINDOW_NORMAL)
     regions = {"hdg": None, "alt": None}
     history = {"hdg": deque(maxlen=args.stable_frames), "alt": deque(maxlen=args.stable_frames)}
@@ -78,7 +79,9 @@ def main():
         if crop.size == 0:
             return None, None
         rgb = cv2.cvtColor(crop, cv2.COLOR_BGR2RGB)
-        aligned = align(Image.fromarray(rgb), kind)
+        # Camera readouts are white/cream, whereas synthetic training digits were amber.
+        # Normalize camera colors before applying the original alignment pipeline.
+        aligned = align(camera_to_amber(Image.fromarray(rgb)), kind)
         if aligned is None:
             return None, None
         # Match training preprocessing: RGB aligned image -> grayscale -> bilinear resize.
