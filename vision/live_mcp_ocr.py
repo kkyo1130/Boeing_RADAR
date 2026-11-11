@@ -95,15 +95,20 @@ def main():
 
     print("Automatic HDG/ALT detection enabled. H/A select manual fallback ROIs, R reset, Q quit.")
     auto_history = deque(maxlen=5)
+    manual_override = False
     try:
         while True:
             ok, frame = capture.read()
             if not ok:
                 print("End of video or camera read failed.")
                 break
-            if not args.manual and not any(regions.values()):
+            if not args.manual and not manual_override:
                 detected = detect_readouts(frame)
                 auto_history.append(detected)
+                if not detected:
+                    regions = {"hdg": None, "alt": None}
+                    for h in history.values():
+                        h.clear()
                 # Require repeated matching candidate positions to avoid jumping between bright UI elements.
                 if len(auto_history) >= 3 and all(set(item) == {"hdg", "alt"} for item in list(auto_history)[-3:]):
                     for kind in ("hdg", "alt"):
@@ -137,6 +142,7 @@ def main():
                 break
             if key == ord("r"):
                 regions = {"hdg": None, "alt": None}
+                manual_override = False
                 auto_history.clear()
                 for h in history.values():
                     h.clear()
@@ -146,6 +152,7 @@ def main():
                 roi = tuple(map(int, cv2.selectROI(window, frame, showCrosshair=True, fromCenter=False)))
                 if roi[2] > 0 and roi[3] > 0:
                     regions[kind] = roi
+                    manual_override = True
                     history[kind].clear()
                     print(f"{kind.upper()} ROI: {roi}")
     finally:
