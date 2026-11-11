@@ -73,22 +73,22 @@
     "reason": null
   },
   {
-    "name": "range-360",
+    "name": "wire-360-remains-invalid",
     "transcript": "Radar one two three heading three six zero",
     "fields": {
       "HDG": 360
     },
     "result": "INVALID",
-    "reason": "HEADING_OUT_OF_RANGE"
+    "reason": "VALUE_OUT_OF_RANGE"
   },
   {
-    "name": "bad-fl-length",
+    "name": "two-digit-flight-level",
     "transcript": "Radar one two three maintain flight level four zero",
     "fields": {
       "ALT": 4000
     },
-    "result": "INVALID",
-    "reason": "FL_REQUIRES_THREE_DIGITS"
+    "result": "PASS",
+    "reason": null
   },
   {
     "name": "exceeds-ceiling",
@@ -180,5 +180,41 @@
     },
     "result": "NEEDS_REVIEW",
     "reason": "UNSUPPORTED_ALTITUDE_NUMBER"
+  },
+  {
+    "name": "spoken-360-north",
+    "transcript": "Radar one two three heading three six zero",
+    "fields": {
+      "HDG": 0
+    },
+    "result": "PASS",
+    "reason": null
+  },
+  {
+    "name": "one-digit-flight-level-held",
+    "transcript": "Radar one two three maintain flight level eight",
+    "fields": {
+      "ALT": 800
+    },
+    "result": "INVALID",
+    "reason": "UNSUPPORTED_FL_NUMBER"
+  },
+  {
+    "name": "whole-hundred-flight-level",
+    "transcript": "Radar one two three maintain flight level three hundred",
+    "fields": {
+      "ALT": 30000
+    },
+    "result": "PASS",
+    "reason": null
+  },
+  {
+    "name": "heading-hesitation-is-review-only",
+    "transcript": "Radar one two three heading ah two seven zero",
+    "fields": {
+      "HDG": 270
+    },
+    "result": "NEEDS_REVIEW",
+    "reason": "HEADING_HESITATION_REQUIRES_REVIEW"
   }
 ]

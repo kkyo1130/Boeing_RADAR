@@ -26,6 +26,11 @@ export async function microphone(deviceId, level) {
     if(recording && frames<context.sampleRate*30){chunks.push(new Float32Array(samples));frames+=samples.length;}
   };
   return {stream,
+    async setCaptureMode(kind, inputMode){
+      // Preserve speaker playback; process direct speech from either demo role.
+      const directSpeech=kind==='PILOT' || inputMode==='microphone_live';
+      await stream.getAudioTracks()[0].applyConstraints({echoCancellation:directSpeech,noiseSuppression:directSpeech});
+    },
     start(){chunks=[];frames=0;recording=true;return new Date().toISOString();},
     stop(){recording=false;const samples=new Float32Array(frames);let offset=0;for(const chunk of chunks){samples.set(chunk,offset);offset+=chunk.length;}chunks=[];return wav(samples,context.sampleRate);},
     close(){recording=false;processor.disconnect();source.disconnect();gain.disconnect();stream.getTracks().forEach(t=>t.stop());context.close();},

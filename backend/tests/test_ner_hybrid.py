@@ -74,7 +74,7 @@ def test_real_bert_artifact():
     if not path:pytest.skip('Set RADAR_TEST_BERT_MODEL for actual BERT inference')
     text='singapore six two one climb flight level two three zero'
     out=extract_atc(text,path,backend='bert-hybrid')
-    assert out['model_version']=='bert-hybrid-rules-v2'
+    assert out['model_version']=='bert-hybrid-rules-v3'
     assert [(e['label'],e['text']) for e in out['entities']]==[('CALLSIGN','singapore six two one'),('ACTION','climb'),('ALT','flight level two three zero')]
     with pytest.raises(ExtractionError,match='EMPTY_TRANSCRIPT'):extract_atc(' ',path,backend='bert-hybrid')
     with pytest.raises(ExtractionError,match='NER_TOKEN_LIMIT'):extract_atc('one '*130,path,backend='bert-hybrid')
@@ -105,7 +105,7 @@ def test_stt_dispatches_hybrid_and_bad_configuration_never_falls_back(client,fli
     def send():
         n=intake.utc_now();return client.post(f'/api/demo/{flight}/readback',json={'started_at':intake.stamp(n-timedelta(seconds=2)),'ended_at':intake.stamp(n-timedelta(seconds=1)),'atc_input_id':state['readback_required']['atc_input_id'],'audio':base64.b64encode(wav_bytes()).decode()})
     r=send();assert r.status_code==200,r.text
-    assert called==[text] and r.json()['ner']['model_version']=='bert-hybrid-rules-v2'
+    assert called==[text] and r.json()['ner']['model_version']=='bert-hybrid-rules-v3'
     assert client.get(f'/api/v2/flights/{flight}/state').json()['structure_checks']['READBACK']['result']=='PASS'
     # Explicit mode with missing path must still attempt extraction and hold.
     monkeypatch.delenv('RADAR_NER_MODEL',raising=False)

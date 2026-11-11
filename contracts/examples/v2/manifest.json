@@ -145,5 +145,12 @@
     "valid": false,
     "schema_valid": true,
     "description": "Do not require old HDG from A as if B instructed it."
+  },
+  {
+    "file": "speech-demo-controller.json",
+    "schema": "speech-segment-v2",
+    "valid": true,
+    "schema_valid": true,
+    "description": "Human controller role is selected explicitly in a simulated microphone demo; not radio reception or speaker identification."
   }
 ]
