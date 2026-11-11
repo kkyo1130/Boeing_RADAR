@@ -1,6 +1,6 @@
 """Heuristic automatic MCP readout localization for webcam frames.
 
-Find three horizontally ordered bright digit groups (IAS, HDG, ALT).
+Find horizontally ordered bright digit groups (HDG, ALT).
 This is a candidate detector, NOT a trained object detector. Inspect its boxes
 on real camera footage before treating readings as reliable.
 """
@@ -35,37 +35,35 @@ def detect_readouts(frame):
         if density < .08 or density > .85:
             continue
         candidates.append((x, y, w, h))
-    # Three displays are roughly level, adjacent, and appear in IAS/HDG/ALT order.
+    # Prefer the HDG/ALT pair: unlike IAS, the left readout can be partially
+    # occluded or split by glare. ALT has five digits and is wider than HDG.
     matches = []
-    for a in candidates:
-        for b in candidates:
-            if b[0] <= a[0] + a[2]:
+    for hdg in candidates:
+        for alt in candidates:
+            if alt[0] <= hdg[0] + hdg[2]:
                 continue
-            for c in candidates:
-                if c[0] <= b[0] + b[2]:
-                    continue
-                heights = [a[3], b[3], c[3]]
-                if max(heights) / max(1, min(heights)) > 2.0:
-                    continue
-                centers = [z[1] + z[3]/2 for z in (a,b,c)]
-                if max(centers) - min(centers) > max(heights)*1.1:
-                    continue
-                gaps = [b[0]-(a[0]+a[2]), c[0]-(b[0]+b[2])]
-                if min(gaps) < 0 or max(gaps) > width*.14:
-                    continue
-                # Altitude is five digits, typically wider than the heading.
-                if c[2] < b[2]*1.05:
-                    continue
-                # Prefer aligned, compact triples of similar text height.
-                score = (max(centers)-min(centers))/max(heights) + sum(gaps)/width
-                matches.append((score, (a,b,c)))
+            if not (1.12 <= alt[2] / max(1, hdg[2]) <= 2.7):
+                continue
+            if not (.55 <= alt[3] / max(1, hdg[3]) <= 1.6):
+                continue
+            cy1, cy2 = hdg[1]+hdg[3]/2, alt[1]+alt[3]/2
+            if abs(cy1-cy2) > max(hdg[3], alt[3])*.45:
+                continue
+            gap = alt[0]-(hdg[0]+hdg[2])
+            if gap > width*.12:
+                continue
+            # MCP digits are large and bright. Reject tiny instrument legends.
+            if min(hdg[3], alt[3]) < height*.025:
+                continue
+            if not (height*.16 < cy1 < height*.82):
+                continue
+            # Prefer a large, aligned pair over tiny text elsewhere.
+            score = (hdg[3]+alt[3]) / height - abs(cy1-cy2)/height - gap/(width*3)
+            matches.append((score, hdg, alt))
     if not matches:
         return {}
-    matches.sort(key=lambda v: v[0])
-    if len(matches) > 1 and abs(matches[1][0]-matches[0][0]) < .015:
-        # Multiple near-equal triples: don't pretend localization is certain.
-        return {}
-    _, (_, hdg, alt) = matches[0]
+    matches.sort(key=lambda item: item[0], reverse=True)
+    _, hdg, alt = matches[0]
     def padded(r):
         x,y,w,h = r
         px, py = max(2,int(w*.08)), max(2,int(h*.25))
