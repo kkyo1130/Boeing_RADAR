@@ -33,7 +33,7 @@ def main():
     cap=cv2.VideoCapture(source)
     if not cap.isOpened():
         p.error("Cannot open camera")
-    args.output.mkdir(parents=True)
+    args.output.mkdir(parents=True, exist_ok=True)
     fields=["image_path","kind","text","split","session_id","source_image"]
     labels=args.output/"labels.csv"
     existing = []
