@@ -70,4 +70,16 @@ def detect_readouts(frame):
         x1,y1 = max(0,x-px), max(0,y-py)
         x2,y2 = min(width,x+w+px), min(height,y+h+py)
         return (x1,y1,x2-x1,y2-y1)
-    return {"hdg": padded(hdg), "alt": padded(alt)}
+    hdg_box = padded(hdg)
+    alt_box = padded(alt)
+    # Webcam glare/spacing can split "270" into a "27" component and a
+    # detached final "0". Use the five-digit ALT window as a scale reference
+    # and extend the HDG crop to the expected three-digit width. Never cross
+    # into the ALT window. Keep the original left edge for alignment.
+    hx, hy, hw, hh = hdg_box
+    ax, ay, aw, ah = alt_box
+    expected_hdg_width = int(aw * 0.74)
+    safe_right = max(hx + hw, ax - max(3, int(aw * 0.10)))
+    extended_right = min(safe_right, hx + max(hw, expected_hdg_width))
+    hdg_box = (hx, hy, extended_right - hx, hh)
+    return {"hdg": hdg_box, "alt": alt_box}
