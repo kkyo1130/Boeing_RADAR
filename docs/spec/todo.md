@@ -139,6 +139,10 @@ SPEC-004-WI-02의 요청 범위 추가 구현을 `origin/dev` `4a6fd74` 기반 `
 
 2026-11-09 PR #21 병합 전 확인: 최초98e6015 자동리뷰 지적없음, 이후e7b1e9e까지 자체 추가검토 지적없음. 원격 Python Ubuntu/macOS 성공, Linux frontend E2E의 기존 `/private/tmp` 캡처 경로3건 실패를 testInfo.outputPath로 수정. 로컬 Node24+Chromium E2E6 passed. 최신 원격 CI를 확인한 뒤 사용자 지시에 따라 squash merge하며 전체 AC 완료와 구분한다.
 
+## 동일 실제 관제 음원 STT 비교 · 2026-11-10
+
+SPEC-004-WI-02의 모델 선택 추가 실험을 `codex/atc-stt-comparison`·커밋 `fe2cf3e`·[PR #23](https://github.com/kkyo1130/Boeing_RADAR/pull/23)에서 reviewing으로 제출했다. Whisper4종×원음/기존 마이크 녹음×3발화×안내문2조건의 실제 로컬48회 처리 완료, 올바른 채택0·잘못된 채택0이다. 정답 텍스트의 별도 추출 진단3/3 PASS, 채점 테스트5개 통과. 운영 모델은 유지했다. [상세 결과/재현](../atc-stt-comparison.md), [WI-02 기록](004-speech-communication.md#wi-02). 새 제품 기능·전체 독립 성능평가 완료를 의미하지 않으며 다른 WI 상태를 변경하지 않는다.
+
 ## ATC 마이크 수음 모드 · 2026-11-10
 
 SPEC-004-WI-02 추가 요청 범위를 `d267d4b` 기반 `codex/atc-microphone-modes`의 구현 커밋 `67852b8`·[PR #22](https://github.com/kkyo1130/Boeing_RADAR/pull/22)를 reviewing으로 제출했다. ATC 수음/Pilot 복창을 분리하고 실제 ATC WAV→STT 경로, 파일 재생→마이크 캡처 UI, 취소·실패 후 과거 지시 재사용 차단을 구현했다. backend560/frontend53/브라우저7/빌드 통과. 실제 UWB-ATCC3개 원음 및 물리 스피커→마이크 각3개는 처리·보류 경로를 확인했으나 지시 채택0/3이며 실제 STT 성능 개선이 남았다. [WI-02 상세 기록](004-speech-communication.md#wi-02)과 [재현 안내](../atc-microphone-modes.md)를 따른다. 다른 WI 상태와 미완료 전체 인수 범위는 유지한다.
