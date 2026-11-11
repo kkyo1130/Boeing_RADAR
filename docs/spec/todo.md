@@ -139,6 +139,12 @@ SPEC-004-WI-02의 요청 범위 추가 구현을 `origin/dev` `4a6fd74` 기반 `
 
 2026-11-09 PR #21 병합 전 확인: 최초98e6015 자동리뷰 지적없음, 이후e7b1e9e까지 자체 추가검토 지적없음. 원격 Python Ubuntu/macOS 성공, Linux frontend E2E의 기존 `/private/tmp` 캡처 경로3건 실패를 testInfo.outputPath로 수정. 로컬 Node24+Chromium E2E6 passed. 최신 원격 CI를 확인한 뒤 사용자 지시에 따라 squash merge하며 전체 AC 완료와 구분한다.
 
+## 관제 전사 후단 추출 평가 · 2026-11-10
+
+SPEC-004-WI-02 reviewing 유지. `codex/atc-slot-evaluation`에서 실제 UWB88개 정답/관제용 Whisper 전사에 기존 BERT+규칙을 적용했다. 추가 실제 음원28개 ASR·두 조건176회 추출·전용6개 테스트와 입력/점수 감사를 완료했다. 방위13개는 이전 평가 원본 그룹과 겹치는 진단임을 분리한다. 제품 코드 변경·전체 WI 완료·병합은 하지 않는다. 상세 결과와 미실행 범위는 [WI-02 기록](004-speech-communication.md#wi-02), [평가 보고서](../atc-slot-evaluation.md)를 따른다.
+
+제출: 평가 커밋 `1b879fb`, [PR #26](https://github.com/kkyo1130/Boeing_RADAR/pull/26). 자체 검토 완료, 외부 리뷰 대기.
+
 2026-11-10 새 관제 녹음 비교: [PR #25](https://github.com/kkyo1130/Boeing_RADAR/pull/25), 결과 `92fa330`. `codex/atc-unseen-whisper`에서 기존 사용 기록과 원본 그룹이 겹치지 않는 UWB test 관제사60구간의 일반/관제용 Whisper 비교를 reviewing. 기본120회+추가진단28회 완료, 전용6 tests·컴파일·결과 감사 통과. 운영 모델은 유지한다. SPEC-004-WI-02의 추가 실험 범위이며 다른 WI는 변경하지 않는다. 최종 근거는 [WI-02](004-speech-communication.md#wi-02)에 기록한다.
 
 2026-11-10 관제 특화 STT 비교: [PR #24](https://github.com/kkyo1130/Boeing_RADAR/pull/24), 코드·실측 `dfdd8ac`, `codex/atc-specialist-comparison`, 기준 dev `d267d4b`. 동일 실제 발화3개×원음/기존 마이크 녹음에서 특화 모델3종·Whisper 안내문2조건,24회 실측. 전용 테스트2개·컴파일·결과 해시/채점 감사 통과. 운영 모델은 유지하며 SPEC-004-WI-02 reviewing. 결과·학습 중복 위험·PR 인수인계는 [WI-02](004-speech-communication.md#wi-02)와 [보고서](../atc-specialist-comparison.md)에 기록한다. 다른 WI 상태는 변경하지 않는다.
