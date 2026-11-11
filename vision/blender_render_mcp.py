@@ -120,6 +120,12 @@ def main():
     mcp_objects = [o for o in descendants(root) if o.type == "MESH"]
     if not mcp_objects:
         raise ValueError("mcp_root has no mesh descendants")
+    # Label only the front MCP face. The mcp_root hierarchy also contains
+    # glareshield and lower sill, whose projected corners extend into the PFD/ND.
+    faces = [o for o in mcp_objects if o.name == "mcp_face"]
+    if len(faces) != 1:
+        raise RuntimeError(f"Expected exactly one mcp_face mesh; found {len(faces)}")
+    mcp_face = faces[0]
     displays = {}
     for key in ("heading", "altitude"):
         matches = [o for o in mcp_objects if o.name == key + "_display"]
@@ -195,7 +201,7 @@ def main():
     manifest = []
     ocr_manifest = []
     split_counts = {"train": 0, "val": 0, "test": 0}
-    bounds = [p for o in mcp_objects for p in box_points(o)]
+    bounds = box_points(mcp_face)
     center = sum(bounds, Vector((0, 0, 0))) / len(bounds)
     print("MCP center", tuple(center), "mesh count", len(mcp_objects), flush=True)
     for session in range(args.sessions):
@@ -237,13 +243,13 @@ def main():
                     target = center
                     camera.data.lens = rng.uniform(20, 34)
                 look_at(camera, target)
-            bpy.context.view_layer.update()
-                bbox = projected_bbox(scene, camera, mcp_objects)
+                bpy.context.view_layer.update()
+                bbox = projected_bbox(scene, camera, [mcp_face])
                 heading_box = display_bbox(scene, camera, displays["heading"])
                 altitude_box = display_bbox(scene, camera, displays["altitude"])
                 if bbox is not None and heading_box is not None and altitude_box is not None:
                     break
-            if bbox is None:
+            if bbox is None or heading_box is None or altitude_box is None:
                 raise RuntimeError(
                     f"No valid MCP framing after {args.max_attempts} attempts "
                     f"for session {session}, frame {frame}. "
@@ -286,7 +292,7 @@ def main():
         {"glb": str(args.glb), "seed": args.seed, "sessions": args.sessions,
          "frames_per_session": args.frames_per_session, "rendered": len(manifest),
          "split_counts": split_counts, "view": args.view, "digits": args.digits,
-         "note": "Projected geometry boxes and synthetic HDG/ALT text; inspect visibility, orientation and label alignment before training."},
+         "note": "MCP bounding box is projected from mcp_face only (excludes glareshield and lower sill); inspect rendered label overlays before training."},
         indent=2), encoding="utf-8")
     print(f"Generated {len(manifest)} labeled images in {output}", flush=True)
 
