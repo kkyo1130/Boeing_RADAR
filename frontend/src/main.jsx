@@ -4,6 +4,8 @@ import './style.css';
 import Operations from './Operations.jsx';
 const Cockpit3D = lazy(() => import('./Cockpit3D.jsx'));
 
+import Pilot from './Pilot.jsx';
+
 const initial = { speed: 250, heading: 270, altitude: 3000 };
 const instruments = [
   { key: 'speed', title: 'IAS', unit: 'KNOTS', step: 1, min: 0, max: 999, digits: 3, roi: [509, 282, 601, 313] },
@@ -130,4 +132,4 @@ function App() {
   </main>;
 }
 
-createRoot(document.getElementById('root')).render(window.location.pathname === '/operations' ? <Operations /> : <App />);
+createRoot(document.getElementById('root')).render(window.location.pathname === '/pilot' ? <Pilot /> : window.location.pathname === '/operations' ? <Operations /> : <App />);

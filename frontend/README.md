@@ -132,3 +132,11 @@ PFD/ND/엔진/FMC·패널 라벨·체크리스트·오버헤드·라디오·좌�
 `scripts/build-cockpit-textures.py`로 직접 그린 원본 도안이다. 수정 후 Pillow가 설치된
 Python으로 `python3 scripts/build-cockpit-textures.py`를 실행한 다음 `npm run model:build`한다.
 PNG 소스는 `scripts/textures/`에 추적하며, 생성한 GLB는 모든 이미지를 내장하여 단독으로 열 수 있다.
+
+### 소형 조종사 화면
+
+운영 화면(`/operations`)에서 비행을 시작하거나 연결한 뒤 **조종사 화면 ↗**을 누르면 `/pilot?flight=<비행 ID>`가 열린다. 다른 디바이스에서는 같은 서버 주소의 이 URL을 연다. `/pilot`에 직접 진입하면 비행 ID를 입력할 수 있다. URL의 비행에 고정되므로 다른 운영 탭에서 비행을 바꿔도 자동 전환하지 않는다.
+
+복명복창·MCP 설정별 오류 항목과 출처별 비교값을 크게 표시한다. 보류·오래된 관측·연결 끊김에는 현재 비교값/정상 표시를 내리지 않는다. 화면은 서버 판정만 표시하며 설정을 변경하지 않는다. 상세 근거와 비행 시작/종료·음성 안내는 운영 화면을 사용한다. 소형 화면을 추가로 열어도 음성을 중복 재생하지 않는다.
+
+화면 테스트: `npx playwright test --config playwright.pilot.config.js` (API fixture 사용). 설치된 Chromium 실행 파일을 쓰려면 `RADAR_CHROMIUM_PATH`를 지정한다. 실제 디바이스의 장착 거리·가독성 및 실제 카메라/마이크 검증은 별도다.

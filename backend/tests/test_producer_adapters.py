@@ -87,7 +87,7 @@ def test_capture_failure_releases_input(scenario,tmp_path,monkeypatch):
 
 @pytest.mark.parametrize('transcript,valid',[
     ('Radar one two three maintain three thousand feet heading zero',True),
-    ('Radar one two three heading 360',False),
+    ('Radar one two three heading 360',True),
     ('Radar one two three heading 270 after departure',False),
     ('Other one two three heading 270',False),
 ])

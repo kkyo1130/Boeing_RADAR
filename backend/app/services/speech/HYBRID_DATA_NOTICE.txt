@@ -1,0 +1,5 @@
+The callsign prefixes in hybrid_prefixes.json are derived ONLY from the 400 UWB-ATCC training transcripts of the 2026-11-09 experiment. No validation/test callsigns are added.
+Source: University of West Bohemia UWB-ATCC, redistributed by Jzuluaga at https://huggingface.co/datasets/Jzuluaga/uwb_atcc
+Revision: 1e8270beb8c1643c8735dddb7229fffb0e399f74
+Dataset-derived prefix data: CC BY-NC-SA 4.0, https://creativecommons.org/licenses/by-nc-sa/4.0/ . The source attribution and noncommercial/share-alike conditions apply to this derived data.
+Transforms: select CALLSIGN training spans, retain words before first spoken or written digit, deduplicate. This data notice is separate from the application code license. No audio or model weights are distributed.

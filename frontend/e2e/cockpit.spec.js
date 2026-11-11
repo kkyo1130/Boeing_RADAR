@@ -15,6 +15,19 @@ test('GLB loads and supports 3D picking, controls and capture without photo togg
  await expect(page.getByRole('button',{name:'조종석 시점',exact:true})).toHaveAttribute('aria-pressed','true');
  await page.getByRole('button',{name:'전체 조종석',exact:true}).click();
  await page.getByRole('button',{name:'MCP 정면',exact:true}).click();
+ // Browser touch input: one finger stays on the heading display while another moves.
+ const touchBox=await page.locator('.cockpit-3d canvas').boundingBox();
+ const touchScale=touchBox.height/(2*16*Math.tan(16*Math.PI/180));
+ const x=touchBox.x+touchBox.width/2,y=touchBox.y+touchBox.height/2-.58*.52*touchScale;
+ const cdp=await page.context().newCDPSession(page);
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{id:1,x:x-80,y},{id:2,x,y}]});
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{id:1,x:x-120,y},{id:2,x,y}]});
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[{id:1,x:x-120,y}]});
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+ await expect(page.getByRole('dialog')).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'HEADING 선택값 입력',exact:true})).toHaveText('270');
+ await cdp.detach();
+ await page.getByRole('button',{name:'MCP 정면',exact:true}).click();
  const box=await page.locator('.cockpit-3d canvas').boundingBox();
  const scale=box.height/(2*16*Math.tan(16*Math.PI/180));
  await page.mouse.click(box.x+box.width/2,box.y+box.height/2-.58*.52*scale);

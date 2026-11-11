@@ -29,6 +29,10 @@ def normalize(value):
 def digits(value):
     if re.fullmatch(r"[0-9]+", value):
         return value
+    # STT may render a spoken digit sequence as 2-7-0. This is slot-local:
+    # ranges (270-280), negatives (-90), short ranges (2-7), and >3 digits are not accepted here.
+    if re.fullmatch(r"[0-9](?:-[0-9]){2}", value):
+        return value.replace("-", "")
     words = number_words(value).split()
     if words and all(word in DIGITS or re.fullmatch(r"[0-9]", word) for word in words):
         return "".join(str(DIGITS[word]) if word in DIGITS else word for word in words)
@@ -44,6 +48,36 @@ def feet(value):
     if match:
         return DIGITS[match[1]]*1000 + (DIGITS[match[2]]*100 if match[2] else 0)
     return None
+
+
+# Hesitations are candidate-only; full structure checks below retain a review gate.
+HEADING_HESITATIONS = {'ah', 'uh', 'um'}
+
+
+def flight_level(value):
+    """Explicit FL units: 2/3 spoken digits or a whole hundred, never truncate a tail."""
+    direct = digits(value)
+    if direct is not None and len(direct) in (2, 3):
+        return int(direct) * 100
+    match = re.fullmatch(r"(one|two|three|four|five|six|seven|eight|nine) hundred", number_words(value))
+    return DIGITS[match[1]] * 10000 if match else None
+
+
+def heading_digits(value):
+    words = value.split()
+    if words and words[0] in HEADING_HESITATIONS:
+        words = words[1:]
+        # A hesitation must be followed by a complete three-digit heading.
+        candidate = digits(' '.join(words))
+        return candidate if candidate is not None and len(candidate) == 3 else None
+    return digits(value)
+
+
+def heading_value(value):
+    number = heading_digits(value)
+    if number is None or not 1 <= len(number) <= 3 or int(number) > 360:
+        return None
+    return 0 if int(number) == 360 else int(number)
 
 
 def parse_command(command):
@@ -64,11 +98,11 @@ def parse_command(command):
         fl = re.fullmatch(r"(?:flight level |fl(?:\s+|(?=[0-9])))(.+)", text)
         ft = re.fullmatch(r"(.+) feet", text)
         if fl:
-            number = digits(fl[1])
-            if number is None or len(number) != 3:
-                issues.append(("ALT", "INVALID", "FL_REQUIRES_THREE_DIGITS"))
+            number = flight_level(fl[1])
+            if number is None:
+                issues.append(("ALT", "INVALID", "UNSUPPORTED_FL_NUMBER"))
             else:
-                values["ALT"] = int(number)*100
+                values["ALT"] = number
         elif ft:
             number = feet(ft[1])
             if number is None:
@@ -78,13 +112,13 @@ def parse_command(command):
         else:
             issues.append(("ALT", "NEEDS_REVIEW", "ALTITUDE_UNIT_NOT_EXPLICIT"))
     if groups.get("hdg") is not None:
-        number = digits(groups["hdg"])
+        number = heading_digits(groups["hdg"])
         if number is None:
             issues.append(("HDG", "NEEDS_REVIEW", "UNSUPPORTED_HEADING_NUMBER"))
-        elif not 1 <= len(number) <= 3 or int(number) > 359:
+        elif not 1 <= len(number) <= 3 or int(number) > 360:
             issues.append(("HDG", "INVALID", "HEADING_OUT_OF_RANGE"))
         else:
-            values["HDG"] = int(number)
+            values["HDG"] = heading_value(groups["hdg"])
     return values, issues
 
 
@@ -147,6 +181,8 @@ def check_structure(data, *, target_callsign, registry, segment, instruction_id,
         add("conditions", "NEEDS_REVIEW", "UNSUPPORTED_CONDITION_OR_SEQUENCE")
         return finish()
     derived, issues = parse_command(command)
+    if re.search(r"\bheading (?:ah|uh|um)\b", command):
+        add("numeric_cleanup", "NEEDS_REVIEW", "HEADING_HESITATION_REQUIRES_REVIEW", "HDG")
     for field, status, reason in issues:
         add("grammar", status, reason, field)
     if not issues:
@@ -186,8 +222,9 @@ def check_structure(data, *, target_callsign, registry, segment, instruction_id,
             elif name == "ALT":
                 raw_value = feet(raw)
             else:
-                number = digits(raw)
-                raw_value = int(number) if number is not None else None
+                raw_value = heading_value(raw)
+                if raw.split() and raw.split()[0] in HEADING_HESITATIONS:
+                    add("raw_field", "NEEDS_REVIEW", "HEADING_HESITATION_REQUIRES_REVIEW", name)
         if raw_issues:
             for _, status, raw_reason in raw_issues:
                 add("raw_field", status, raw_reason, name)

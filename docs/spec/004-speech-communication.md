@@ -67,10 +67,118 @@
 
 #### 결과·검증·리뷰·인수인계
 
-- 구현: 미착수; 코드 기준·변경 파일은 수행 후 기록.
-- 검증: 미실행; 실제 명령·환경·기대/관찰 결과·통과/실패/차단을 수행 후 기록.
-- 리뷰: 미수행; 계약·범위·회귀·근거 검토와 지적 해결 여부를 수행 후 기록.
-- 인수인계: 담당 세션 미배정; 선행 결과와 해당 미정 사항 확인 후 이 WI를 지정해 착수.
+2026-11-08 사용자 요청 범위: 학습된 v7 NER의 영어 추출 함수와 현재 RADAR STT 연결. 기준 dev `2e3dd77`, 브랜치 `codex/v7-stt-integration`. 원래 작업 폴더의 미커밋 변경은 보존하고 독립 worktree에서 구현했다.
+
+- 구현: `speech/ner.py`는 local-only safetensors/config/manifest를 검사하고 모델·fast tokenizer를 프로세스별 캐시한다. 첫 subtoken 라벨을 원문 단어/문자구간에 정렬, raw BIO와 비보정 모델 점수 반환. 128토큰 초과/빈 입력/illegal BIO를 정상 처리하지 않음. `scripts/extract-atc.py` 및 opt-in `POST /api/demo/speech/extract` 제공.
+- 연결: `demo/adapters.py`의 LocalWhisper 결과를 v7에 전달. 등록 호출부호/전체 문장 문법으로 변환된 값과 NER 후보가 일치해야 기존 PASS 가능. 등록 ATC 시나리오도 같은 gate를 사용하나 실제 ATC STT라고 표현하지 않음. `RADAR_NER_MODEL`을 지정하면 모델 실패/후보 불일치 시 fields를 비우고 NEEDS_REVIEW; 미지정 시 기존 동작 유지. 원본 transcript, 음성근거, segment/attempt/ATC ID·역할과 후속 수신/구조 검사 보존.
+- 검증: backend에서 전용 Python3.11 환경으로 `python -m pytest -q`: 506 passed, 1 skipped(실제 모델 opt-in), Starlette TestClient deprecation 경고1. `RADAR_TEST_NER_MODEL=<final-v7> python -m pytest -q tests/test_ner_v7.py`: 실제 가중치 포함8 passed. 주입 ASR의 raw transcript 전달/모델 실패 후 비정상 상태, 미지원 suffix·오디오 품질 보류, 호출부호/숫자 불일치, 잘못된BIO/NaN/길이초과 검사. 실제v7+speech_payload 직접 smoke에서 Radar123/ALT3000/HDG270의 기존 문법과 NER 일치 PASS 확인.
+- 리뷰: 자체 검토. NER 점수를 검증된 정확도로 표현하지 않음, 신경망 결과만으로 숫자 승인/상태 정상/설정 변경하지 않음. 동일 transcript의 두 검사는 독립 안전 채널 아님. 유효 BIO라도 잘못된 의미 추출 가능. 기존 parser의 미지원 문법을 임의 제거/확장하지 않음. weight/pickle/원음은 커밋하지 않음.
+- 인수인계: `backend/requirements-ner.txt`, `RADAR_NER_MODEL`, `docs/v7-stt-integration.md` 참고. v7 함수와 현재 데모 STT 결과 연결만 요청 범위에서 구현. 실제 사용자 마이크/Whisper 원음 E2E, 더 넓은 관제 문법/숫자 정규화, 전체 AC-02 인수는 미완료. 코드 PR 검토 대상이며 WI 전체 완료를 주장하지 않는다.
+
+#### BERT+규칙 STT 추가 연결 · 2026-11-09
+
+- 범위/기준: 사용자 요청에 따라 SPEC-004-WI-02의 기존 STT 구조화 경로를 확장했다. 기준 `origin/dev` `4a6fd74`, 독립 브랜치 `codex/bert-hybrid-stt`. 기존 작업 폴더의 변경은 보존했다. 상태는 reviewing이며 WI 전체 AC-02 완료를 뜻하지 않는다.
+- 구현: `speech/hybrid.py`는 로컬 BERT의 CALLSIGN과 이전 비교 실험에서 보완한 `hybrid_rules.py`/`hybrid_baseline.py`의 ACTION·ALT·HDG를 합친다. `hybrid_prefixes.json`은 실제 UWB 학습400개에서 얻은46개 접두어이며 별도 출처·라이선스 고지를 포함한다. BERT는 기존 검증99개의 전체일치 기준으로 seed13을 선택했고 재학습하지 않았다. 모델·tokenizer6개 파일의 SHA-256과 정확한 라벨 구성을 검사한다.
+- 연결/계약: `RADAR_NER_BACKEND=bert-hybrid`에서 LocalWhisper→원문→BERT+규칙 후보→기존 전체 문법/등록 호출부호/숫자 검사→기존 저장·판정으로 이어진다. 원문/문자 오프셋/모델 원시 라벨과 정규화 입력을 보존한다. 규칙 결과는 `source=rule, model_score=null`; BERT 점수는 정확도로 표현하지 않는다. 모델 로딩 실패, 잘못된 BIO, 조건/정정/충돌·필수 호출부호 누락은 fields를 비우고 검토로 남긴다. 명시적 backend 설정에 모델이 없어도 규칙만으로 조용히 통과하지 않는다. 기본 설정의 v7은 유지한다.
+- STT 표현 보완: 실제 Whisper가 생성한 쉼표·`3,000`·`2-7-0`을 처리한다. BERT 입력의 단어 끝 문장부호만 제거하고 원문은 유지한다. 숫자 슬롯에서 정확히3자리 하이픈 표기만 허용하며 `270-280`, `2-7`, `-90`, `2--7-0` 등은 거부한다.
+- 자동 검증: 작업 worktree의 `backend/`에서 실제 두 모델 경로를 지정해 `RADAR_TEST_BERT_MODEL=<prepared-bert> RADAR_TEST_NER_MODEL=<v7> ../.venv/bin/python -m pytest -q` 실행: **532 passed**, skipped 없음, Starlette TestClient deprecation 경고1. 실제 BERT/v7 로딩, artifact 변조, 원문 정렬·점수 출처, 규칙 수정, 잘못된 BIO/조건/단위/숫자 표기/명시 설정 실패 처리와 기존 서버 회귀를 포함한다. 별도로 기존487문장×3seed의 캐시 예측1461개를 옮긴 결합 함수와 대조해 라벨·오프셋 일치를 확인했다. 이 비교는 새 추론 정확도 평가가 아니다.
+- HTTP 검증: 실제 실행 서버에서 `.venv/bin/python scripts/test-hybrid-stt.py --audio .demo/audio --output .demo/hybrid-http-verified --recorded-wav <previous-microphone.wav>`를 실행했다. ASR stub 없이 faster-whisper base.en과 BERT가 동작했다. 합성 정상 음성은 RADAR123/3000ft/270°, 구조PASS·복창NORMAL; 합성290° 음성은 기대270° 대비 MISMATCH; 무음은 NEEDS_REVIEW/UNVERIFIED. 이전 사용자 마이크 WAV의 `Eight thousand feet, heading 270.`는 호출부호/명령 누락으로 NEEDS_REVIEW/UNVERIFIED였다. 정상 복창도 Cockpit 관측이 없으므로 비행 전체 상태는 UNVERIFIED다. frontend5176의 `/api/demo/status`가 backend8013의 bert-hybrid를 반환하는 proxy 연결도 확인했다.
+- 자체 리뷰: 동일 전사의 검사들은 독립 안전 채널이 아니다. 하이픈 처리가2자리 범위까지 받아들이던 초기 구현을 정확히3자리로 제한하고 회귀 테스트를 추가했다. 명시 설정 실패의 묵시적 규칙 fallback, 속도/상승률의 고도 혼동, BERT 점수의 규칙 점수 전용, 출처 누락 위험을 검토했다. 외부 사람/자동 PR 리뷰는 아직 미수행이다.
+- 인수인계: [실행·검증 안내](../bert-hybrid-stt-integration.md), `scripts/prepare-hybrid-model.py`, `scripts/run-hybrid-backend.sh`, `scripts/test-hybrid-stt.py` 참고. 가중치·오디오·DB·원시 보고서는 로컬 `.demo/`에만 보존한다. 새 실시간 마이크 녹음, 실제 ATC 원음 STT, 카메라 통합/전체 AC-02는 미실행이다. PR 검토 후 병합 여부를 결정하며 자동 병합하지 않는다.
+
+#### 실제 마이크 후속 검증 · 2026-11-09 23:07–23:10 KST
+
+MacBook Air 마이크(48kHz mono PCM16) 신규 녹음3회를 실제 HTTP STT 경로로 전달했다. 1회 약신호로 빈 전사·보류, 2회 고도/방위 구간은 추출됐으나 전사에 호출부호가 없어 보류, 3회 전체 문장에서 Whisper가 `two`를 `to`로 전사했다. 3회 BERT CALLSIGN/규칙 ALT는 추출됐지만 hybrid HDG가 누락되어 구조 NEEDS_REVIEW(MENTION_SCOPE_UNKNOWN)·복창/전체 UNVERIFIED였다. 기존 문법의 후보값3000/270이 있어도 정상 복창으로 승인하지 않았다. 연결은 실제 입력으로 확인했으나 전체 정상 판정 성공은0/3이다. 앞부분 누락의 원인은 확정하지 않았다. 브라우저 마이크 권한/MediaRecorder 경로·실제 ATC·카메라는 여전히 미실행이다. 코드 변경 없이 [검증 안내](../bert-hybrid-stt-integration.md)에 기록하며 원음·전체응답은 Git-ignored `.demo/live-mic-20261109-*`에 보존했다. 동음어 처리 불일치는 미해결 후속 항목이며 테스트 통과를 위해 입력을 보정하지 않았다.
+
+#### 숫자 동음어 보완·원본 재시험 · 2026-11-09
+
+사용자 요청에 따라 `speech/numeric_slots.py`에서 기존 숫자 grammar의 동음어 사전을 후보 추출에도 적용했다. heading/flight level 뒤의 정확한3자리(heading359이하), 고도 명령+명시 feet 단위의 지원 숫자에만 적용하며 CALLSIGN·원문·BERT 입력은 변경하지 않는다. 원래 토큰과 후보·위치·문맥을 `numeric_normalizations`에 반환한다. 조건/범위/미지원 꼬리문구/누락 검사는 유지한다. 실제 BERT 포함 전용42개, 전체 backend549개 통과(skip0, 기존경고1). 최초 루트 실행은 app import경로로 실패해 정해진 backend 위치에서 다시 실행했다.
+
+신규 녹음3개 원본 WAV를 실제 Whisper/BERT HTTP 경로로 재시험했다. 전사3개 모두 이전과 동일했다. 마지막20초 녹음에서 `heading to seven, zero.`를 보존한 채 HDG 후보의 to→two를 기록하여 RADAR123/3000ft/270°, 구조PASS·복창NORMAL을 확인했다. 앞의 약신호/호출부호 누락2개는 계속 보류됐다. Cockpit 부재로 전체 상태UNVERIFIED를 유지했다. 입력 SHA-256/원문/전체응답은 `.demo/homophone-replay/`에 보존하며 새 독립 정확도나 새 마이크 녹음으로 표현하지 않는다. 자체 리뷰에서 전역치환·정답주입·호출부호보완 없음과 기존 보류 조건을 확인했다. 같은 PR #21에 추가하며 외부리뷰/병합 전 reviewing 유지.
+
+#### 동일 실제 관제 음원 STT 비교 · 2026-11-10
+
+- 범위/기준: 사용자 요청으로 기존3개 실제 관제 음원과 당시 물리 마이크 녹음본을 고정해 base.en/small.en/medium.en/large-v3-turbo를 비교했다. 평가 도구는 dev `d267d4b` 기반 `codex/atc-stt-comparison`·구현 커밋 `fe2cf3e`·[PR #23](https://github.com/kkyo1130/Boeing_RADAR/pull/23), 실행 서버 코드는 PR #22 `da0f219` 별도 체크아웃이다. 운영 STT/NER/품질 기준을 수정하지 않았다.
+- 구현: `scripts/evaluation/compare_atc_stt.py`가 고정 계획·파일 해시를 확인하고 CPU int8/4 threads로 모델별 별도 프로세스에서 실제 LocalWhisper→BERT+규칙→ATC API를 실행한다. 실험용 임시 DB를 사용한다. 단어 오류율, 실제 STT 소요시간, 올바른/잘못된 지시 채택을 분리한다. `summarize_atc_stt.py`는 각 모델·조건의 동일6개 파일과 계획 해시를 확인하고 공개 JSON을 만든다.
+- 검증: 실제 추론 기본24회 + 안내문 제거 후속24회 모두 처리 완료. 기대 HDG 채택0/48, 잘못된 채택0/48. 원음/마이크 기본 WER는 base48.4/90.3%, small38.7/51.6%, medium61.3/67.7%, turbo38.7/45.2%. 메모리16GiB M4의 CPU 시간이며 GPU 성능이 아니다. 별도 정답 텍스트 추출 진단3/3 PASS; ASR 입력이나 실제 지시 채택으로 계산하지 않았다. 점수 단위 테스트5개·py_compile·입력/계획 해시 및 누락 감사 통과. 제품 코드 변경이 없어 전체 backend/UI 회귀는 미실행.
+- 자체 리뷰: 기준선/추가조건을 분리했고 기존 전사 정답·등록 호출부호·임계값을 고정했다. 숫자 표기를 제외한 정답 보정/학습/강제 호출부호 교체는 하지 않았다. 악센트 단어 분리 오류를 채점기에서 수정한 뒤 같은48개 출력 전체를 재채점했다. 원음/모델은 Git에 넣지 않는다. 이미 분석한3개뿐이며 독립 평가/전체 정확도로 표현하지 않는다. 외부 리뷰는 PR에서 별도로 확인한다.
+- 인수인계: [보고서·재현 명령](../atc-stt-comparison.md), [출처·고정 계획·실측 결과](../evaluation/atc-stt-comparison-2026-11-10.json). small.en은 비용 대비 추가 시험 후보지만 검증된 대체 모델로 채택하지 않았다. ATC 특화 STT/더 넓은 미사용 음원 평가가 남으며 WI 전체 완료로 표시하지 않는다.
+
+#### 병합 전 리뷰·CI 보완 · 2026-11-09
+
+PR #21 자동 Codex 리뷰는 최초 구현 `98e6015`에 지적 없음으로 완료됐으며 GitHub APPROVED 제출과는 구분한다. 미해결 review thread는0개다. 이후 `e7b1e9e`까지의 숫자 동음어 변경은 자체 추가 검토로 원문/점수 출처 보존, 숫자 슬롯 한정, 조건·누락 보류를 확인했다. 최신 원격 Python fixtures는 Ubuntu/macOS 모두 성공했으나 frontend Chromium E2E가 기존 pilot 테스트의 Mac 전용 `/private/tmp` 캡처 경로 때문에 Linux에서3건 실패했다. 테스트 기대값은 유지하고 `testInfo.outputPath`로 캡처 경로만 바꿔 OS별 임시경로 의존과 실행 간 파일 충돌을 제거한다. 사용자 요청에 따라 최신 CI 성공과 head/충돌 여부 확인 후 squash merge한다. 자동 리뷰가 최신 코드를 재검토했다고 표현하지 않는다.
+
+#### 관제용 Whisper → BERT+규칙 후보 추출 평가 · 2026-11-10
+
+- 범위/기준: 사용자 요청으로 기존 실제 관제 전사의 후단 추출을 측정했다. `origin/dev` `d267d4b` 기반 `codex/atc-slot-evaluation`; 기존 작업 폴더 보존. 모델 재학습·서비스 규칙·기본 설정 변경 없음. 선행 입력은 [PR #25](https://github.com/kkyo1130/Boeing_RADAR/pull/25)의 고정 관제용 Whisper 전사이며 파일 기반 후보 추출 평가다. AC-02 전체 인수 완료가 아니다.
+- 산출물: `scripts/evaluation/`의 표본 선정·추가 ASR·두 조건 추출·감사/발행·단위 테스트 5개 스크립트, `docs/evaluation/atc-slot-{gold,results}-2026-11-10.json`, [평가 보고서](../atc-slot-evaluation.md). 원음·모델·중간 결과는 ignored `.demo/slots/`와 선행 worktree에 보존한다. 실제 실행 명령과 입력 revision/해시는 보고서·JSON 참조.
+- 자료/계획 조정: 기존 TWR60개에는 목표 ALT/HDG가 없어 실제 고도15개·방위13개를 추가했다. 고도는 모든 이전 사용 원본 그룹 제외. 방위는 완전히 새로운 그룹이 없어 새 ASR/NER 실행 전에 진단 자료로 범위를 변경했다. 방위13개는 BERT 학습400/검증99 그룹 및 기존 정확한 clip ID를 제외하지만 이전 평가 원본 그룹과 겹친다. 양성 표본을 의도적으로 골랐으므로 전체 교신 정확도로 일반화하지 않는다. 전사 기반 어시스턴트 라벨이며 전문가 원음 검수는 미실행이다.
+- 실제 검증: 추가28개 WAV 관제용 Whisper 추론, 최종88개×정답/ASR2조건 BERT 추론176회 완료. 앞선 TWR 예비120회는 중복 합산하지 않는다. `.venv/bin/python -m unittest discover -s scripts/evaluation -p test_atc_slots.py`: 6 passed. Python 컴파일·`git diff --check` 통과. 발행 감사에서 정답/전사/음성/가중치/소스 해시, 176쌍 커버리지, 기존80파일 사용 이력, 추가 자료의 BERT train/validation 그룹 비중복, 채점 재계산 통과.
+- 결과: TWR 호출부호 전체일치 정답50/51→ASR10/51. 고도 값12/15→11/15, 방위 값12/13→7/13. 호출부호와 숫자를 함께 맞힌 ASR 결과 고도4/15·호출부호가 있는 방위0/7. TWR 목표 ALT/HDG가0개인 것을 양성100%로 계산하지 않는다. 상세 표/오검출/실패 사례는 보고서를 원본으로 유지한다.
+- 자체 리뷰: 정답 문자열을 모델 입력/프롬프트에 주입하지 않음, ASR 원문을 사후 수정하지 않음, CALLSIGN 형식 정규화는 채점에만 적용, 값0과 누락·UNRESOLVED 구분, 변환 실패/중복 후보를 오류로 계산, ambiguous 정답 제외를 확인했다. 조건/검토 필요 사유를 보존하며 후보 정답률을 서버 지시 승인율로 표현하지 않는다. 원음/가중치/개인 절대 경로는 커밋 제외. 외부 PR 리뷰·전체 UI/서버 채택·새 마이크 시험은 미실행.
+- 인수인계: WI 상태 reviewing 유지. 평가 코드/결과 커밋 `1b879fb`, [PR #26](https://github.com/kkyo1130/Boeing_RADAR/pull/26)으로 제출했으며 병합은 수행하지 않았다. 다음 개선 후보는 호출부호 STT 손상, FL80/three hundred/360 및 명령 사이 삽입 단어 처리다. 이번 평가 자료로 보완할 경우 해당 자료를 다시 독립 시험이라고 부르지 않고 새 시험을 분리해야 한다.
+
+#### 미사용 관제 녹음의 Whisper 비교 · 2026-11-10
+
+- 범위/기준: 사용자 요청에 따라 dev `d267d4b`에서 `codex/atc-unseen-whisper`로 분리했다. 일반 large-v3-turbo와 관제용 ATC-whisper-turbo-v1을 재학습 없이 비교한다. 운영 API/모델/임계값/등록 호출부호는 변경하지 않는다.
+- 계획/자료: UWB 공식 test2,822개에서 `_AT`만 사용하고 이전 선택 자료80개 JSON의1,226개 ID·1,051개 원본 그룹과 중복 문장을 제외했다. 후보576개·389그룹 중 seed20261110으로60그룹 각1개,225.30초를 추론 전에 고정했다. ATCO2/ATCOSIM은 제외한다. 공개된 추가 학습 코퍼스와 분리했지만 기반 Whisper 사전학습 중복0은 보장할 수 없다.
+- 구현: `prepare_unseen_atc.py`는 출처·선택·이전 사용 파일 해시와 음원 해시를 고정한다. `compare_unseen_whisper.py`는 두 로컬 가중치를 같은CPU/int8/beam5/영어/VAD/temperature0/일반 안내문 조건에 적용하고 실행 순서를 교대한다. `summarize_unseen_whisper.py`는60×2커버리지·이전파일 해시·그룹 중복·WER를 재검산하고 paired bootstrap을 수행한다. 전사 자체와 숫자 토큰 순서를 측정하며 서버 채택/ALT·HDG 값 정확도와 구분한다.
+- 자료 준비 수정: 초기 감사에서 이전에 내려받은 시험셋 전체 메타데이터를 실제 사용 목록으로 취급해 후보0개로 중단했다. 추론 전에 해당 카탈로그만 제외하고 실제 학습·선택·예측 기록80개의 해시를 대조하여 원본 그룹/동일 문장 중복0을 확인했다. 결과를 보고 표본을 바꾼 것이 아니다.
+- 검증 완료: 작업 루트에서 `.venv/bin/python -m unittest discover -s scripts/evaluation -p 'test_unseen_whisper.py'`:6 passed. 편집 거리, 숫자 표기 정규화와 오류 보존, 순서, 가중 WER, 오류 유형, bootstrap을 확인했다. `.venv/bin/python -m py_compile scripts/evaluation/*.py`, `git diff --check` 통과. [보고서 재현 명령](../unseen-atc-whisper-comparison.md)에 따라 기본120회 추론과 추가28회 진단을 완료했다. summary 스크립트로60×2기본/14×2진단 커버리지, 입력 WAV·이전 사용80개 파일 해시, 원본 그룹 중복0, 모든 지표를 재계산했다. 원본 parquet/실행 코드 해시도 확인했다.
+- 결과/AC 경계: 고정 temperature0에서 전체 WER 일반149.5%/관제용30.2%, 문장별 중앙값33.3%/25.7%, 관제용 우세35·동률14·일반 우세11이다. 전체 일치는3/60·4/60, 숫자 포함55문장의 숫자 토큰 목록 일치는20/55·30/55. 일반 모델의 긴 반복이 전체 WER를 크게 높였다. 실패14구간에서 기본 temperature 재시도 목록을 적용한 추가 진단은97.5%/68.6%이며, 실패 사례 선택 후의 진단이므로 전체60개 성능으로 확대하지 않는다. 후단 NER/숫자 값/서버 채택·운항 정확도는 이번 지표가 아니다.
+- 자체 리뷰: 원음/정답/호출부호를 ASR 프롬프트에 넣지 않았고, 모델별 선택 표본·디코딩 설정이 같다. 동일 원본의 다른 구간도 제외하고 실제 이전 사용 파일을 재검산했다. UWB 전체 카탈로그 다운로드와 학습/평가 사용을 구분했다. 사전학습 파일 미공개에 따른 중복 확인 한계, TWR·동일 코퍼스 한계, 정답 철자·표기 차이, 반복 출력과 temperature 영향, 숫자 토큰 지표의 의미 한계를 보고서에 명시했다. 실패 진단28회를 기본120회에 섞지 않았다. 한국어 보고서는 출처 주장과 자체 측정·판단을 구분해 검토했다. 외부 PR 리뷰는 미실행이다.
+- 인수인계: 실행 코드 `2f71c4a`, 결과·감사 `92fa330`, `codex/atc-unseen-whisper`의 [PR #25](https://github.com/kkyo1130/Boeing_RADAR/pull/25)로 제출했다. [보고서](../unseen-atc-whisper-comparison.md), `docs/evaluation/unseen-atc-whisper-2026-11-10.json`에 출처·선정 목록·가중치/입력 해시·전체 전사를 보존한다. 후속 요약기에는 추가 진단 감사 기능을 포함한다. 학습/운영 모델 교체/새 마이크/전체 UI·서버 회귀는 수행하지 않았다. TODO reviewing 유지, WI 전체 AC 완료로 처리하지 않는다. 다음 비교는 운영 디코딩의 전체 표본과 호출부호·ALT/HDG 의미 정확도가 대상이다.
+
+#### 관제 특화 STT 모델 비교 · 2026-11-10
+
+- 범위/기준: 사용자 요청은 같은 실제 관제 녹음에서 특화 모델을 찾아 비교하는 것이다. `origin/dev` `d267d4b`에서 `codex/atc-specialist-comparison`을 만들었다. 운영 코드·품질 임계값·호출부호 사전·모델 설정은 변경하지 않는다. 기존 사용자 작업 폴더는 보존했다.
+- 구현: `scripts/evaluation/compare_atc_specialists.py`는 고정 WAV6개의 SHA-256을 확인하고 실제 CTC 또는 Whisper 추론을 PR #22 `da0f219`의 `/atc` TestClient 경로에 연결한다. 모델별 임시 DB/비행을 사용한다. CTC는16kHz 리샘플링·greedy·LM 없음·점수null, Whisper는 로컬 CTranslate2 변환·기존 beam5/영어/VAD로 실행한다. 실제 전사를 BERT+규칙에 넣은 텍스트 진단과 서버 채택을 분리한다. `summarize_atc_specialists.py`는 PR #23 `de7740e` 채점기를 사용해 WER과 결과 커버리지를 재검산한다. 모델 revision/가중치 해시·원문·환경·중복 위험은 `docs/evaluation/atc-specialist-comparison-2026-11-10.json`, 해석/재현은 [실험 보고서](../atc-specialist-comparison.md)에 기록했다.
+- 실행 검증: 작업 worktree에서 `.venv/bin/python -m unittest discover -s scripts/evaluation -p 'test_atc_specialists.py'` 2 passed. 리샘플링 길이·무음 보존, 잘못된 호출부호/방위/여분 고도의 텍스트 진단 탈락을 확인했다. `.venv/bin/python -m py_compile scripts/evaluation/*.py` 통과. 보고서의 compare 명령으로 CTC2종 각6회, Whisper 일반 안내문/없음 각6회, 합계24회 실제 가중치 추론·API 처리를 완료했다. summarize 명령은 입력6개×4조건의 누락·중복/해시/채점 재계산, CTC12회의 미확인 점수·서버 보류를 확인했다. 새 마이크 수음이 아니라 이전 물리 스피커→마이크 녹음을 파일 재입력했다.
+- 결과/AC 경계: ATC-Whisper 일반 안내문 WER 원음22.6%/마이크29.0%, 기존 일반 turbo38.7%/45.2%보다 낮았으나 호출부호 오류로 텍스트 추출 일치0/3씩이다. CTC-UWB는0.0%/3.2%, 텍스트3/3·2/3이지만 시험 음원이 UWB train split으로 학습 중복 위험이 높다. CTC 서버 미채택은 품질 점수를 정의하지 않은 결과이므로 ASR 실패로 계산하지 않는다.24회 모두 서버 채택0, 잘못된 지시 채택0. 이 표본으로 전체 AC-02 완료나 독립 일반화 성능을 주장하지 않는다.
+- 자체 리뷰: 정답 전사/호출부호/방위를 ASR에 주입하지 않았고 프롬프트 두 조건을 실행 전에 고정했다. ATCOSIM-only CTC 저장소의 UWB 이름 LM 파일은 사용하지 않았다. UWB 학습 모델의 중복, ATCO2 학습 모델에 대한 향후 ATCO2 시험 오염 가능성, 점수null의 보류, 모델/엔진별 속도 비교 한계, 라이선스/출처를 검토했다. 한국어 보고서는 외부 모델 카드의 설명과 자체 실측·해석을 분리해 점검했다. 외부 자동/사람 리뷰는 아직 미실행이다.
+- 인수인계: 코드·실측 커밋 `dfdd8ac`, [PR #24](https://github.com/kkyo1130/Boeing_RADAR/pull/24)로 제출했다. TODO reviewing 유지. 재현에는 PR #22/23 체크아웃과 별도 원음/BERT 가중치가 필요하다. 원음·신규 다운로드 가중치·DB는 Git에 추가하지 않는다. 다음 결정은 학습 코퍼스와 겹치지 않는 실제 교신으로 후보를 재평가하는 것이다. 운영 모델 교체, CTC 품질 정책, 새로운 실시간 마이크·전체 UI/서버 회귀는 이번 변경 범위에서 미실행이다.
+
+#### ATC 수음 / 파일럿 복창 분리 · 2026-11-10
+
+- 범위·기준: PR #21 squash merge 후 `origin/dev` `d267d4b`, 별도 `codex/atc-microphone-modes` worktree. SPEC-004-WI-02의 실제 ATC 입력을 확장한다. 기존 사용자 작업 폴더·다른 WI는 변경하지 않는다.
+- 구현: `api/demo.py`의 `/atc`는 PCM WAV와 두 가지 입력 경로 표시만 받고 서버가 ATC ID/역할을 만든다. `demo/adapters.py`는 사전 등록 전사를 거치지 않고 실제 LocalWhisper→선택된 NER/규칙→기존 구조/품질 검사를 재사용한다. ASR lock을 미디어/segment 쓰기 앞에서 획득해 busy 요청의 상태 변경을 막는다. 기존 Pilot 경로는 현재 ATC ID를 요구한다.
+- UI: `DemoPanel.jsx`에 ATC/파일럿 모드, 관제 파일 재생+실제 마이크 캡처, 외부 재생 수음, 원문 구분을 추가했다. 녹음/처리 중 모드 전환 금지, 재생 후0.5초 수음 여유, 28초 초과 파일·29초 제한 입력 취소, 실패/취소/늦은 응답의 이전 지시 재사용 방지. `demo-audio.js`에서 ATC 수음의 echo cancellation/noise suppression을 끄고 Pilot에서 복구한다. `DemoResults.jsx`는 새 입력 확인 중 보류 문구를 표시한다. 서버 health 이벤트가 이전 복창 근거를 해제한다.
+- 검증: backend에서 `RADAR_TEST_BERT_MODEL=<BERT 경로> RADAR_TEST_NER_MODEL=<v7 경로> ../.venv/bin/python -m pytest -q` → **560 passed**, skip0, 기존 Starlette deprecation1. 신규11개는 stub ASR로 두 경로 실제 ASR 호출, ATC→Pilot ID 연결, 조건부/인식 실패/엔진 장애, busy 무부작용, 정답/역할 주입 거절, 잘못된 WAV 거절을 확인한다. 실제 모델 smoke는 위 전체 실행에 포함된다.
+- UI 검증: Node24에서 frontend `npm test` **53 passed**, `npm run test:e2e` **7 passed**, `npm run build` 성공. 신규 fake-device 브라우저 시험은 선택 파일 바이트 대신 캡처 WAV 전송, 재생 후 자동종료, 모드 고정, ATC 채택 후 Pilot 연결, 취소와 새로고침 후 과거 지시 차단을 확인한다. 실제 브라우저 하드웨어 수음 시험과 혼동하지 않는다.
+- 실제 음원·장비: UWB-ATCC `_AT` 3개를 추론 전에 고정. 원음 파일3개와 MacBook Air 스피커→내장 마이크3개 모두 HTTP 저장/전사/보류 경로 완료, **지시 채택은 각0/3**. 원음에서도 호출부호·명령 오인식이 있어 현재 Whisper base.en의 실제 무전 전사 개선이 필요하다. 음소거였던 최초 하드웨어 시도는 별도 진단으로 남기고, 음소거 해제·볼륨50 재시험 후 이전 설정을 복원했다. 품질 임계값/정답 주입 없이 실패를 보존했다. [원본 출처·해시·결과](../evaluation/atc-playback-2026-11-10.json).
+- 자체 리뷰: 역할을 추측하지 않는지, 요청이 바쁠 때 새 ATC가 생기지 않는지, 새 ATC 실패/취소/지연·연결 끊김 시 이전 정상 복창이 재사용되지 않는지 검토했다. 추가로 새로고침의 이전 ATC 버튼 활성화, 자동 시간 제한의 완료 오인, 이전 재생 콜백이 새 녹음을 종료할 가능성을 발견해 차단했다. 외부 리뷰/CI는 PR 제출 후 별도 확인한다.
+- 인수인계: [실행 안내와 한계](../atc-microphone-modes.md). branch `codex/atc-microphone-modes`, 구현 커밋 `67852b8`, [PR #22](https://github.com/kkyo1130/Boeing_RADAR/pull/22). 마지막 콜백 보호 변경 후 관련 브라우저1개와 빌드를 재통과했다. 이번 사용 음원은 train split이고 학습 중복 미감사이므로 독립 성능평가가 아니다. ATCO2 미사용. 새 Pilot 육성/카메라/실제 무선 수신 전체 E2E는 미실행이며 WI-04 완료로 표시하지 않는다. 다음 판단은 고정된 음원으로 STT 모델·전처리를 비교하는 것이다.
+
+#### 등록 호출부호 문맥을 STT에 전달 · 2026-11-10
+
+- 범위/선행: 사용자 요청의 첫 개선 단계. `origin/dev` d267d4b에서 독립 `codex/atc-callsign-context`를 만들고 기존 ATC 수음 PR #22의 da0f219를 fast-forward 의존성으로 가져왔다. 원격 병합이나 기존 사용자 작업 수정은 하지 않는다. 기본 STT 모델·BERT 가중치·숫자 규칙은 그대로다.
+- 확보 정보: 기존 ATC 데모 설정 및 SQLite의 마지막 세 세션에 RADAR123/GWI7P/DLH1KK/BAW820과 발음5개가 동일하게 등록돼 있음을 읽기 전용으로 확인했다. 실시간 주변 항공기 API/비행계획 연동은 없다. 후자3개는 과거 실제 녹음 데모에 맞춘 등록값이므로 이번 독립 현장 정보처럼 표현하지 않는다.
+- 구현: `speech/context.py`에서 전체 세션 등록 발음의 문자/길이/개수 검증과 해시를 만들고 `speech/local.py`의 요청별 hotwords에 전달한다. `demo/adapters.py`의 ATC/Pilot 음성 경로에서 연결하며 transcript 후처리·강제 prefix·정답 주입은 없다. `stt_context` API 응답에 근거를 남기고 `/api/demo/status`에서 기능 설정을 확인한다. `scripts/run-context-backend.sh`로 opt-in 실행한다. context 사용 시 `callsign_context_requires_review`로 자동 지시 채택을 보류한다. 기존 CLI 음성 생산기는 이번 범위 밖이다.
+- 비교 설계: 과거 등록 데모3개 + 목록 밖 실제12개 + 호출부호 없는 실제8개 + 합성무음1개, 같은 모델/설정으로 hotwords 유무48회. 결과를 보기 전에 seed20261112와 정답/설정/음원/가중치 해시를 고정했다. 개발/회귀 자료이며 새 독립 정확도 시험이 아니다. 전사 라벨은 기존 어시스턴트 검토를 재사용하며 항공 전문가 검수 없음.
+- 검증/결과: 48회 비교 추론 및 실제 모델 ASGI2회 완료. 호출부호 등록 데모0/3→1/3, 목록 밖3/12 유지. 실제20개 부정 비교에서 등록 호출부호 삽입0/20, 기존 CALLSIGN 오검출2/8은 유지. [문맥 평가 보고서](../atc-callsign-context.md)와 고정 실측 JSON에 원문/후단 후보/채점·입력 감사를 기록했다. 실제 BERT/v7 포함 backend571 passed, 기존 Starlette deprecation 경고1. 최초 전체 실행은 잘못 지정한 v7 경로로1개 실패했으며 올바른 경로로 단독 재확인 후 최종 전체571개를 다시 통과했다. 첫 ASGI 요청은 UTC +00:00 표기가 계약의 Z 형식과 달라 모델 실행 전에 거절돼 수정했다. 새 하드웨어 수음·실시간 교통 목록·프런트 브라우저 검증은 미실행.
+- 자체 리뷰: 모든 등록 항공기 동일 취급, 공유 모델의 세션 문맥 유출 없음, 설정 변경과 기존 세션 스냅샷 분리, 호출부호/무음 누락을 채우지 않음, 힌트가 있는 고점수 결과도 자동 채택하지 않음을 테스트했다. API 응답의 문맥 metadata는 Observation DB에 별도 영속화하지 않았다. 원음·가중치·DB·개인 절대 경로는 Git 제외. 조건부 효과와 데모 정답에서 미리 만든 등록 목록의 한계를 보고서에 명시한다.
+- 인수인계: 구현/실측 커밋 `7a5da03`, [PR #27](https://github.com/kkyo1130/Boeing_RADAR/pull/27) 제출. base는 미병합 PR #22의 `codex/atc-microphone-modes`이며 선행 병합 후 dev로 전환한다. 외부 리뷰/병합 대기. WI 전체 AC-02 완료와 구분한다. 다음에는 실제 시연 전에 정한 항공기 목록 또는 연동된 교통 목록을 확보해야 일반화된 문맥 효과를 평가할 수 있다. 이번 요청에서 숫자 규칙 수정·STT 추가 학습은 수행하지 않는다.
+
+#### 음성 고도·방위 숫자 문법 보완 및 고정 전사 재시험 · 2026-11-10
+
+- 범위/기준: 사용자 요청의 두 번째 개선 단계. 최신 dev d267d4b에서 `codex/atc-numeric-rules`를 만들고 앞 단계 PR #27의203e5e0을 의존성으로 가져왔다. 원격 병합·기존 사용자 작업 수정 없음. 변경은 고도/방위 숫자 문법과 같은 녹음의 후단 재시험이며 STT/BERT 재학습·전사 수정은 하지 않았다.
+- 구현/계약: `structure_rules.py`가 명시 FL2/3자리·one~nine hundred, 음성 heading360→0을 해석한다. `numeric_slots.py`가 고도 명령 뒤 compact/spaced FL 및 heading 뒤 단일 ah/uh/um 후보를 보완한다. 후자는 전체 구조 검사와 hybrid 둘 다 검토 사유를 남겨 자동 채택하지 않는다. 원문/offset/규칙 점수null 보존. `hybrid.py`는 rules-v3, `ner.py`는 새 버전의 보류를 처리한다. wire/target/OCR 범위는 그대로이며 관련 계약2개·문형 fixture24개·기존 smoke 기대 버전을 갱신했다. 원시값360을 정상값으로 고치는 변경이 아니다.
+- 자료/실행: PR #26의88개 정답/ASR176조건과 PR #27의24개 문맥유무48조건을 고정 전사로 재사용했다. 실제 중복제외91음원+합성무음1개다. `replay_numeric_rules.py`에서 실제 BERT222회와 빈 무음2조건 처리, `publish_numeric_rules.py`에서224조건 커버리지·음원/전사/정답/가중치/소스 해시·채점·집계·호출부호 불변을 감사했다. 새 전사나 새 독립 시험이 아니며 방위13개 진단·기존 데모3개의 제약을 유지한다.
+- 결과: ASR 고도11/15→13/15, 방위7/13→10/13. 정답 전사 고도12/15→14/15, 방위12/13→13/13. 기존 정답 필드 회귀0, 호출부호 예측 모두 불변. 방위 개선2개는 머뭇거림 후보/보류이며 자동 승인 성공이 아니다. 호출부호+숫자 전체 정답은 ASR 고도4/15·방위0/7 그대로다. 미해결 연속 숫자/obama/q/kel/heading 손상은 [보고서](../atc-numeric-rules.md)에 분리했다.
+- 검증: backend에서 실제 BERT/v7 경로와 OMP_NUM_THREADS=4로 `../.venv/bin/python -m pytest -q`: **623 passed**, skip0, 기존 Starlette 경고1. 전용 숫자 경계47개와 wire360 거부/원문360→0/0과결측/unknown 삽입·꼬리/NER 없는 서버의 보류를 검증했다. 최초 집중 실행의 FL30 거부 기대1개는 새 계약에 맞게 FL30 허용·FL3 거부로 바꾼 뒤 전체 재검증했다. `contracts/check_v2.py`: Schema6/fixture21 PASS. 컴파일·diff 검사 통과. 서버 경계는 주입 STT fixture이며 실제 모델의 고정 전사 재추론과 구분한다.
+- 자체 리뷰: 기존 조건/부정·상한·급변·호출부호·품질 gate 유지, 추출 후보와 서버 채택 구분, 360 변환은 음성 원문에만 제한, 361/720/음수·한 자리FL·불명확 꼬리 거부, 같은 평가 자료 재사용을 새 정확도로 주장하지 않음 확인. 기존 baseline/가중치/ASR 코드는 불변. 원음/가중치/DB는 Git 제외. 새 마이크·STT 재실행·브라우저·전문가/외부 리뷰는 미실행.
+- 인수인계: 구현/재시험 커밋 `dfb25c7`, [PR #28](https://github.com/kkyo1130/Boeing_RADAR/pull/28) 제출, reviewing. PR #27에 의존하며 선행 병합 후 dev로 base를 전환한다. WI 전체 AC-02 완료나 실제 운항 인수로 보지 않는다. 남은 핵심은 호출부호 STT 손상이며 이번 요청에서 추가 모델/규칙 튜닝으로 평가 표본을 반복 맞추지 않는다.
+
+#### 사람이 관제사 역할을 하는 시연 · 2026-11-10
+
+- 범위·기준: 사용자 요청에 따라 SPEC-004-WI-02의 데모 입력을 확장했다. 최신 origin/dev 확인 후 선행 숫자 규칙 PR #28의 `39063eb`를 fast-forward한 `codex/atc-live-demo`에서 작업했다. 원래 작업 폴더의 미커밋 변경은 유지했다. 실제 RF 수신·화자 자동 분리·새 모델 학습은 이번 범위가 아니다.
+- 구현: `DemoPanel.jsx`는 관제사 직접 발화를 기본값으로 두고 녹음 재생 시험은 선택 기능으로 보존한다. 역할·입력 방식·ATC ID는 녹음 시작 때 고정한다. `demo-audio.js`는 직접 발화/Pilot에 소음 억제·에코 제거를 요청하고 재생에는 끈다. `api/demo.py`/`adapters.py`는 `microphone_live`를 실제 ASR 경로로 전달한다. `SpeechSegmentV2`/JSON Schema는 ATC 역할의 `ATC_DEMO_MICROPHONE` 근거를 추가했으며 Pilot 역할과 섞으면 거부한다. DB payload에 역할 근거·원음 ref가 저장되고 스키마 버전은 2를 유지한다. 기존 소비자는 새 enum을 배포하기 전에 함께 갱신해야 한다.
+- 입력→결과: 마이크 PCM→Whisper→BERT 호출부호+고도/방위 규칙→기존 서버 검사로 이어진다. 예시 문장/정답을 ASR 요청에 보내지 않으며 등록 시나리오는 STT 미사용 예비 기능으로 분리한다. `DemoResults.jsx`의 재생 전용 안내를 음성 입력 안내로 바꿨다. 무음·취소·새 ATC 미채택 시 이전 정상 복창을 재사용하지 못한다. 기존 callsign context opt-in 보류 조건은 유지한다.
+- 실행: `scripts/run-live-demo.sh`는 준비된 모델/설정으로 backend8018와 frontend5178을 실행한다. 최초8014 실행 시 기존 서버와 충돌한 것을 확인해 포트 사전 확인과 backend 준비 대기를 추가했다. 기존 프로세스는 종료하지 않았으며 이 작업의 잘못 연결된 frontend만 중지했다. 새 서버의 실제 모델은 기존 base.en + BERT rules-v3, context 비활성이다. 경로와 상세 사용법은 [사람 관제사 데모](../atc-live-demo.md)에 있다.
+- 자동 검증: worktree 루트에서 `RADAR_TEST_BERT_MODEL=<prepared-bert> RADAR_TEST_NER_MODEL=<v7> .venv/bin/python scripts/verify.py --component backend`의 backend **627 passed**(skip0, 기존 Starlette 경고1). 같은 실행의 HTTP47개는 sandbox bind 금지로 setup 실패했으므로 권한 있는 실행 환경에서 backend 기준 `../.venv/bin/python -m pytest ../tests/integration -q`로 별도 실행해 **47 passed**를 확인했다. `contracts/check_v2.py`는 **6 schema/22 fixture PASS**. frontend Node24.22.2에서 `npm test`: **54 passed**, `npm run build`: PASS. `npx playwright test e2e/speech-modes.spec.js`는 설치된 Chromium 경로를 지정해 **2 passed**. 초기 브라우저 실행의 번들 미설치 오류는 기존 설치 경로를 명시해 해결했다. 실제 장치 음성 대신 fake media/ASR 경계를 사용하는 브라우저 테스트임을 구분한다.
+- 실제 모델 재생 검증: `scripts/test-live-atc.py --wav <기존-사용자-마이크.wav> --wrong-heading-wav .demo/audio/heading.wav --output .demo/live-replay.json`을 로컬 서버에 실행했다. 요청 시각은 API 순서 검증용 합성 시각이며 원래 수음 시각이 아니다. 저장된 사용자 음성에서 `Radar, one, two, three, climb and maintain, three thousand feet, heading to seven, zero.`를 받아 RADAR123/3000/270을 채택했다. 같은 파일 Pilot은 NORMAL, 합성290도 Pilot은 MISMATCH. 새 ATC 무음은 silence_or_weak_signal + LATEST_ATC_NOT_ADOPTED, 이전 ID의 복창 HTTP409. 과거 불일치 이력 자체는 보존된다. 처음 재생 도구가 UTC +00:00을 보낸422는 제품 계약에 맞춰 Z 형식으로 수정했다. 원음·모델·DB·원시 JSON은 Git에 제외했다.
+- 자체 리뷰: 직접 발화를 ATC_PLAYBACK으로 잘못 저장하는 문제, 역할/입력 방식 변경 경쟁, 정답 전사 주입, 취소 후 이전 지시 채택, context 보류 우회, 기존 재생 경로 회귀를 점검했다. provenance·역할 거부 테스트와 직접/재생 브라우저 테스트가 통과했다. 실행 중인 새 UI의 기본 직접 발화 선택과 안내 문구를 눈으로 확인했다. 외부 PR 리뷰는 아직 미수행이다.
+- 미실행·인수인계: 새 실시간 2인 마이크 발화, 소음 있는 현장·실무전, 카메라 동시 전체 시연은 미실행이다. 기존 녹음 재생 성공을 현장 인식률로 일반화하지 않는다. 이번 PR은 #28 위에 쌓으며 선행 병합 뒤 dev로 retarget한다. WI 전체 done이 아닌 reviewing으로 유지한다. 구현 커밋은 `3ece4fd`, 제출 PR은 [#29](https://github.com/kkyo1130/Boeing_RADAR/pull/29)이며 base는 `codex/atc-numeric-rules`다. 자체 리뷰와 외부 리뷰를 구분하며 외부 결과를 아직 확인하지 않았다.
 
 <a id="wi-03"></a>
 

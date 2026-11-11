@@ -1,0 +1,129 @@
+{
+  "purpose": "Functional smoke test, not held-out accuracy benchmark",
+  "source": "https://huggingface.co/datasets/Jzuluaga/uwb_atcc",
+  "revision": "1e8270beb8c1643c8735dddb7229fffb0e399f74",
+  "license": "CC-BY-NC-SA-4.0",
+  "attribution": "University of West Bohemia UWB-ATCC; Hugging Face Jzuluaga redistribution",
+  "split": "train",
+  "selection": "Three short controller (_AT) heading-only segments, fixed before inference",
+  "training_overlap": "Not audited; do not report unseen-test accuracy",
+  "asr": "local faster-whisper base.en, CPU int8, existing settings",
+  "extractor": "existing BERT CALLSIGN + deterministic ACTION/ALT/HDG rules",
+  "hardware": "MacBook Air speakers and built-in microphone, Core Audio 48kHz; volume 50, original volume13/muted restored",
+  "sources": [
+    {
+      "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+      "sha256": "cab1c7c8cf8484e6d210ab52c426dc9f64b5d2581df4f0488bec9d332d15035f",
+      "source_row_index": 5681,
+      "source_parquet": "train-00001-of-00002-91082fb03180a296.parquet",
+      "duration": 2.9100000858306885
+    },
+    {
+      "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+      "sha256": "76355cff008a4f4d03490b618d77b0c1a00c43eac866d07943a8cdc5a7533cdb",
+      "source_row_index": 5728,
+      "source_parquet": "train-00001-of-00002-91082fb03180a296.parquet",
+      "duration": 3.140000104904175
+    },
+    {
+      "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+      "sha256": "3df6cfa1718f2ec31aa0aa491cc45605051f095fc716bc41ad0c31f8fc777e4a",
+      "source_row_index": 6378,
+      "source_parquet": "train-00001-of-00002-91082fb03180a296.parquet",
+      "duration": 2.4000000953674316
+    }
+  ],
+  "trials": [
+    {
+      "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+      "mode": "file_upload",
+      "input_sha256": "cab1c7c8cf8484e6d210ab52c426dc9f64b5d2581df4f0488bec9d332d15035f",
+      "rms": 0.0492393895983696,
+      "transcript": "German win some pop-up and lavering zero, four zero.",
+      "quality_reason": "low_or_unknown_model_score",
+      "expected_heading": 40,
+      "targets": {
+        "ALT": null,
+        "HDG": null
+      },
+      "validation_reason": "LATEST_ATC_NOT_ADOPTED",
+      "readback_required": null
+    },
+    {
+      "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+      "mode": "file_upload",
+      "input_sha256": "76355cff008a4f4d03490b618d77b0c1a00c43eac866d07943a8cdc5a7533cdb",
+      "rms": 0.0250565018504858,
+      "transcript": "One's a one kilo kilo, turn left, heading three, zero, zero.",
+      "quality_reason": "ner_or_grammar_needs_review",
+      "expected_heading": 300,
+      "targets": {
+        "ALT": null,
+        "HDG": null
+      },
+      "validation_reason": "LATEST_ATC_NOT_ADOPTED",
+      "readback_required": null
+    },
+    {
+      "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+      "mode": "file_upload",
+      "input_sha256": "3df6cfa1718f2ec31aa0aa491cc45605051f095fc716bc41ad0c31f8fc777e4a",
+      "rms": 0.04536251723766327,
+      "transcript": "It'll be right eight, two, zero, ten, left heading zero, eight, zero.",
+      "quality_reason": "ner_or_grammar_needs_review",
+      "expected_heading": 80,
+      "targets": {
+        "ALT": null,
+        "HDG": null
+      },
+      "validation_reason": "LATEST_ATC_NOT_ADOPTED",
+      "readback_required": null
+    },
+    {
+      "id": "uwb-atcc_APP-0Oi8pk_003039_003329_AT",
+      "mode": "microphone_playback",
+      "input_sha256": "d144049604c7368a2f5e44c5f0de3a0d3b03a8de1b1a84adb491d01bd4ea29b4",
+      "rms": 0.02230280637741089,
+      "transcript": "You're managing some pop-up and I'm getting zero positive.",
+      "quality_reason": "low_or_unknown_model_score",
+      "expected_heading": 40,
+      "targets": {
+        "ALT": null,
+        "HDG": null
+      },
+      "validation_reason": "LATEST_ATC_NOT_ADOPTED",
+      "readback_required": null
+    },
+    {
+      "id": "uwb-atcc_APP-1a67h9_000000_000314_AT",
+      "mode": "microphone_playback",
+      "input_sha256": "c3dd2731b0371843b110d20904786d6fd21af4a27f2607dfe260743f67fa5d2e",
+      "rms": 0.01537642814218998,
+      "transcript": "Oh, I saw.",
+      "quality_reason": "ner_or_grammar_needs_review",
+      "expected_heading": 300,
+      "targets": {
+        "ALT": null,
+        "HDG": null
+      },
+      "validation_reason": "LATEST_ATC_NOT_ADOPTED",
+      "readback_required": null
+    },
+    {
+      "id": "uwb-atcc_APP-33pYrA_000102_000342_AT",
+      "mode": "microphone_playback",
+      "input_sha256": "a4ca1a29b9013bbdec9239926a56ba6f3f4c49ee2cded4f90a76322c778cfb1f",
+      "rms": 0.02360648103058338,
+      "transcript": "Let's be ready, two, zero, ten, eleven, zero, eight, zero.",
+      "quality_reason": "ner_or_grammar_needs_review",
+      "expected_heading": 80,
+      "targets": {
+        "ALT": null,
+        "HDG": null
+      },
+      "validation_reason": "LATEST_ATC_NOT_ADOPTED",
+      "readback_required": null
+    }
+  ],
+  "excluded_trial": "First speaker run was muted; retained locally for diagnostics, excluded from audible playback results."
+}

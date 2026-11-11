@@ -2,7 +2,7 @@
 
 음성의 ATC/READBACK 추출 결과를 같은 원문 transcript·등록 구간·호출부호·설정 정책과 대조한다. 모델의 `instruction_check`와 별개로 서버가 계산하며, AI 재질문·다른 모델 호출·음성의 재인식은 수행하지 않는다. 같은 ASR 원문을 쓰므로 독립된 센서나 검증된 안전 채널이 아니다.
 
-실행 원본은 [검사 서비스](../backend/app/services/structure_rules.py), [타입](../backend/app/schemas/structure_rules.py), [문형 fixture20개](examples/structure-rules/cases.json)다. [정책 Schema](schemas/structure-policy-v1.schema.json)와 [결과 Schema](schemas/structure-result-v1.schema.json)는 Draft2020-12이며 backend 회귀가 DTO와 JSON의 일치를 확인한다. 기존 공통 v2 Schema6종은 그대로 유지한다.
+실행 원본은 [검사 서비스](../backend/app/services/structure_rules.py), [타입](../backend/app/schemas/structure_rules.py), [문형 fixture24개](examples/structure-rules/cases.json)다. [정책 Schema](schemas/structure-policy-v1.schema.json)와 [결과 Schema](schemas/structure-result-v1.schema.json)는 Draft2020-12이며 backend 회귀가 DTO와 JSON의 일치를 확인한다. 기존 공통 v2 Schema6종은 그대로 유지한다.
 
 ## 입력·출력과 적용
 
@@ -26,7 +26,9 @@
 - HDG: `heading ...`, `turn left heading ...`, `turn right heading ...`.
 - 두 항목: ALT 문형 다음 HDG 문형. 연결어 `and`는 선택이다. 부분 지시는 원문/mentioned_fields/fields 집합이 정확히 같아야 한다.
 - 숫자: ASCII 숫자 또는 zero/oh~nine/niner의 자리별 발음. feet는 one~nine thousand와 선택 one~nine hundred 조합도 지원한다. 그 밖의 수사 문형은 NEEDS_REVIEW다.
-- FL은 정확히3자리다. `FL040`/`flight level zero four zero`를4000ft로 유도하고 이미 정규화된 value와 비교한다. 정규화 단위는 항상ft이며 FL을 wire unit으로 받지 않는다. HDG는0~359이며360을0으로 보정하지 않는다.
+- 2026-11-10 사용자 요청에 따른 음성 숫자 문법 확장: 명시 FL 뒤2/3자리 숫자 또는 자리별 발음과 one~nine hundred의 완전한 백 단위 표현을 지원한다. `FL80`/`flight level eight zero`는8000ft, `flight level three hundred`는30000ft다. 한 자리 FL·천 단위·추가 숫자 꼬리는 거부한다. 정규화 단위는 항상ft이며 FL을 wire unit으로 받지 않는다.
+- 음성 원문에서 명시된 `heading 360`/`heading three six zero`는 북쪽을 기존 DTO의0도로 변환한다. 이는 [FAA의 북쪽 표기 설명](https://www.faa.gov/air_traffic/publications/atpubs/fs_html/chap3_section_3.html)과 같다. 361 이상·음수·임의 각도에 modulo 보정하지 않는다. wire/target HDG 값은 여전히0~359이며 원문과 값의 대조에서만360→0을 허용한다. 원본 transcript/raw_text를 보존한다. Cockpit/OCR의360값을 고치는 기능이 아니다.
+- heading 직후 단일 `ah`/`uh`/`um`과 완전한3자리 숫자는 진단 후보로 읽되 전체 구조 검사는 `HEADING_HESITATION_REQUIRES_REVIEW`를 남긴다. BERT+규칙도 같은 보류 사유를 반환한다. `q`/`kel`, 두 번의 머뭇거림, 숫자 중간 삽입은 제거하지 않는다.
 - 필드 `raw_text`도 같은 숫자/명시 FL·feet 문법으로 대조한다. FL 표시의 원문은 `FL040`처럼 단위를 남겨야 한다. 누락/지원하지 않는 원문은 NEEDS_REVIEW, 추출값과 명확한 충돌은 INVALID다.
 - if/after/before/until/when/then/unless 조건·순서는 NEEDS_REVIEW다. 호출부호가 끝에 오는 복창, 지원하지 않는 어순·추가 명령도 자동 통과하지 않는다.
 - 파서 자원 경계는 호출부호 뒤 명령2048자, 필드 원문128자다. 초과 입력은 NEEDS_REVIEW다. 운항 수치나 모델 성능 기준이 아니다.
