@@ -223,3 +223,14 @@ PR #21 자동 Codex 리뷰는 최초 구현 `98e6015`에 지적 없음으로 완
 ## 변경 기록
 
 - v1 · 2026-10-10: 사용자 제공 기획·Priority·자문과 현재 코드로 최초 작업 초안 작성. 문서 작성 권한과 기능 구현 권한은 구분한다.
+
+
+#### 뒤쪽 호출부호·실제 복창 문형 보완 · 2026-11-11
+
+- 요청/기준: 사용자 DELTA 녹음 실패를 수정. dev `0e80cb4`에서 `codex/readback-callsign-suffix`, SPEC-004-WI-02 범위. 기존 사용자 작업/원음/비행 상태 보존.
+- 구현: `structure_rules.py`에 PILOT 앞/뒤 유일 등록 호출부호·복창 문법·동작 비교, `speech/readback.py`에 출처를 밝힌 실제 원문 후보 보완, demo adapter와 수신 상태 연결. BERT 오예측·BIO 실패·모델 장애는 그대로 보류. 운영 UI에서 동작 누락과 호출부호 보류 안내. raw DTO/계약 형식 유지.
+- 검증: 전체 backend665 passed/1 skipped(v7 opt-in), 추가 사례 포함 전용42 passed(실제 BERT 포함), 계약6 schemas/22 fixtures PASS, frontend build. 원본 ATC/Pilot WAV 두 개를 실제 Whisper/BERT HTTP로 재생하여 같은 전사와 DELTA123/3000ft/270° 추출 확인. Pilot 동작 생략은 NEEDS_REVIEW, 카메라 부재도 계속 UNVERIFIED. 텍스트 완전 복창 성공과 실제 녹음 결과를 구분한다.
+- 자체 리뷰: 고정 target 주입·음성 수정·숫자만으로 자동 승인 없음, 등록 alias 충돌/복수 호출부호/잘린 입력·반대 동작 검증. 상세 실패 및 재실행, 한계·재현은 [수행 기록](../readback-callsign-suffix.md)을 따른다. 전체 AC-02 완료나 외부 리뷰 완료로 표시하지 않는다.
+- 인수인계: 재생 스크립트 `scripts/replay-readback.py`, 파일은 `.demo/`에만 보존. 외부 PR 리뷰 및 병합 대기; 새 live 마이크/카메라 시험은 미실행. 기존 채택 지시에 새 동작 비교 정보가 없는 경우 새 관제 입력부터 진행한다.
+
+2026-11-11 PR #34 CI 후속: 원격 Linux/macOS HTTP 통합 fixture4건과 프런트 옛 안내문 assertion1건 실패를 확인했다. 숫자 불일치 fixture의 상승 동작 누락을 보완하고 누락/반대 동작 보류 및 뒤쪽 호출부호 정상 HTTP3건을 추가했다. 제품 판정 기준 변경 없음. CI와 동일한 verify 명령으로 backend/HTTP713 passed·6 opt-in skipped, Vision45, frontend60·빌드·legacy/v2 HTTP smoke 통과. 초기 검증 범위 누락과 브라우저 실행 환경, 원격 재검증은 [후속 기록](../readback-callsign-suffix.md)을 따른다. reviewing 유지.

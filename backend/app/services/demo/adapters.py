@@ -11,7 +11,7 @@ from uuid import uuid4
 from PIL import Image
 from app.schemas.observation_v2 import ObservationV2, SpeechSegmentV2
 from app.services import receiving_v2 as intake, media_v2
-from app.services.structure_rules import normalize, parse_command
+from app.services.structure_rules import normalize, parse_command, parse_readback, split_callsign
 
 SCENARIOS = {
     'baseline': 'Radar one two three climb and maintain three thousand feet heading two seven zero',
@@ -51,14 +51,13 @@ def base(flight, revision, observed, evidence):
 
 def speech_payload(flight, revision, segment, transcript, score, registry, audio, quality_reason=None, ner_result=None):
     text = normalize(transcript)
-    matches = [(canonical, alias, raw) for canonical, aliases in registry.items()
-               for alias, raw in aliases.items() if text.startswith(normalize(raw)+' ')]
+    matched = split_callsign(text, registry, readback=segment['role'] == 'PILOT')
     values, issues = {}, ['callsign_not_recognized']
     call = dict(value=None, alias_key=None, raw_text=None, validity='UNREADABLE',
                 reason='callsign_not_recognized', quality=quality(score, False, 'callsign_not_recognized'))
-    if len(matches) == 1:
-        canonical, alias, raw = matches[0]
-        values, issues = parse_command(text[len(normalize(raw))+1:])
+    if matched is not None:
+        canonical, alias, raw, command = matched
+        values, issues = (parse_readback(command) if segment['role'] == 'PILOT' else parse_command(command))
         call = dict(value=canonical, alias_key=alias, raw_text=raw, validity='VALID', reason=None,
                     quality=quality(score, not quality_reason, quality_reason))
     if ner_result is not None:
@@ -67,7 +66,7 @@ def speech_payload(flight, revision, segment, transcript, score, registry, audio
         if ner_issue:
             issues.append(ner_issue)
             quality_reason = quality_reason or ner_issue
-    if issues:
+    if any(issue != ('ALT', 'NEEDS_REVIEW', 'READBACK_ALTITUDE_ACTION_MISSING') for issue in issues):
         values = {}  # No partial guess from an unconsumed transcript.
     fields = {key: reading(value, key, score, raw=str(value)) for key, value in values.items()}
     if quality_reason:
@@ -78,7 +77,7 @@ def speech_payload(flight, revision, segment, transcript, score, registry, audio
                    segment_id=segment['segment_id'], attempt_id=segment['attempt_id'],
                    atc_input_id=segment['atc_input_id'], transcript=transcript or None,
                    transcript_reason=None if transcript else 'no_speech_detected', callsign=call,
-                   mention_status='UNKNOWN' if issues else 'KNOWN', mentioned_fields=list(fields),
+                   mention_status='KNOWN' if values else 'UNKNOWN', mentioned_fields=list(fields),
                    instruction_check='NEEDS_REVIEW' if issues or quality_reason else 'PASS', fields=fields)
     if segment['role'] == 'PILOT':
         payload['instruction_id'] = segment['instruction_id']
@@ -159,6 +158,9 @@ def _receive_speech(db, flight, body, data, *, scenario=None, atc_mode=None):
         from app.services.speech.ner import extract_atc
         try:
             ner_result = extract_atc(transcript)
+            if segment['role'] == 'PILOT':
+                from app.services.speech.readback import readback_candidates
+                ner_result = readback_candidates(transcript, registry, ner_result)
         except Exception:
             # An explicitly enabled model must never silently fall back to grammar-only PASS.
             ner_result = dict(entities=[], tokens=[], issues=['NER_UNAVAILABLE'],

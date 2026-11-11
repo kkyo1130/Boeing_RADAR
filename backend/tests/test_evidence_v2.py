@@ -127,7 +127,7 @@ def test_media_is_scoped_and_never_fetches_arbitrary_path(scenario, tmp_path, mo
 
 def test_actual_correction_readback_can_start_without_panel_or_ack(scenario):
     s = scenario; a = s.adopt(); s.tick()
-    data = s.speech(s.segment(a)); data["transcript"] = "Radar one two three maintain four thousand feet heading two seven zero"
+    data = s.speech(s.segment(a)); data["transcript"] = "Radar one two three climb and maintain four thousand feet heading two seven zero"
     data["fields"]["ALT"].update(value=4000,raw_text="4000"); s.send(data)
     match_readback(s,a)
     assert s.state()["incidents"][0]["status"] == "RESOLVED"

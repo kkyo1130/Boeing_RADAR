@@ -94,7 +94,7 @@ def test_stt_dispatches_hybrid_and_bad_configuration_never_falls_back(client,fli
     response=client.post(f'/api/demo/{flight}/scenario/baseline',json={'started_at':intake.stamp(now-timedelta(seconds=4)),'ended_at':intake.stamp(now-timedelta(seconds=3))})
     assert response.status_code==200
     state=client.get(f'/api/v2/flights/{flight}/state').json()
-    text='Radar one two three maintain 3,000 feet heading 270.'
+    text='Radar one two three climb and maintain 3,000 feet heading 270.'
     class ASR:
         def transcribe(self,path):return {'transcript':text,'model_score':.9}
     monkeypatch.setattr(adapters,'MODEL',ASR())
