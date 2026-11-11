@@ -50,13 +50,26 @@ def main():
     p.add_argument("--name", default="baseline")
     args = p.parse_args()
     counts = validate_dataset(args.data)
+    # Blender-generated dataset.yaml can contain an absolute path from another machine.
+    # Write a portable, local training config without modifying the source dataset.
+    yaml_path = args.data.resolve() / "dataset_local.yaml"
+    yaml_path.write_text(
+        f"path: {args.data.resolve()}\\ntrain: images/train\\nval: images/val\\ntest: images/test\\nnames:\\n  0: mcp\\n",
+        encoding="utf-8",
+    )
     print("Dataset counts:", counts, flush=True)
     from ultralytics import YOLO
     model = YOLO(args.model)
-    model.train(data=str((args.data / "dataset.yaml").resolve()),
+    model.train(data=str(yaml_path),
                 epochs=args.epochs, imgsz=args.imgsz, batch=args.batch,
                 device=args.device, project=args.project, name=args.name)
-    print("Training finished. Check best.pt and validation metrics in the run directory.")
+    best = Path(model.trainer.best)
+    print(f"Training finished. Best weights: {best}", flush=True)
+    if counts["test"]:
+        from ultralytics import YOLO
+        metrics = YOLO(str(best)).val(data=str(yaml_path), split="test", device=args.device)
+        print(f"Test metrics: precision={metrics.box.mp:.4f}, recall={metrics.box.mr:.4f}, "
+              f"mAP50={metrics.box.map50:.4f}, mAP50-95={metrics.box.map:.4f}", flush=True)
 
 
 if __name__ == "__main__":
