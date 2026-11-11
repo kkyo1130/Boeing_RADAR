@@ -23,8 +23,6 @@ def main():
     from auto_detect_mcp import detect_readouts
     from camera_digit_preprocess import camera_to_amber
     from preprocess_mcp_ocr import align
-    if args.output.exists() and any(args.output.iterdir()):
-        p.error("Output must be a new empty directory (avoid accidental overwrite)")
     if args.pairs < 1:
         p.error("--pairs must be positive")
     def validate(h,a):
@@ -38,11 +36,34 @@ def main():
     args.output.mkdir(parents=True)
     fields=["image_path","kind","text","split","session_id","source_image"]
     labels=args.output/"labels.csv"
-    count=0
+    existing = []
+    if labels.exists():
+        with labels.open(newline="", encoding="utf-8") as fp:
+            existing = list(csv.DictReader(fp))
+        by_source = {}
+        for row in existing:
+            rel = Path(row["image_path"])
+            if (row.get("kind") not in ("hdg", "alt") or rel.is_absolute()
+                    or ".." in rel.parts or not (args.output / rel).is_file()):
+                p.error(f"Invalid or missing existing image: {rel}")
+            by_source.setdefault(row["source_image"], set()).add(row["kind"])
+        if any(kinds != {"hdg", "alt"} for kinds in by_source.values()):
+            p.error("Incomplete pair in labels.csv; inspect before resuming")
+        count = len(by_source)
+    else:
+        if any(args.output.iterdir()):
+            p.error("Existing folder has no labels.csv; refusing to overwrite")
+        count = 0
+    print(f"Resuming at {count}/{args.pairs} pairs")
+    if count >= args.pairs:
+        print("Batch already complete.")
+        cap.release()
+        return
     try:
-        with labels.open("w",newline="",encoding="utf-8") as fp:
+        with labels.open("a",newline="",encoding="utf-8") as fp:
             writer=csv.DictWriter(fp,fieldnames=fields)
-            writer.writeheader()
+            if not existing:
+                writer.writeheader()
             while count<args.pairs:
                 ok,frame=cap.read()
                 if not ok:
