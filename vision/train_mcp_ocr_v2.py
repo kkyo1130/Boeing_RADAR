@@ -22,6 +22,7 @@ def main():
     p.add_argument("--device", choices=("cpu", "mps", "cuda"), default="cpu")
     p.add_argument("--augment", action="store_true")
     p.add_argument("--test", action="store_true", help="Evaluate held-out test split after training")
+    p.add_argument("--init-checkpoints", type=Path, help="Load existing HDG/ALT weights for fine-tuning")
     args = p.parse_args()
     import torch
     from torch import nn
@@ -94,6 +95,13 @@ def main():
         train = DataLoader(train_ds, batch_size=args.batch, shuffle=True)
         val = DataLoader(val_ds, batch_size=args.batch)
         model = DigitCNN(n).to(args.device)
+        if args.init_checkpoints:
+            ckpt_path = args.init_checkpoints / f"{kind}_best.pt"
+            checkpoint = torch.load(ckpt_path, map_location="cpu", weights_only=True)
+            if checkpoint.get("kind") != kind or checkpoint.get("digits") != n:
+                raise ValueError(f"Checkpoint kind/digits mismatch: {ckpt_path}")
+            model.load_state_dict(checkpoint["model"])
+            print(f"Fine-tuning {kind} from {ckpt_path}", flush=True)
         optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
         # Per-position weighting prevents frequent trailing zeroes from dominating.
         frequencies = [Counter(int(r["text"][pos]) for r in train_ds.rows) for pos in range(n)]
