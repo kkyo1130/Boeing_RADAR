@@ -20,6 +20,7 @@ def main():
     p.add_argument("--manual", action="store_true", help="Disable automatic detection; select ROIs with H and A")
     p.add_argument("--yolo-weights", type=Path, default=None, help="Optional trained YOLO MCP best.pt")
     p.add_argument("--yolo-conf", type=float, default=0.25)
+    p.add_argument("--debug-ocr", action="store_true", help="Save OCR preprocessing images")
     args = p.parse_args()
     if args.stable_frames < 1:
         p.error("--stable-frames must be positive")
@@ -100,6 +101,12 @@ def main():
         gray = aligned.convert("L")
         n = 3 if kind == "hdg" else 5
         gray = gray.resize((36*n, 48), Image.Resampling.BILINEAR)
+        if args.debug_ocr:
+            debug_dir = Path("vision/reports/ocr_debug")
+            debug_dir.mkdir(parents=True, exist_ok=True)
+            cv2.imwrite(str(debug_dir / f"{kind}_raw.png"), crop)
+            aligned.save(debug_dir / f"{kind}_aligned.png")
+            gray.save(debug_dir / f"{kind}_cnn_input.png")
         tensor = torch.from_numpy(np.asarray(gray, dtype=np.float32).copy()).unsqueeze(0).unsqueeze(0).to(args.device) / 255.
         with torch.no_grad():
             probabilities = models[kind](tensor).softmax(-1)[0]
