@@ -108,6 +108,15 @@ MacBook Air 마이크(48kHz mono PCM16) 신규 녹음3회를 실제 HTTP STT 경
 
 PR #21 자동 Codex 리뷰는 최초 구현 `98e6015`에 지적 없음으로 완료됐으며 GitHub APPROVED 제출과는 구분한다. 미해결 review thread는0개다. 이후 `e7b1e9e`까지의 숫자 동음어 변경은 자체 추가 검토로 원문/점수 출처 보존, 숫자 슬롯 한정, 조건·누락 보류를 확인했다. 최신 원격 Python fixtures는 Ubuntu/macOS 모두 성공했으나 frontend Chromium E2E가 기존 pilot 테스트의 Mac 전용 `/private/tmp` 캡처 경로 때문에 Linux에서3건 실패했다. 테스트 기대값은 유지하고 `testInfo.outputPath`로 캡처 경로만 바꿔 OS별 임시경로 의존과 실행 간 파일 충돌을 제거한다. 사용자 요청에 따라 최신 CI 성공과 head/충돌 여부 확인 후 squash merge한다. 자동 리뷰가 최신 코드를 재검토했다고 표현하지 않는다.
 
+#### 관제 특화 STT 모델 비교 · 2026-11-10
+
+- 범위/기준: 사용자 요청은 같은 실제 관제 녹음에서 특화 모델을 찾아 비교하는 것이다. `origin/dev` `d267d4b`에서 `codex/atc-specialist-comparison`을 만들었다. 운영 코드·품질 임계값·호출부호 사전·모델 설정은 변경하지 않는다. 기존 사용자 작업 폴더는 보존했다.
+- 구현: `scripts/evaluation/compare_atc_specialists.py`는 고정 WAV6개의 SHA-256을 확인하고 실제 CTC 또는 Whisper 추론을 PR #22 `da0f219`의 `/atc` TestClient 경로에 연결한다. 모델별 임시 DB/비행을 사용한다. CTC는16kHz 리샘플링·greedy·LM 없음·점수null, Whisper는 로컬 CTranslate2 변환·기존 beam5/영어/VAD로 실행한다. 실제 전사를 BERT+규칙에 넣은 텍스트 진단과 서버 채택을 분리한다. `summarize_atc_specialists.py`는 PR #23 `de7740e` 채점기를 사용해 WER과 결과 커버리지를 재검산한다. 모델 revision/가중치 해시·원문·환경·중복 위험은 `docs/evaluation/atc-specialist-comparison-2026-11-10.json`, 해석/재현은 [실험 보고서](../atc-specialist-comparison.md)에 기록했다.
+- 실행 검증: 작업 worktree에서 `.venv/bin/python -m unittest discover -s scripts/evaluation -p 'test_atc_specialists.py'` 2 passed. 리샘플링 길이·무음 보존, 잘못된 호출부호/방위/여분 고도의 텍스트 진단 탈락을 확인했다. `.venv/bin/python -m py_compile scripts/evaluation/*.py` 통과. 보고서의 compare 명령으로 CTC2종 각6회, Whisper 일반 안내문/없음 각6회, 합계24회 실제 가중치 추론·API 처리를 완료했다. summarize 명령은 입력6개×4조건의 누락·중복/해시/채점 재계산, CTC12회의 미확인 점수·서버 보류를 확인했다. 새 마이크 수음이 아니라 이전 물리 스피커→마이크 녹음을 파일 재입력했다.
+- 결과/AC 경계: ATC-Whisper 일반 안내문 WER 원음22.6%/마이크29.0%, 기존 일반 turbo38.7%/45.2%보다 낮았으나 호출부호 오류로 텍스트 추출 일치0/3씩이다. CTC-UWB는0.0%/3.2%, 텍스트3/3·2/3이지만 시험 음원이 UWB train split으로 학습 중복 위험이 높다. CTC 서버 미채택은 품질 점수를 정의하지 않은 결과이므로 ASR 실패로 계산하지 않는다.24회 모두 서버 채택0, 잘못된 지시 채택0. 이 표본으로 전체 AC-02 완료나 독립 일반화 성능을 주장하지 않는다.
+- 자체 리뷰: 정답 전사/호출부호/방위를 ASR에 주입하지 않았고 프롬프트 두 조건을 실행 전에 고정했다. ATCOSIM-only CTC 저장소의 UWB 이름 LM 파일은 사용하지 않았다. UWB 학습 모델의 중복, ATCO2 학습 모델에 대한 향후 ATCO2 시험 오염 가능성, 점수null의 보류, 모델/엔진별 속도 비교 한계, 라이선스/출처를 검토했다. 한국어 보고서는 외부 모델 카드의 설명과 자체 실측·해석을 분리해 점검했다. 외부 자동/사람 리뷰는 아직 미실행이다.
+- 인수인계: 코드·실측 커밋 `dfdd8ac`, [PR #24](https://github.com/kkyo1130/Boeing_RADAR/pull/24)로 제출했다. TODO reviewing 유지. 재현에는 PR #22/23 체크아웃과 별도 원음/BERT 가중치가 필요하다. 원음·신규 다운로드 가중치·DB는 Git에 추가하지 않는다. 다음 결정은 학습 코퍼스와 겹치지 않는 실제 교신으로 후보를 재평가하는 것이다. 운영 모델 교체, CTC 품질 정책, 새로운 실시간 마이크·전체 UI/서버 회귀는 이번 변경 범위에서 미실행이다.
+
 #### ATC 수음 / 파일럿 복창 분리 · 2026-11-10
 
 - 범위·기준: PR #21 squash merge 후 `origin/dev` `d267d4b`, 별도 `codex/atc-microphone-modes` worktree. SPEC-004-WI-02의 실제 ATC 입력을 확장한다. 기존 사용자 작업 폴더·다른 WI는 변경하지 않는다.
