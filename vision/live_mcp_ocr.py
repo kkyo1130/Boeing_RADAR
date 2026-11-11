@@ -1,9 +1,9 @@
-"""Run saved MCP OCR v3 checkpoints on webcam or video with manually selected ROIs.
+"""Run saved MCP OCR v3 checkpoints with automatic readout localization.
 
 Example:
  python vision/live_mcp_ocr.py --source 0 --checkpoints vision/checkpoints/mcp_ocr_v3
  python vision/live_mcp_ocr.py --source demo.mp4 --checkpoints vision/checkpoints/mcp_ocr_v3
-Keys: H select HDG ROI, A select ALT ROI, R reset, Q quit.
+Keys: H/A manual fallback ROI, R reset, Q quit. Automatic mode is default.
 """
 import argparse
 from collections import deque
@@ -17,6 +17,7 @@ def main():
     p.add_argument("--device", choices=("cpu", "mps", "cuda"), default="cpu")
     p.add_argument("--stable-frames", type=int, default=3)
     p.add_argument("--width", type=int, default=0, help="Optional camera capture width")
+    p.add_argument("--manual", action="store_true", help="Disable automatic detection; select ROIs with H and A")
     args = p.parse_args()
     if args.stable_frames < 1:
         p.error("--stable-frames must be positive")
@@ -27,6 +28,7 @@ def main():
         from torch import nn
         from PIL import Image
         from preprocess_mcp_ocr import align
+        from auto_detect_mcp import detect_readouts
     except ImportError as exc:
         p.error(f"Missing dependency: {exc}. Install opencv-python, torch, pillow, numpy")
 
@@ -91,13 +93,25 @@ def main():
         confidence = float(probabilities.max(-1).values.min().item())
         return value, confidence
 
-    print("Press H to select heading display, A to select altitude display, R to reset, Q to quit.")
+    print("Automatic HDG/ALT detection enabled. H/A select manual fallback ROIs, R reset, Q quit.")
+    auto_history = deque(maxlen=5)
     try:
         while True:
             ok, frame = capture.read()
             if not ok:
                 print("End of video or camera read failed.")
                 break
+            if not args.manual and not any(regions.values()):
+                detected = detect_readouts(frame)
+                auto_history.append(detected)
+                # Require repeated matching candidate positions to avoid jumping between bright UI elements.
+                if len(auto_history) >= 3 and all(set(item) == {"hdg", "alt"} for item in list(auto_history)[-3:]):
+                    for kind in ("hdg", "alt"):
+                        boxes = [item[kind] for item in list(auto_history)[-3:]]
+                        centers = [(b[0]+b[2]/2, b[1]+b[3]/2) for b in boxes]
+                        tolerance = max(8, frame.shape[1]*.015)
+                        if max(x for x,y in centers)-min(x for x,y in centers) <= tolerance and max(y for x,y in centers)-min(y for x,y in centers) <= tolerance:
+                            regions[kind] = boxes[-1]
             for kind, color in (("hdg", (0, 230, 255)), ("alt", (255, 190, 40))):
                 roi = regions[kind]
                 if roi is None:
@@ -114,7 +128,7 @@ def main():
                     label = f"{kind.upper()}: {value} {'STABLE' if stable else 'CHECK'} conf={conf:.2f}"
                 cv2.putText(frame, label, (max(0, x), max(20, y-8)),
                             cv2.FONT_HERSHEY_SIMPLEX, .55, color, 2, cv2.LINE_AA)
-            cv2.putText(frame, "H: HDG ROI | A: ALT ROI | R: reset | Q: quit",
+            cv2.putText(frame, "AUTO detect | H/A: manual fallback | R: reset | Q: quit",
                         (12, max(25, frame.shape[0]-18)), cv2.FONT_HERSHEY_SIMPLEX,
                         .55, (240,240,240), 2, cv2.LINE_AA)
             cv2.imshow(window, frame)
@@ -123,6 +137,7 @@ def main():
                 break
             if key == ord("r"):
                 regions = {"hdg": None, "alt": None}
+                auto_history.clear()
                 for h in history.values():
                     h.clear()
             if key in (ord("h"), ord("a")):
