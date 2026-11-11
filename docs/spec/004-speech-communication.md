@@ -108,6 +108,17 @@ MacBook Air 마이크(48kHz mono PCM16) 신규 녹음3회를 실제 HTTP STT 경
 
 PR #21 자동 Codex 리뷰는 최초 구현 `98e6015`에 지적 없음으로 완료됐으며 GitHub APPROVED 제출과는 구분한다. 미해결 review thread는0개다. 이후 `e7b1e9e`까지의 숫자 동음어 변경은 자체 추가 검토로 원문/점수 출처 보존, 숫자 슬롯 한정, 조건·누락 보류를 확인했다. 최신 원격 Python fixtures는 Ubuntu/macOS 모두 성공했으나 frontend Chromium E2E가 기존 pilot 테스트의 Mac 전용 `/private/tmp` 캡처 경로 때문에 Linux에서3건 실패했다. 테스트 기대값은 유지하고 `testInfo.outputPath`로 캡처 경로만 바꿔 OS별 임시경로 의존과 실행 간 파일 충돌을 제거한다. 사용자 요청에 따라 최신 CI 성공과 head/충돌 여부 확인 후 squash merge한다. 자동 리뷰가 최신 코드를 재검토했다고 표현하지 않는다.
 
+#### 미사용 관제 녹음의 Whisper 비교 · 2026-11-10
+
+- 범위/기준: 사용자 요청에 따라 dev `d267d4b`에서 `codex/atc-unseen-whisper`로 분리했다. 일반 large-v3-turbo와 관제용 ATC-whisper-turbo-v1을 재학습 없이 비교한다. 운영 API/모델/임계값/등록 호출부호는 변경하지 않는다.
+- 계획/자료: UWB 공식 test2,822개에서 `_AT`만 사용하고 이전 선택 자료80개 JSON의1,226개 ID·1,051개 원본 그룹과 중복 문장을 제외했다. 후보576개·389그룹 중 seed20261110으로60그룹 각1개,225.30초를 추론 전에 고정했다. ATCO2/ATCOSIM은 제외한다. 공개된 추가 학습 코퍼스와 분리했지만 기반 Whisper 사전학습 중복0은 보장할 수 없다.
+- 구현: `prepare_unseen_atc.py`는 출처·선택·이전 사용 파일 해시와 음원 해시를 고정한다. `compare_unseen_whisper.py`는 두 로컬 가중치를 같은CPU/int8/beam5/영어/VAD/temperature0/일반 안내문 조건에 적용하고 실행 순서를 교대한다. `summarize_unseen_whisper.py`는60×2커버리지·이전파일 해시·그룹 중복·WER를 재검산하고 paired bootstrap을 수행한다. 전사 자체와 숫자 토큰 순서를 측정하며 서버 채택/ALT·HDG 값 정확도와 구분한다.
+- 자료 준비 수정: 초기 감사에서 이전에 내려받은 시험셋 전체 메타데이터를 실제 사용 목록으로 취급해 후보0개로 중단했다. 추론 전에 해당 카탈로그만 제외하고 실제 학습·선택·예측 기록80개의 해시를 대조하여 원본 그룹/동일 문장 중복0을 확인했다. 결과를 보고 표본을 바꾼 것이 아니다.
+- 검증 완료: 작업 루트에서 `.venv/bin/python -m unittest discover -s scripts/evaluation -p 'test_unseen_whisper.py'`:6 passed. 편집 거리, 숫자 표기 정규화와 오류 보존, 순서, 가중 WER, 오류 유형, bootstrap을 확인했다. `.venv/bin/python -m py_compile scripts/evaluation/*.py`, `git diff --check` 통과. [보고서 재현 명령](../unseen-atc-whisper-comparison.md)에 따라 기본120회 추론과 추가28회 진단을 완료했다. summary 스크립트로60×2기본/14×2진단 커버리지, 입력 WAV·이전 사용80개 파일 해시, 원본 그룹 중복0, 모든 지표를 재계산했다. 원본 parquet/실행 코드 해시도 확인했다.
+- 결과/AC 경계: 고정 temperature0에서 전체 WER 일반149.5%/관제용30.2%, 문장별 중앙값33.3%/25.7%, 관제용 우세35·동률14·일반 우세11이다. 전체 일치는3/60·4/60, 숫자 포함55문장의 숫자 토큰 목록 일치는20/55·30/55. 일반 모델의 긴 반복이 전체 WER를 크게 높였다. 실패14구간에서 기본 temperature 재시도 목록을 적용한 추가 진단은97.5%/68.6%이며, 실패 사례 선택 후의 진단이므로 전체60개 성능으로 확대하지 않는다. 후단 NER/숫자 값/서버 채택·운항 정확도는 이번 지표가 아니다.
+- 자체 리뷰: 원음/정답/호출부호를 ASR 프롬프트에 넣지 않았고, 모델별 선택 표본·디코딩 설정이 같다. 동일 원본의 다른 구간도 제외하고 실제 이전 사용 파일을 재검산했다. UWB 전체 카탈로그 다운로드와 학습/평가 사용을 구분했다. 사전학습 파일 미공개에 따른 중복 확인 한계, TWR·동일 코퍼스 한계, 정답 철자·표기 차이, 반복 출력과 temperature 영향, 숫자 토큰 지표의 의미 한계를 보고서에 명시했다. 실패 진단28회를 기본120회에 섞지 않았다. 한국어 보고서는 출처 주장과 자체 측정·판단을 구분해 검토했다. 외부 PR 리뷰는 미실행이다.
+- 인수인계: 실행 코드 `2f71c4a`, 결과·감사 `92fa330`, `codex/atc-unseen-whisper`의 [PR #25](https://github.com/kkyo1130/Boeing_RADAR/pull/25)로 제출했다. [보고서](../unseen-atc-whisper-comparison.md), `docs/evaluation/unseen-atc-whisper-2026-11-10.json`에 출처·선정 목록·가중치/입력 해시·전체 전사를 보존한다. 후속 요약기에는 추가 진단 감사 기능을 포함한다. 학습/운영 모델 교체/새 마이크/전체 UI·서버 회귀는 수행하지 않았다. TODO reviewing 유지, WI 전체 AC 완료로 처리하지 않는다. 다음 비교는 운영 디코딩의 전체 표본과 호출부호·ALT/HDG 의미 정확도가 대상이다.
+
 #### 관제 특화 STT 모델 비교 · 2026-11-10
 
 - 범위/기준: 사용자 요청은 같은 실제 관제 녹음에서 특화 모델을 찾아 비교하는 것이다. `origin/dev` `d267d4b`에서 `codex/atc-specialist-comparison`을 만들었다. 운영 코드·품질 임계값·호출부호 사전·모델 설정은 변경하지 않는다. 기존 사용자 작업 폴더는 보존했다.
