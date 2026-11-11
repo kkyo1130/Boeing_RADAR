@@ -1,0 +1,142 @@
+"""Run saved MCP OCR v3 checkpoints on webcam or video with manually selected ROIs.
+
+Example:
+ python vision/live_mcp_ocr.py --source 0 --checkpoints vision/checkpoints/mcp_ocr_v3
+ python vision/live_mcp_ocr.py --source demo.mp4 --checkpoints vision/checkpoints/mcp_ocr_v3
+Keys: H select HDG ROI, A select ALT ROI, R reset, Q quit.
+"""
+import argparse
+from collections import deque
+from pathlib import Path
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--source", default="0", help="Camera index or video file path")
+    p.add_argument("--checkpoints", type=Path, default=Path("vision/checkpoints/mcp_ocr_v3"))
+    p.add_argument("--device", choices=("cpu", "mps", "cuda"), default="cpu")
+    p.add_argument("--stable-frames", type=int, default=3)
+    p.add_argument("--width", type=int, default=0, help="Optional camera capture width")
+    args = p.parse_args()
+    if args.stable_frames < 1:
+        p.error("--stable-frames must be positive")
+    try:
+        import cv2
+        import numpy as np
+        import torch
+        from torch import nn
+        from PIL import Image
+        from preprocess_mcp_ocr import align
+    except ImportError as exc:
+        p.error(f"Missing dependency: {exc}. Install opencv-python, torch, pillow, numpy")
+
+    class DigitCNN(nn.Module):
+        # Same architecture as train_mcp_ocr_v2.py.
+        def __init__(self, n):
+            super().__init__()
+            self.features = nn.Sequential(
+                nn.Conv2d(1, 32, 3, padding=1), nn.BatchNorm2d(32), nn.ReLU(), nn.MaxPool2d(2),
+                nn.Conv2d(32, 64, 3, padding=1), nn.BatchNorm2d(64), nn.ReLU(), nn.MaxPool2d(2),
+                nn.Conv2d(64, 128, 3, padding=1), nn.BatchNorm2d(128), nn.ReLU(),
+                nn.Conv2d(128, 128, 3, padding=1), nn.ReLU(),
+                nn.AdaptiveAvgPool2d((1, n)),
+            )
+            self.head = nn.Linear(128, 10)
+
+        def forward(self, x):
+            return self.head(self.features(x).squeeze(2).transpose(1, 2))
+
+    models = {}
+    for kind, n in (("hdg", 3), ("alt", 5)):
+        path = args.checkpoints / f"{kind}_best.pt"
+        if not path.is_file():
+            p.error(f"Checkpoint not found: {path}")
+        checkpoint = torch.load(path, map_location="cpu", weights_only=True)
+        if checkpoint.get("kind") != kind or checkpoint.get("digits") != n:
+            p.error(f"Unexpected checkpoint metadata: {path}")
+        model = DigitCNN(n)
+        model.load_state_dict(checkpoint["model"])
+        model.to(args.device).eval()
+        models[kind] = model
+
+    source = int(args.source) if args.source.isdecimal() else args.source
+    capture = cv2.VideoCapture(source)
+    if not capture.isOpened():
+        p.error(f"Could not open video source: {args.source}")
+    if args.width:
+        capture.set(cv2.CAP_PROP_FRAME_WIDTH, args.width)
+    window = "MCP OCR v3 - H:HDG ROI A:ALT ROI R:Reset Q:Quit"
+    cv2.namedWindow(window, cv2.WINDOW_NORMAL)
+    regions = {"hdg": None, "alt": None}
+    history = {"hdg": deque(maxlen=args.stable_frames), "alt": deque(maxlen=args.stable_frames)}
+
+    def infer(frame, kind, roi):
+        x, y, w, h = roi
+        crop = frame[y:y+h, x:x+w]
+        if crop.size == 0:
+            return None, None
+        rgb = cv2.cvtColor(crop, cv2.COLOR_BGR2RGB)
+        aligned = align(Image.fromarray(rgb), kind)
+        if aligned is None:
+            return None, None
+        # Match training preprocessing: RGB aligned image -> grayscale -> bilinear resize.
+        gray = aligned.convert("L")
+        n = 3 if kind == "hdg" else 5
+        gray = gray.resize((36*n, 48), Image.Resampling.BILINEAR)
+        tensor = torch.from_numpy(np.asarray(gray, dtype=np.float32).copy()).unsqueeze(0).unsqueeze(0).to(args.device) / 255.
+        with torch.no_grad():
+            probabilities = models[kind](tensor).softmax(-1)[0]
+        digits = probabilities.argmax(-1)
+        value = "".join(str(v) for v in digits.tolist())
+        confidence = float(probabilities.max(-1).values.min().item())
+        return value, confidence
+
+    print("Press H to select heading display, A to select altitude display, R to reset, Q to quit.")
+    try:
+        while True:
+            ok, frame = capture.read()
+            if not ok:
+                print("End of video or camera read failed.")
+                break
+            for kind, color in (("hdg", (0, 230, 255)), ("alt", (255, 190, 40))):
+                roi = regions[kind]
+                if roi is None:
+                    continue
+                x, y, w, h = roi
+                cv2.rectangle(frame, (x, y), (x+w, y+h), color, 2)
+                value, conf = infer(frame, kind, roi)
+                if value is None:
+                    history[kind].clear()
+                    label = f"{kind.upper()}: NO DIGITS"
+                else:
+                    history[kind].append(value)
+                    stable = len(history[kind]) == args.stable_frames and len(set(history[kind])) == 1
+                    label = f"{kind.upper()}: {value} {'STABLE' if stable else 'CHECK'} conf={conf:.2f}"
+                cv2.putText(frame, label, (max(0, x), max(20, y-8)),
+                            cv2.FONT_HERSHEY_SIMPLEX, .55, color, 2, cv2.LINE_AA)
+            cv2.putText(frame, "H: HDG ROI | A: ALT ROI | R: reset | Q: quit",
+                        (12, max(25, frame.shape[0]-18)), cv2.FONT_HERSHEY_SIMPLEX,
+                        .55, (240,240,240), 2, cv2.LINE_AA)
+            cv2.imshow(window, frame)
+            key = cv2.waitKey(1 if isinstance(source, int) else 30) & 0xFF
+            if key in (ord("q"), 27):
+                break
+            if key == ord("r"):
+                regions = {"hdg": None, "alt": None}
+                for h in history.values():
+                    h.clear()
+            if key in (ord("h"), ord("a")):
+                kind = "hdg" if key == ord("h") else "alt"
+                # selectROI blocks until ENTER/SPACE; press C to cancel.
+                roi = tuple(map(int, cv2.selectROI(window, frame, showCrosshair=True, fromCenter=False)))
+                if roi[2] > 0 and roi[3] > 0:
+                    regions[kind] = roi
+                    history[kind].clear()
+                    print(f"{kind.upper()} ROI: {roi}")
+    finally:
+        capture.release()
+        cv2.destroyAllWindows()
+
+
+if __name__ == "__main__":
+    main()
