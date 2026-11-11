@@ -22,6 +22,7 @@ def main():
     p.add_argument("--device", choices=("cpu", "mps", "cuda"), default="cpu")
     p.add_argument("--augment", action="store_true")
     p.add_argument("--test", action="store_true", help="Evaluate held-out test split after training")
+    p.add_argument("--kinds", choices=("both", "hdg", "alt"), default="both", help="Train one or both readout models")
     p.add_argument("--init-checkpoints", type=Path, help="Load existing HDG/ALT weights for fine-tuning")
     args = p.parse_args()
     import torch
@@ -91,6 +92,8 @@ def main():
 
     args.output.mkdir(parents=True, exist_ok=True)
     for kind, n in (("hdg", 3), ("alt", 5)):
+        if args.kinds != "both" and kind != args.kinds:
+            continue
         train_ds, val_ds = OCRDataset(kind, "train"), OCRDataset(kind, "val")
         train = DataLoader(train_ds, batch_size=args.batch, shuffle=True)
         val = DataLoader(val_ds, batch_size=args.batch)
