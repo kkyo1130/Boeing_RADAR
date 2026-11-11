@@ -59,3 +59,26 @@ test('initial connection without a snapshot renders safely', () => {
   const html = renderToStaticMarkup(React.createElement(Display, { snapshot: null, connected: false }));
   assert.match(html, /Status unavailable/);
 });
+
+function matchedSnapshot() {
+  return { status: 'ACTIVE', result: 'UNVERIFIED', reason: 'SETTING_UNVERIFIED', channels: {},
+    validation: { phase: 'SETTING', readback: { result: 'NORMAL', fields: [row('ALT', 'NORMAL', 3000, 3000), row('HDG', 'NORMAL', 0, 0), row('CALLSIGN', 'NORMAL', 'RADAR123', 'RADAR123')] },
+      setting: { result: 'UNVERIFIED', fields: [row('ALT', 'UNVERIFIED', 3000, null, 'INPUT_NOT_AVAILABLE')] } } };
+}
+test('completed readback stays visible while camera input is missing, without overall normal', () => {
+  const html = render([], [], {snapshot: matchedSnapshot()});
+  for (const value of ['Readback matched', '3,000 ft', '0°', 'RADAR123', 'MCP setting not verified', 'Awaiting camera input']) assert.ok(html.includes(value), value);
+  assert.doesNotMatch(html, /pilot-normal|Matches ATC/);
+});
+test('readback success disappears for a new ATC, unverified readback, unavailable speech, disconnect or ended flight', () => {
+  const cases = [
+    s => {s.validation.phase = 'WAITING_ATC'; s.reason = 'LATEST_ATC_NOT_ADOPTED';},
+    s => {s.validation.phase = 'READBACK'; s.reason = 'LATEST_READBACK_UNVERIFIED';},
+    s => {s.validation.readback.result = 'UNVERIFIED'; s.validation.readback.fields[0].result = 'UNVERIFIED';},
+    s => {s.channels.MICROPHONE = {status: 'DISCONNECTED'};},
+    s => {s.channels.SPEECH_API = {status: 'DEGRADED'};},
+    s => {s.status = 'ENDED';},
+  ];
+  for (const change of cases) {const snapshot = matchedSnapshot(); change(snapshot); assert.doesNotMatch(render([], [], {snapshot}), /Readback matched|3,000 ft|0°/);}
+  assert.doesNotMatch(render([], [], {snapshot: matchedSnapshot(), connected: false}), /Readback matched|3,000 ft|0°/);
+});

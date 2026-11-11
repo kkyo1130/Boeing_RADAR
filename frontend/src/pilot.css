@@ -51,3 +51,9 @@
   .pilot-multiple h1 { font-size: 23px; }
   .pilot-multiple dd { font-size: 19px; }
 }
+
+.pilot-readback-match { border: 1px solid #38705e; border-left: 5px solid #8ed7bc; border-radius: 10px; background: #10251f; padding: 14px 18px; margin-bottom: 12px; }
+.pilot-readback-match h2 { margin: 0 0 10px; color: #8ed7bc; font-size: 22px; }
+.pilot-readback-match dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; }
+.pilot-readback-match dt { font-size: 13px; color: #b3c9bf; }
+.pilot-readback-match dd { margin: 4px 0 0; font-size: clamp(16px, 3vw, 22px); font-weight: 700; overflow-wrap: anywhere; }

@@ -47,3 +47,26 @@ test('manual connection binds an explicit flight', async ({ page }) => {
   await expect(page).toHaveURL(/flight=pilot-test/);
   await expect(page.getByRole('heading', { name: 'Altitude Mismatch' })).toBeVisible();
 });
+
+test('matched readback and pending MCP remain distinct; new ATC removes old success', async ({page}, testInfo) => {
+  await page.setViewportSize({width: 800, height: 480});
+  const data = snapshot();
+  data.result = data.validation.result = 'UNVERIFIED';
+  data.reason = data.validation.reason = 'SETTING_UNVERIFIED';
+  data.validation.phase = 'SETTING';
+  data.validation.readback = {result: 'NORMAL', fields: [row('ALT', 'NORMAL', 3000, 3000), row('HDG', 'NORMAL', 270, 270), row('CALLSIGN', 'NORMAL', 'RADAR123', 'RADAR123')]};
+  data.validation.setting = {result: 'UNVERIFIED', fields: [row('ALT', 'UNVERIFIED', 3000, null, 'INPUT_NOT_AVAILABLE'), row('HDG', 'UNVERIFIED', 270, null, 'INPUT_NOT_AVAILABLE')]};
+  await page.route('**/api/v2/flights/pilot-test/state', route => route.fulfill({json: data}));
+  await page.goto('/pilot?flight=pilot-test');
+  await expect(page.getByRole('heading', {name: 'Readback matched', exact: true})).toBeVisible();
+  const readback = page.getByRole('region', {name: 'Readback result'});
+  for (const text of ['3,000 ft', '270°', 'RADAR123']) await expect(readback.getByText(text, {exact: true})).toBeInViewport({ratio: 1});
+  await expect(page.getByText('Awaiting camera input', {exact: true})).toHaveCount(2);
+  await expect(page.locator('.pilot-display')).toHaveClass(/pilot-unverified/);
+  await page.screenshot({path: testInfo.outputPath('readback-matched-camera-pending.png'), fullPage: true});
+  data.validation.phase = 'WAITING_ATC';
+  data.reason = data.validation.reason = 'LATEST_ATC_NOT_ADOPTED';
+  await expect(page.getByRole('heading', {name: 'Readback matched', exact: true})).toHaveCount(0);
+  await expect(readback).toHaveCount(0);
+  await expect(page.getByText('· Awaiting new ATC review', {exact: true})).toBeVisible();
+});

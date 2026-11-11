@@ -131,6 +131,8 @@ WI-02는 이 dev 기준 별도 브랜치에서 수신/문맥/중복/시간/원�
 
 2026-11-11 SPEC-006-WI-05 후속: 사용자 요청으로 `/pilot`의 버튼·판정·보류·장치 안내를 영어로 표시했다. `codex/pilot-english`, reviewing. frontend 단위60개·소형 화면 E2E4개·빌드 통과. 상세 범위와 근거는 WI-05 기록을 따른다.
 
+2026-11-11 실제 발화 시험 후속: `codex/pilot-readback-result`, reviewing. 복창 성공을 Pilot에 따로 표시하고 카메라 입력 대기와 구분했다. 단위62개·Pilot E2E5개·빌드 통과, 신규 실제 관제/복창 결과의 Chrome 표시 확인. ATC 최초2회 호출부호 실패와 카메라 미검증은 WI-05에 구분해 기록했다.
+
 ## 2026-11-09 BERT+보완 규칙 STT 연결
 
 SPEC-004-WI-02의 요청 범위 추가 구현을 `origin/dev` `4a6fd74` 기반 `codex/bert-hybrid-stt`에서 reviewing으로 제출한다. BERT CALLSIGN+규칙 ACTION/ALT/HDG를 로컬 Whisper WAV 경로에 연결했다. 실제 모델 포함 backend **532 passed**(skip 없음, deprecation 경고1), 실제 HTTP 음성4사례에서 정상 복창/방위 불일치/무음 보류/호출부호 누락 보류, frontend proxy 연결을 확인했다. 두 정상·불일치 음성은 합성, 사용자 음성은 이전 녹음 재생이며 새 live 마이크·실제 ATC·카메라 E2E는 미실행이다. 공유 기본은 v7 유지, 새 조합은 명시 설정한다. 상세 근거는 [WI-02 기록](004-speech-communication.md#wi-02)과 [실행 안내](../bert-hybrid-stt-integration.md)를 따른다. 다른 WI 상태는 바꾸지 않는다.
