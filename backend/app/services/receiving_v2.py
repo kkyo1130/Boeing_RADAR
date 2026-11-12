@@ -15,7 +15,7 @@ from app.models.flight import Flight
 from app.models.observation_v2 import V2FlightContext, V2Instruction, V2Segment, V2TraceEvent, V2Input
 from app.schemas.receiving_v2 import ReceiverConfig
 from app.schemas.structure_rules import StructurePolicy
-from app.services.structure_rules import check_structure
+from app.services.structure_rules import check_structure, split_callsign, normalize, phraseology
 from app.services.validation_v2 import evaluate
 from app.services.incidents_v2 import reconcile, view
 from app.services.safety_trace_service import record
@@ -91,7 +91,7 @@ def refresh_validation(db, profile, state, now, ended=False):
             'active_attempt': next((a for a in voice['attempts'].values() if a['status'] == 'PLAYING'), None)}, now)
 
 
-def start(db, callsign):
+def start(db, callsign, *, report_owner_hash=None):
     try:
         path = os.environ["RADAR_V2_CONFIG"]
         config = ReceiverConfig.model_validate_json(Path(path).read_text())
@@ -111,6 +111,9 @@ def start(db, callsign):
                 "structure_policy": config.structure_rules.model_dump() if config.structure_rules else None,
                 "structure_checks": {}})
         db.add(profile)
+        if report_owner_hash:
+            from app.models.operations_v2 import V2ReportOwner
+            db.add(V2ReportOwner(flight_id=flight.flight_id,owner_hash=report_owner_hash))
         initial = deepcopy(profile.state)
         refresh_validation(db, profile, initial, now)
         profile.state = initial
@@ -416,7 +419,8 @@ def apply_observation(profile, state, obj, instruction, segment, now):
         checked = check_structure(obj.model_dump(mode="json"), target_callsign=profile.callsign,
             registry=profile.callsign_registry, segment=segment.payload,
             instruction_id=instruction.instruction_id, previous_targets=state["targets"],
-            policy=StructurePolicy.model_validate(configured) if configured else None)
+            policy=StructurePolicy.model_validate(configured) if configured else None,
+            expected_phraseology=state.get('instruction_phraseology', {}).get(instruction.instruction_id, {'context_missing': True}) if obj.source == 'READBACK' else None)
         state.setdefault("structure_checks", {})[obj.source] = checked.model_dump(mode="json")
         if checked.result != "PASS":
             reason = reason or "STRUCTURE_" + checked.result
@@ -437,6 +441,8 @@ def apply_observation(profile, state, obj, instruction, segment, now):
                 adopted_at=stamp(now), target_revision=profile.revision+1)
             state["current"]["COCKPIT"][field] = None
             state["current"]["READBACK"][field] = None
+        matched = split_callsign(normalize(obj.transcript), profile.callsign_registry)
+        state.setdefault('instruction_phraseology', {})[instruction.instruction_id] = phraseology(matched[3])
         instruction.status = "ADOPTED"
         state["readback_required"] = dict(instruction_id=instruction.instruction_id,
             atc_input_id=obj.atc_input_id, fields=list(obj.fields), callsign_required=True)

@@ -112,7 +112,7 @@ def test_pending_failed_and_out_of_target_atc_do_not_supersede(scenario):
 def test_readback_requires_new_complete_attempt_and_keeps_same_occurrence(scenario):
     s = scenario; atc = s.adopt(); s.tick()
     bad = s.speech(s.segment(atc))
-    bad["transcript"] = "Radar one two three maintain four thousand feet heading two seven zero"
+    bad["transcript"] = "Radar one two three climb and maintain four thousand feet heading two seven zero"
     bad["fields"]["ALT"].update(value=4000, raw_text="4000")
     assert s.send(bad).status_code == 201
     occurrence = incidents(s)[0]["occurrence_id"]
@@ -178,7 +178,7 @@ def test_incidents_are_isolated_per_flight(setup):
 def test_corrected_field_does_not_resolve_incomplete_readback(scenario):
     s = scenario; atc = s.adopt(); s.tick()
     bad = s.speech(s.segment(atc))
-    bad["transcript"] = "Radar one two three maintain four thousand feet heading two seven zero"
+    bad["transcript"] = "Radar one two three climb and maintain four thousand feet heading two seven zero"
     bad["fields"]["ALT"].update(value=4000, raw_text="4000")
     s.send(bad)
     s.tick(); correction = s.speech(s.segment(atc))
@@ -220,7 +220,7 @@ def test_runtime_incident_schema_matches_contract_and_real_response(scenario):
 def test_retained_old_heading_readback_can_be_corrected_without_touching_new_altitude(scenario):
     s = scenario; a = s.adopt(); s.tick()
     bad = s.speech(s.segment(a))
-    bad["transcript"] = "Radar one two three maintain three thousand feet heading zero nine zero"
+    bad["transcript"] = "Radar one two three climb and maintain three thousand feet heading zero nine zero"
     bad["fields"]["HDG"].update(value=90, raw_text="090")
     assert s.send(bad).status_code == 201
     occurrence = incidents(s, "OPEN")[0]["occurrence_id"]
@@ -245,7 +245,7 @@ def test_pre_policy_readback_provenance_never_emits_invalid_incident(scenario, m
     from app.services.incidents_v2 import reconcile
     s = scenario; atc = s.adopt(); s.tick()
     data = s.speech(s.segment(atc))
-    data["transcript"] = "Radar one two three maintain four thousand feet heading two seven zero"
+    data["transcript"] = "Radar one two three climb and maintain four thousand feet heading two seven zero"
     data["fields"]["ALT"].update(value=4000, raw_text="4000")
     s.send(data)
     snapshot = s.state(); snapshot["incidents"] = []
@@ -266,7 +266,7 @@ def test_old_persisted_readback_revalidation_returns_schema_valid_incidents(scen
     from app.schemas.incidents_v2 import IncidentV1
     s = scenario; atc = s.adopt(); s.tick()
     data = s.speech(s.segment(atc))
-    data["transcript"] = "Radar one two three maintain four thousand feet heading two seven zero"
+    data["transcript"] = "Radar one two three climb and maintain four thousand feet heading two seven zero"
     data["fields"]["ALT"].update(value=4000, raw_text="4000")
     s.send(data)
     db_generator = app.dependency_overrides[get_db]()

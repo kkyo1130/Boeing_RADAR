@@ -18,3 +18,10 @@ class V2Media(Base):
     created_at: Mapped[str]
     deleted_at: Mapped[str | None]
     content: Mapped[bytes | None] = mapped_column(LargeBinary)
+
+
+class V2ReportOwner(Base):
+    """Browser capability hash; raw secrets never enter reports or traces."""
+    __tablename__ = 'v2_report_owners'
+    flight_id: Mapped[str] = mapped_column(ForeignKey('v2_flight_contexts.flight_id'), primary_key=True)
+    owner_hash: Mapped[str] = mapped_column(index=True)

@@ -8,6 +8,8 @@ from app.migrate_observation_v2 import migrate
 @asynccontextmanager
 async def lifespan(app):
     migrate(engine)
+    from app.services.demo.adapters import prepare_runtime
+    prepare_runtime()
     yield
 
 app = FastAPI(title="RADAR", version="0.1.0", lifespan=lifespan,

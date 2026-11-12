@@ -5,7 +5,7 @@ const example = name => JSON.parse(readFileSync(new URL(`../../contracts/example
 const quality = { model_score: .9, input_quality: 'SUFFICIENT', reason: null, score_calibrated: false, calibration_ref: null };
 const stamp = offset => new Date(Date.now()+(offset || 0)).toISOString();
 
-test('v2 운영 화면에서 근거·수정·연결 복구·종료 리포트', async ({ page, request }) => {
+test('v2 운영 화면에서 근거·수정·연결 복구·종료 리포트', async ({ page, request },testInfo) => {
   const errors=[]; page.on('pageerror', e => errors.push(e.message));
   await page.goto('/operations');
   await page.getByLabel('등록된 호출부호').fill('RADAR123');
@@ -60,12 +60,21 @@ test('v2 운영 화면에서 근거·수정·연결 복구·종료 리포트', a
   await expect(page.getByRole('region',{name:'Cockpit 설정',exact:true}).locator('.op-section-heading .op-badge')).toHaveText('판단 보류');
   await page.unroute('**/api/v2/flights/**/state');
   await expect(page.getByRole('region',{name:'Cockpit 설정',exact:true}).locator('.op-section-heading .op-badge')).toHaveText('일치');
-  await page.getByRole('button',{name:'END FLIGHT',exact:true}).click();
+  page.once('dialog',dialog=>dialog.accept());
+  await page.getByRole('button',{name:'운항 종료 및 리포트 보기',exact:true}).click();
+  await expect(page).toHaveURL(/\/report\?flight=/);
   await expect(page.getByRole('heading',{name:'비행 종료 리포트'})).toBeVisible();
   await expect(page.getByRole('link',{name:'리포트 JSON 저장'})).toBeVisible();
-  const report=await (await request.get(base+'/report.json')).json();
+  const report=await (await page.request.get(base+'/report.json')).json();
   expect(report.summary).toMatchObject({incidents:1,resolved:1,open:0});
   expect(report.snapshot.result).toBe('NORMAL');
+  await page.screenshot({path:testInfo.outputPath('flight-report.png'),fullPage:true});
+  const downloadPromise=page.waitForEvent('download');
+  await page.getByRole('button',{name:'PDF 다운로드',exact:true}).first().click();
+  const download=await downloadPromise;
+  expect(download.suggestedFilename()).toMatch(/^Flight_Safety_Report_.*\.pdf$/);
+  const stream=await download.createReadStream();const chunks=[];for await(const chunk of stream)chunks.push(chunk);
+  expect(Buffer.concat(chunks).subarray(0,5).toString()).toBe('%PDF-');
   expect(errors).toEqual([]);
 });
 

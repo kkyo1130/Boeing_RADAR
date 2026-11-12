@@ -44,6 +44,16 @@ macOS, Python 3.12, Node 22.20+ 또는 24.12+, Xcode command line tools가 필�
 
 ## 숫자 동음어 해석
 
+### 2026-10-26 실행 환경 복구 기록
+
+- 영역 등록 500의 서버 예외는 `ModuleNotFoundError: radar_vision`이었다. 현재 가상환경에 NumPy·OpenCV·faster-whisper도 누락되어 ` .venv/bin/python -m pip install -r backend/requirements-demo.txt -e './vision[capture]'`로 복구했다.
+- `scripts/run-demo.sh`는 저장소의 `vision/src`를 Python 경로에 추가하고 Vision·영상 추적·음성 라이브러리를 시작 전에 import하여 누락된 실행 환경으로 서버가 준비됐다고 보이는 것을 방지한다.
+- `frontend/src/flight-client.js`는 JSON이 아닌 오류/빈 응답에서 HTTP 상태를 표시한다. 정상 HTTP 응답도 JSON을 읽지 못하면 실패로 처리한다. `frontend/tests/flight-client.test.js` 13개, `backend/tests/test_demo.py` 9개 통과.
+- 실행 중인 5175 프록시를 통한 별도 시험 비행에서 합성 JPEG의 영역 등록 200 및 실제 OCR 프레임 3회 연속 200을 확인하고 시험 비행을 종료했다. 원문 3000/270을 읽었으나 단색 주변 배경에서 `panel_tracking_lost`로 값은 null을 유지했다. 실제 사용자 카메라의 연속 인식 성공은 미검증이며 모의 테스트와 구분한다.
+- 변경은 미커밋 상태다. 기존 3D MCP 크기 변경을 보존했다. 재현: `sh scripts/run-demo.sh` → `/operations`에서 카메라 연결·영역 재지정·연속 OCR 시작.
+- 후속 시간 초과: 사용자 세션 로그에서 OCR 프레임과 복창은 최종 200이었으나 첫 음성 엔진 로딩 구간에 카메라 요청도 지연됐다. 데모 활성화 시 앱 lifespan에서 Vision import·OpenCV 단일 스레드 설정·로컬 Whisper 모델 로딩을 마친 후 요청을 받도록 변경했다. Whisper는 CPU 스레드 2개·worker 1개로 제한했다. 정확한 사용자 요청별 소요 시간은 기존 로그에 없어 지연 원인 전체를 확정하지 않는다.
+- 검증: backend에서 `../.venv/bin/python -m pytest -q tests/test_demo.py tests/test_producer_adapters.py` 21 passed. 비활성 모드에서 사전 로딩하지 않음·활성 모드 모델 1회 준비·OpenCV 스레드 설정을 회귀 검증했다. 재시작한 서버의 별도 시험 비행에서 등록 관제 → 합성 JPEG OCR 3회와 등록 WAV의 실제 Whisper 처리를 동시에 호출해 모두 200, 복창 약 1.11초를 확인하고 시험 비행을 종료했다. 실제 사용자 마이크·카메라의 동시 처리와 장시간 부하는 미검증이다.
+
 숫자를 받는 문법 구간(heading, feet, flight level)에서만 `to/too → two`,
 `for/fore → four`, `ate → eight`, `tree → three`, `fife → five`, `o → zero`를
 해석한다. 기존 `oh`, `niner`와 한 자리 숫자/단어 혼용도 지원한다.

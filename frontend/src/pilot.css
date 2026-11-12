@@ -1,0 +1,59 @@
+.pilot-shell { min-height: 100svh; background: #090e14; color: #f0f4f8; padding: clamp(16px, 3vw, 32px); display: flex; flex-direction: column; gap: 18px; font-family: system-ui, sans-serif; }
+.pilot-shell * { box-sizing: border-box; }
+.pilot-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #a7b6c7; font-size: 13px; flex-wrap: wrap; }
+.pilot-header a { color: #c3cfdb; text-decoration: none; padding: 8px 0; }
+.pilot-header a:first-child { font-weight: 800; letter-spacing: .16em; }
+.pilot-display { width: 100%; max-width: 960px; margin: auto; }
+.pilot-status { display: flex; align-items: center; gap: 9px; font-size: 16px; color: #bac8d9; margin-bottom: 18px; }
+.pilot-dot { width: 9px; height: 9px; background: currentColor; border-radius: 50%; }
+.pilot-mismatch .pilot-status { color: #ffc36c; }
+.pilot-normal .pilot-status { color: #8ed7bc; }
+.pilot-cards { display: grid; gap: 12px; }
+.pilot-card { padding: clamp(20px, 4vw, 36px); border: 1px solid #3e4d60; border-left: 5px solid #a9bdd9; background: #111a25; border-radius: 12px; min-width: 0; }
+.pilot-card.pilot-mismatch { border-color: #79572d; border-left-color: #ffc36c; background: #201b14; }
+.pilot-stage { margin: 0 0 12px; color: #e2e8f0; font-size: clamp(20px, 4vw, 28px); font-weight: 650; }
+.pilot-card h1 { margin: 0; font-size: clamp(30px, 7vw, 64px); letter-spacing: -.04em; line-height: 1.2; overflow-wrap: anywhere; }
+.pilot-card.pilot-mismatch h1 { color: #ffc36c; }
+.pilot-values { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 28px 0 0; }
+.pilot-values div { min-width: 0; }
+.pilot-values dt { color: #c8c1b7; font-size: 15px; margin-bottom: 7px; }
+.pilot-values dd { margin: 0; font-size: clamp(22px, 4.5vw, 38px); font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.pilot-reason, .pilot-empty p { color: #b6c4d4; font-size: 18px; margin-bottom: 0; }
+.pilot-empty { padding: 32px 0; }
+.pilot-empty h1 { font-size: clamp(28px, 6vw, 52px); margin: 0; }
+.pilot-multiple .pilot-card { padding: 18px 22px; }
+.pilot-multiple h1 { font-size: clamp(28px, 4vw, 38px); }
+.pilot-multiple .pilot-stage { font-size: 18px; margin-bottom: 8px; }
+.pilot-multiple .pilot-values { margin-top: 16px; }
+.pilot-multiple dd { font-size: clamp(22px, 3.5vw, 28px); }
+.pilot-devices { margin-top: 16px; padding: 0 18px; border: 1px solid #536780; border-radius: 8px; color: #c1d5ef; }
+.pilot-footer { margin-top: auto; padding-top: 12px; color: #99a8bb; font-size: 12px; text-align: center; }
+.pilot-connect { margin: auto; max-width: 480px; width: 100%; display: grid; gap: 14px; }
+.pilot-connect h1, .pilot-connect p { margin: 0; }
+.pilot-connect input { width: 100%; background: #111a25; color: #fff; border: 1px solid #687b91; border-radius: 6px; padding: 12px; }
+.pilot-shell button { min-height: 44px; border: 1px solid #687b91; background: #1c2a3c; color: #e6edf7; border-radius: 6px; padding: 10px 18px; }
+.pilot-shell button:disabled { opacity: .5; }
+.pilot-reconnect { align-self: center; }
+.pilot-shell :focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+@media (min-width: 720px) { .pilot-multiple { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-height: 420px) and (min-width: 460px) {
+  .pilot-shell { padding: 12px 16px; gap: 8px; }
+  .pilot-header { padding-bottom: 6px; }
+  .pilot-status { margin-bottom: 8px; font-size: 14px; }
+  .pilot-card, .pilot-multiple .pilot-card { padding: 14px 18px; }
+  .pilot-stage, .pilot-multiple .pilot-stage { font-size: 18px; margin-bottom: 6px; }
+  .pilot-card h1, .pilot-multiple h1 { font-size: 30px; }
+  .pilot-values, .pilot-multiple .pilot-values { margin-top: 14px; }
+  .pilot-values dd, .pilot-multiple dd { font-size: 23px; }
+  .pilot-footer { padding-top: 6px; }
+  .pilot-multiple { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pilot-multiple .pilot-card { padding: 10px; }
+  .pilot-multiple h1 { font-size: 23px; }
+  .pilot-multiple dd { font-size: 19px; }
+}
+
+.pilot-readback-match { border: 1px solid #38705e; border-left: 5px solid #8ed7bc; border-radius: 10px; background: #10251f; padding: 14px 18px; margin-bottom: 12px; }
+.pilot-readback-match h2 { margin: 0 0 10px; color: #8ed7bc; font-size: 22px; }
+.pilot-readback-match dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; }
+.pilot-readback-match dt { font-size: 13px; color: #b3c9bf; }
+.pilot-readback-match dd { margin: 4px 0 0; font-size: clamp(16px, 3vw, 22px); font-weight: 700; overflow-wrap: anywhere; }

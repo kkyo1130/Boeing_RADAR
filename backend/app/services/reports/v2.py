@@ -1,7 +1,8 @@
 """Report existing v2 decisions and traces without a second decision engine."""
 from copy import deepcopy
 from sqlalchemy import select
-from app.models.observation_v2 import V2Input, V2TraceEvent
+from app.models.observation_v2 import V2Input, V2TraceEvent, V2Instruction
+from app.models.flight import Flight
 from app.models.operations_v2 import V2Report
 from app.services import receiving_v2 as intake
 
@@ -10,7 +11,12 @@ def report(db, flight_id, *, final_snapshot=None):
     intake.context(db, flight_id)
     frozen = db.get(V2Report, flight_id)
     if frozen:
-        return deepcopy(frozen.data)
+        data=deepcopy(frozen.data)
+        if 'safety' not in data:
+            from app.services.reports.safety import build
+            instructions=db.scalars(select(V2Instruction).where(V2Instruction.flight_id==flight_id)).all()
+            data['safety']=build(data,db.query(Flight).filter_by(flight_id=flight_id).one(),instructions,allow_ai=False)
+        return data
     state = final_snapshot if final_snapshot is not None else intake.get_state(db, flight_id)
     events = db.scalars(select(V2TraceEvent).where(V2TraceEvent.flight_id == flight_id).order_by(V2TraceEvent.id)).all()
     inputs = db.scalars(select(V2Input).where(V2Input.flight_id == flight_id).order_by(V2Input.id)).all()
@@ -30,6 +36,9 @@ def report(db, flight_id, *, final_snapshot=None):
         observations=[dict(input_id=r.input_id, kind=r.kind, applied=r.applied, reason=r.reason,
                            received_at=r.received_at, payload=r.payload) for r in inputs],
         limitations='Field counts are not flight or model accuracy. Terminal snapshot is the last live verdict, not current clearance to operate.')
+    from app.services.reports.safety import build
+    instructions=db.scalars(select(V2Instruction).where(V2Instruction.flight_id==flight_id)).all()
+    data['safety']=build(data,db.query(Flight).filter_by(flight_id=flight_id).one(),instructions)
     if final_snapshot is not None:
         db.add(V2Report(flight_id=flight_id, data=data))
     return data

@@ -1,0 +1,192 @@
+# BERT + corrected rules in the local STT path
+
+This opt-in backend connects the existing local Whisper WAV adapter to BERT
+CALLSIGN extraction and the evaluated rules-v2 ACTION/ALT/HDG candidates. It
+retains registered callsign matching, full-transcript grammar, numeric/range
+checks, capture context, and the existing backend verdict. It never controls
+Cockpit settings. V7 remains the default for existing configurations.
+
+## Local setup
+
+Install `backend/requirements-demo.txt`, `backend/requirements-ner.txt`, and the
+existing Vision capture dependency in the same Python environment. No models
+are downloaded by the application. Supply local fine-tuned BERT and
+faster-whisper directories. The model weights are not committed.
+
+Package the BERT artifact once (the destination must not exist):
+
+```sh
+.venv/bin/python scripts/prepare-hybrid-model.py \
+  --source /absolute/path/to/bert/model \
+  --destination .demo/bert-hybrid-model
+```
+
+`radar_hybrid.json` stores SHA-256 digests for weights, configuration and tokenizer
+files. Loading verifies BERT architecture and the exact nine BIO labels. The
+local experiment used seed13, selected by the original validation99 results
+(98 exact sentences; seed42 97, seed73 96), not by the fresh test scores.
+
+Configure the existing `.demo/config.json` callsign registry, `.demo/audio`
+registered scenario WAVs, and `.demo/model` faster-whisper model. Local absolute
+paths can instead be passed with `RADAR_V2_CONFIG`, `RADAR_DEMO_AUDIO`, and
+`RADAR_WHISPER_MODEL`. Run:
+
+```sh
+scripts/run-hybrid-backend.sh
+# In another terminal, from frontend/:
+RADAR_API_TARGET=http://127.0.0.1:8013 npm run dev -- --host 127.0.0.1 --port 5176
+```
+
+The launcher uses `.venv/bin/python` (`RADAR_PYTHON` overrides it) and binds only
+127.0.0.1, port8013 (`RADAR_PORT` overrides it). It enables:
+
+```sh
+RADAR_NER_BACKEND=bert-hybrid
+RADAR_NER_MODEL=/absolute/path/to/prepared/bert-hybrid-model
+```
+
+`GET /api/demo/status` reports the selected backend and artifact presence, not
+proof of prediction accuracy. `POST /api/demo/speech/extract` accepts
+`{"text":"Radar one two three maintain 3000 feet heading 270"}` for diagnostics.
+The response is a candidate extraction, always `instruction_check=NEEDS_REVIEW`;
+only the full speech intake/structure pipeline can produce a PASS check.
+
+CLI:
+
+```sh
+.venv/bin/python scripts/extract-atc.py \
+  --backend bert-hybrid --model .demo/bert-hybrid-model \
+  'Radar one two three maintain 3000 feet heading 270'
+```
+
+## Processing and failure behavior
+
+- Original transcript, whitespace-token and character offsets are preserved.
+  BERT input only strips punctuation at token edges, with normalized input tokens
+  returned for inspection. No word substitution or missing-word completion.
+- BERT provides CALLSIGN. The frozen training-derived rule baseline plus the
+  rules-v2 filters provides ACTION, ALT, HDG. Speed/rate units and referenced
+  altitudes are filtered; `fly` in a name is not an ACTION. The 46-prefix data
+  file has a separate source/license notice (`speech/HYBRID_DATA_NOTICE.txt`).
+- Rule tokens/entities have `source=rule` and `model_score=null`. Only BERT
+  callsign scores are retained, uncalibrated. Original model tokens remain in
+  diagnostics and are not mistaken for the combined rule output.
+- Grouped numbers (`3,000`) preserve their original text. Exactly three
+  hyphen-separated single digits (`2-7-0`) are accepted inside numeric grammar
+  slots. Ranges (`270-280` or `2-7`), negatives, malformed hyphens and longer
+  sequences are rejected. Callsign spelling still requires a registered alias.
+- Invalid BIO, missing/multiple callsigns, overlapping spans, conditions,
+  correction/negation and detected cutoff clauses remain review reasons.
+  Absence of a flag does not certify an input. The complete existing grammar
+  still has to consume the transcript and agree with extracted numeric spans.
+- Explicitly enabling a backend without a model, with an incompatible artifact,
+  or with an inference error does not fall back to grammar-only PASS. Fields are
+  withheld and the result requires review.
+- Same-transcript checks are not independent safety channels. Broader ATC
+  grammar, free-form callsign resolution, actual ATC STT and all microphone
+  environments remain outside the validated scope. Registered ATC playback is
+  still a scenario; the pilot WAV adapter actually runs Whisper.
+
+## Verification (2026-11-09)
+
+- Both actual local model loaders exercised, along with backend regression tests.
+  Exact final counts are recorded in SPEC-004-WI-02/TODO and the PR.
+- Ported merger: 487 existing transcripts × 3 model-seed prediction streams
+  matched the previous rules-v2 experiment labels and source offsets. This used
+  cached predictions and does not constitute fresh model inference accuracy.
+  Runtime punctuation handling is an additional STT integration adaptation.
+- Actual local HTTP server, actual faster-whisper base.en and BERT seed13:
+
+| Audio input | Observed result |
+| --- | --- |
+| Generated correct phrase | STT `Radar 1-2-3 climb and maintain 3,000 feet, heading 2-7-0.`; RADAR123/3000ft/270deg, READBACK structure PASS and comparison NORMAL |
+| Generated wrong heading | STT `Radar one, two, three, maintain 3,000 feet, heading two, nine, zero.`; actual290 versus expected270, READBACK MISMATCH |
+| Three seconds of silence | Empty transcript, NEEDS_REVIEW/UNVERIFIED |
+| Previously recorded user microphone WAV | `Eight thousand feet, heading 270.`; missing callsign/command, NEEDS_REVIEW/UNVERIFIED |
+
+The first two audio fixtures are synthetic speech, not real ATC recordings. The
+last input is replay of a prior microphone recording, not a new live recording.
+Overall flight state remains UNVERIFIED without a Cockpit observation even when
+the readback itself matches. No frontend microphone permissions or camera E2E
+were tested in that run. A subsequent native microphone test is recorded below.
+
+Re-run the actual WAV HTTP checks against an already-running local server:
+
+```sh
+.venv/bin/python scripts/test-hybrid-stt.py \
+  --audio .demo/audio --output .demo/hybrid-http-results
+```
+
+Optional `--recorded-wav` includes an existing microphone recording in the report.
+The generated fixtures must correspond to the existing baseline/heading
+scenarios. Saved reports contain original transcripts, raw candidate evidence,
+and backend state. `.demo/` (audio, weights, DB and reports) is Git-ignored.
+
+Run automated tests from `backend/`:
+
+```sh
+RADAR_TEST_BERT_MODEL=/absolute/path/to/prepared/bert-hybrid-model \
+RADAR_TEST_NER_MODEL=/absolute/path/to/v7/model \
+../.venv/bin/python -m pytest -q
+```
+
+Without those two test variables, actual model smoke tests are skipped; other
+unit/API tests do not require model files. Switch back by setting
+`RADAR_NER_BACKEND=v7` and a v7 `RADAR_NER_MODEL` before restarting the server.
+
+## New live microphone follow-up (2026-11-09 23:07–23:10 KST)
+
+Three new recordings used the MacBook Air microphone (48kHz mono PCM16),
+submitted to the same actual HTTP readback endpoint. This exercised native
+microphone capture, not the frontend browser MediaRecorder permission flow.
+
+| Attempt | Observation | Result |
+| --- | --- | --- |
+| 1, 12s | Weak signal, empty STT; RMS58 | NEEDS_REVIEW / UNVERIFIED |
+| 2, 12s | `climb and maintain, three thousand feet, heading two, seven, zero.`; callsign absent from transcript | ALT/HDG spans found, missing callsign held |
+| 3, 20s | `Radar, one, two, three, climb and maintain, three thousand feet, heading to seven, zero.` | BERT CALLSIGN and rule ALT found; hybrid HDG absent, held |
+
+The last attempt began only after capture activation was observed. Whisper
+rendered the prompted `two` as `to`. The existing full grammar derived
+ALT3000/HDG270, but the hybrid candidate set did not include HDG. The final
+structure check was NEEDS_REVIEW (MENTION_SCOPE_UNKNOWN), readback/overall
+UNVERIFIED, and no values were accepted as a verified readback. No global
+`to -> two` substitution or expected-answer injection was introduced.
+
+These are real live captures and confirm the connection, but **none achieved a
+fully accepted readback**. Initial missing speech/callsign may involve capture
+timing or STT; their cause was not conclusively identified. The observed
+homophone handling difference remains unresolved. Audio, capture metadata and
+full API evidence are local-only `.demo/live-mic-20261109-*` artifacts. The
+532-test result above predates this follow-up; no implementation changed and
+the suite was not rerun for this documentation-only update.
+
+## Numeric homophone fix and original WAV replay (2026-11-09)
+
+`numeric_slots.py` now aligns hybrid rule candidates with the existing grammar's
+NUMBER_HOMOPHONES mapping. It operates only after heading/flight-level markers
+(exactly three numeric digits, heading <=359) or an altitude command followed
+by a supported number and explicit feet unit. It never changes BERT input,
+callsign words or the original transcript. `numeric_candidate_policy` and
+`numeric_normalizations` expose token index, original token, candidate token,
+slot and reason. Full grammar, reference/rate filters, BIO and context checks
+still apply; candidate normalization alone does not approve a command.
+
+The same three recorded WAVs were replayed through actual Whisper and BERT.
+All three transcripts exactly matched their prior outputs. Weak signal and
+missing-callsign recordings remained NEEDS_REVIEW/UNVERIFIED. The third WAV
+(SHA-256 `9a20dfac8cbf6c15683d7689312b7fcf539fd4ea9fb194d1dc5d643d49a6b31c`)
+kept `heading to seven, zero.` in the source transcript, with token11 `to`
+recorded as the HDG candidate `two`. It now produced RADAR123, ALT3000/HDG270,
+structure PASS and readback NORMAL. Overall flight remains UNVERIFIED because
+there is no Cockpit observation. This is a regression replay of a known
+failure, not an independent STT accuracy benchmark or another live capture.
+Full replay responses and SHA-256 values are in ignored `.demo/homophone-replay/`.
+
+Verification: targeted42 passed; complete backend suite with actual BERT/v7
+models **549 passed**, no skips, one existing Starlette warning. Negative
+cases cover prepositions/callsigns, short and out-of-range operands, unknown
+trailing words and conditions. Self-review confirmed no global replacement,
+expected-value injection or missing-callsign completion. The previous
+`two/to` candidate mismatch is resolved within this bounded scope; wider STT
+error accuracy, browser recording and real ATC/camera E2E remain unmeasured.

@@ -287,7 +287,7 @@ def test_confirmed_readback_error_wins_over_missing_cockpit_over_http(producer):
     p = producer
     atc, _ = p.adopt()
     data = p.speech(p.segment(atc))
-    data["transcript"] = "Radar one two three maintain four thousand feet heading two seven zero"
+    data["transcript"] = "Radar one two three climb and maintain four thousand feet heading two seven zero"
     data["fields"]["ALT"].update(value=4000, raw_text="4000")
     p.send(data)
     report = p.state()["validation"]
@@ -295,3 +295,23 @@ def test_confirmed_readback_error_wins_over_missing_cockpit_over_http(producer):
     assert report["result"] == "MISMATCH"
     assert report["representative_stage"] == "READBACK"
     assert report["setting"]["result"] == "UNVERIFIED"
+
+
+@pytest.mark.parametrize("phrase,expected", [
+    ("Climbing to three thousand feet heading two seven zero Radar one two three", "NORMAL"),
+    ("Maintaining three thousand feet heading two seven zero Radar one two three", "UNVERIFIED"),
+    ("Descending to three thousand feet heading two seven zero Radar one two three", "UNVERIFIED"),
+])
+def test_trailing_callsign_readback_direction_over_http(producer, phrase, expected):
+    p = producer
+    atc, _ = p.adopt()
+    data = p.speech(p.segment(atc))
+    data["transcript"] = phrase
+    p.send(data)
+    report = p.state()["validation"]
+    validate("validation-snapshot-v1", report)
+    assert report["readback"]["result"] == expected
+    assert report["setting"]["result"] == "UNVERIFIED"
+    if expected == "UNVERIFIED":
+        checks = p.state()["structure_checks"]["READBACK"]["checks"]
+        assert "READBACK_VERTICAL_MISSING_OR_CONFLICT" in {c["reason"] for c in checks}

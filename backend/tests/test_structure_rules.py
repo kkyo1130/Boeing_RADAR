@@ -180,7 +180,7 @@ def test_mention_field_metadata_cannot_hide_duplicates():
 
 
 @pytest.mark.parametrize("raw,expected", [("FL030", "PASS"), ("FL040", "INVALID"),
-    ("FL30", "INVALID"), (None, "NEEDS_REVIEW")])
+    ("FL30", "PASS"), ("FL3", "INVALID"), (None, "NEEDS_REVIEW")])
 def test_explicit_raw_flight_level_and_missing_raw_text_are_checked(raw, expected):
     data, context = sample()
     data["fields"]["ALT"]["raw_text"] = raw

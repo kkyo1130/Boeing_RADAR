@@ -11,7 +11,7 @@ from uuid import uuid4
 from PIL import Image
 from app.schemas.observation_v2 import ObservationV2, SpeechSegmentV2
 from app.services import receiving_v2 as intake, media_v2
-from app.services.structure_rules import normalize, parse_command
+from app.services.structure_rules import normalize, parse_command, parse_readback, split_callsign
 
 SCENARIOS = {
     'baseline': 'Radar one two three climb and maintain three thousand feet heading two seven zero',
@@ -49,19 +49,24 @@ def base(flight, revision, observed, evidence):
                 evidence_unavailable_reason=None)
 
 
-def speech_payload(flight, revision, segment, transcript, score, registry, audio, quality_reason=None):
+def speech_payload(flight, revision, segment, transcript, score, registry, audio, quality_reason=None, ner_result=None):
     text = normalize(transcript)
-    matches = [(canonical, alias, raw) for canonical, aliases in registry.items()
-               for alias, raw in aliases.items() if text.startswith(normalize(raw)+' ')]
+    matched = split_callsign(text, registry, readback=segment['role'] == 'PILOT')
     values, issues = {}, ['callsign_not_recognized']
     call = dict(value=None, alias_key=None, raw_text=None, validity='UNREADABLE',
                 reason='callsign_not_recognized', quality=quality(score, False, 'callsign_not_recognized'))
-    if len(matches) == 1:
-        canonical, alias, raw = matches[0]
-        values, issues = parse_command(text[len(normalize(raw))+1:])
+    if matched is not None:
+        canonical, alias, raw, command = matched
+        values, issues = (parse_readback(command) if segment['role'] == 'PILOT' else parse_command(command))
         call = dict(value=canonical, alias_key=alias, raw_text=raw, validity='VALID', reason=None,
                     quality=quality(score, not quality_reason, quality_reason))
-    if issues:
+    if ner_result is not None:
+        from app.services.speech.ner import check_candidates
+        ner_issue = check_candidates(ner_result, call['raw_text'], values)
+        if ner_issue:
+            issues.append(ner_issue)
+            quality_reason = quality_reason or ner_issue
+    if any(issue != ('ALT', 'NEEDS_REVIEW', 'READBACK_ALTITUDE_ACTION_MISSING') for issue in issues):
         values = {}  # No partial guess from an unconsumed transcript.
     fields = {key: reading(value, key, score, raw=str(value)) for key, value in values.items()}
     if quality_reason:
@@ -72,17 +77,19 @@ def speech_payload(flight, revision, segment, transcript, score, registry, audio
                    segment_id=segment['segment_id'], attempt_id=segment['attempt_id'],
                    atc_input_id=segment['atc_input_id'], transcript=transcript or None,
                    transcript_reason=None if transcript else 'no_speech_detected', callsign=call,
-                   mention_status='UNKNOWN' if issues else 'KNOWN', mentioned_fields=list(fields),
+                   mention_status='KNOWN' if values else 'UNKNOWN', mentioned_fields=list(fields),
                    instruction_check='NEEDS_REVIEW' if issues or quality_reason else 'PASS', fields=fields)
     if segment['role'] == 'PILOT':
         payload['instruction_id'] = segment['instruction_id']
     return payload
 
 
-def register(db, flight, body, audio, role):
+def register(db, flight, body, audio, role, atc_mode=None):
+    file_upload = atc_mode == 'file_upload' if role == 'ATC' else body.get('input_mode') == 'file_upload'
+    role_basis = ('PILOT_FILE_UPLOAD' if file_upload else 'PILOT_PTT') if role == 'PILOT' else ('ATC_FILE_UPLOAD' if file_upload else 'ATC_DEMO_MICROPHONE' if atc_mode == 'microphone_live' else 'ATC_PLAYBACK')
     segment = dict(schema_version='2', flight_id=flight, segment_id='seg-'+uuid4().hex,
                    attempt_id='try-'+uuid4().hex, atc_input_id=body['atc_input_id'] if role == 'PILOT' else 'atc-'+uuid4().hex,
-                   role=role, role_basis='PILOT_PTT' if role == 'PILOT' else 'ATC_PLAYBACK',
+                   role=role, role_basis=role_basis,
                    started_at=body['started_at'], ended_at=body['ended_at'], complete=True,
                    interruption_reason=None, audio_ref=audio['ref'], audio_unavailable_reason=None)
     receipt = intake.register_segment(db, flight, SpeechSegmentV2.model_validate(segment))
@@ -96,7 +103,19 @@ def profile(db, flight):
     return result
 
 
-def receive_speech(db, flight, body, data, *, scenario=None):
+def receive_speech(db, flight, body, data, *, scenario=None, atc_mode=None):
+    # Reserve BEFORE media/segment writes. A competing upload must not create
+    # a new ATC input or invalidate an in-flight readback while ASR is busy.
+    if scenario and atc_mode: error('Choose one ATC input path')
+    if atc_mode not in (None, 'microphone_live', 'microphone_playback', 'file_upload'): error('Unknown ATC input mode')
+    if not STT_LOCK.acquire(blocking=False): error('Speech recognition is busy; retry recording', 409)
+    try:
+        return _receive_speech(db, flight, body, data, scenario=scenario, atc_mode=atc_mode)
+    finally:
+        STT_LOCK.release()
+
+
+def _receive_speech(db, flight, body, data, *, scenario=None, atc_mode=None):
     revision, registry = profile(db, flight)
     media_v2.validate(data, 'audio/wav')
     with wave.open(io.BytesIO(data)) as wav:
@@ -109,31 +128,55 @@ def receive_speech(db, flight, body, data, *, scenario=None):
     if intake.parsed(body['ended_at']) > intake.utc_now() or intake.parsed(body['started_at']) >= intake.parsed(body['ended_at']):
         error('Invalid capture interval')
     audio = media_v2.upload(db, flight, data, 'audio/wav')
-    segment = register(db, flight, body, audio, 'ATC' if scenario else 'PILOT')
+    segment = register(db, flight, body, audio, 'ATC' if scenario or atc_mode else 'PILOT', atc_mode)
     reason = 'silence_or_weak_signal' if rms < .01 else 'clipped_audio' if clipped > .01 else None
     transcript, score = '', None
+    stt_context = None
+    if not scenario and os.getenv('RADAR_STT_CALLSIGN_CONTEXT') == '1':
+        from app.services.speech.context import callsign_context
+        stt_context = callsign_context(registry, revision)
     if scenario:
         transcript = SCENARIOS[scenario]
     else:
         global MODEL
-        if not STT_LOCK.acquire(blocking=False): error('Speech recognition is busy; retry recording', 409)
         try:
             from app.services.speech.local import LocalWhisper
             if MODEL is None:
                 MODEL = LocalWhisper(os.environ.get('RADAR_WHISPER_MODEL', ''))
             with TemporaryDirectory() as temp:
                 path = Path(temp)/'input.wav'; path.write_bytes(data)
-                result = MODEL.transcribe(path)
+                result = (MODEL.transcribe(path, callsign_context=stt_context)
+                          if stt_context and stt_context["enabled"] else MODEL.transcribe(path))
             transcript, score = result['transcript'], result['model_score']
+            # A vocabulary hint is not independent evidence that this aircraft was addressed.
+            # Keep contextual decoding diagnostic until wrong-aircraft bias is validated.
+            if stt_context and stt_context['enabled']:
+                reason = reason or 'callsign_context_requires_review'
             if score is None or score < .5: reason = reason or 'low_or_unknown_model_score'
         except Exception as exc:
             reason = 'speech_engine_unavailable'
-        finally:
-            STT_LOCK.release()
-    payload = speech_payload(flight, revision, segment, transcript, score, registry, audio, reason)
+    ner_result = None
+    if os.getenv('RADAR_NER_MODEL') or os.getenv('RADAR_NER_BACKEND'):
+        from app.services.speech.ner import extract_atc
+        try:
+            ner_result = extract_atc(transcript)
+            if segment['role'] == 'PILOT':
+                from app.services.speech.readback import readback_candidates
+                ner_result = readback_candidates(transcript, registry, ner_result)
+        except Exception:
+            # An explicitly enabled model must never silently fall back to grammar-only PASS.
+            ner_result = dict(entities=[], tokens=[], issues=['NER_UNAVAILABLE'],
+                              instruction_check='NEEDS_REVIEW', score_calibrated=False,
+                              numeric_validation='NOT_PERFORMED', model_version=os.getenv('RADAR_NER_BACKEND', 'v7'), transcript=transcript)
+            reason = reason or 'ner_engine_unavailable'
+    payload = speech_payload(flight, revision, segment, transcript, score, registry, audio, reason, ner_result)
+    if ner_result is not None and payload['instruction_check'] == 'NEEDS_REVIEW':
+        reason = reason or 'ner_or_grammar_needs_review'
     receipt, _ = intake.receive(db, flight, ObservationV2.model_validate(payload), 'OBSERVATION')
-    return dict(receipt=receipt, transcript=transcript, model_score=score, quality_reason=reason,
-                input_mode='registered_scenario' if scenario else 'uploaded_wav_local_whisper',
+    return dict(receipt=receipt, transcript=transcript, model_score=score, quality_reason=reason, ner=ner_result,
+                stt_context=stt_context,
+                input_mode='registered_scenario' if scenario else atc_mode or body.get('input_mode') or 'uploaded_wav_local_whisper',
+                role=segment['role'], atc_input_id=segment['atc_input_id'],
                 instruction_id=segment['instruction_id'])
 
 
@@ -146,6 +189,28 @@ def decode_image(encoded):
         return data, image
     except (ValueError, OSError):
         error('Invalid camera image')
+
+
+def auto_calibrate(flight, encoded):
+    # Image-only localization: no instruction values or saved manual ROI.
+    from vision.auto_windows import locate_windows
+    _, image = decode_image(encoded)
+    found = locate_windows(image)
+    debug_path = os.getenv('RADAR_VISION_DEBUG_FRAME')
+    if debug_path:
+        destination = Path(debug_path)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        image.save(destination, format='JPEG', quality=95)
+    if not found or set(found) != {'hdg', 'alt'}:
+        # Invalidate any previous calibration instead of reusing stale regions.
+        with CAMERA_LOCK:
+            for key in list(CAMERAS):
+                if CAMERAS[key]['flight'] == flight:
+                    del CAMERAS[key]
+        return dict(status='SEARCHING', token=None, rois=None, reason='WINDOWS_NOT_FOUND_OR_AMBIGUOUS',
+                    message='ALT·HDG 창 탐색 중 · 계기판 전체와 주황색 숫자가 선명하게 보이도록 맞추세요.')
+    rois = {'ALT': [int(x) for x in found['alt']], 'HDG': [int(x) for x in found['hdg']]}
+    return {**calibrate(flight, encoded, rois), 'status': 'READY', 'rois': rois, 'region_source': 'vision_auto_windows'}
 
 
 def calibrate(flight, encoded, rois):
@@ -235,3 +300,18 @@ def expire_camera(db, flight):
             intake.receive(db,flight,event,'HEALTH')
         except intake.ReceivingError:
             db.rollback()
+
+
+def prepare_runtime():
+    """Load optional demo engines before accepting camera or speech requests."""
+    if os.getenv('RADAR_DEMO_ENABLED') != '1':
+        return
+    import cv2
+    from radar_vision.stream import Stabilizer
+    from radar_vision.poc import recognize
+    from app.services.speech.local import LocalWhisper
+    cv2.setNumThreads(1)
+    global MODEL
+    with STT_LOCK:
+        if MODEL is None:
+            MODEL = LocalWhisper(os.environ.get('RADAR_WHISPER_MODEL', ''))

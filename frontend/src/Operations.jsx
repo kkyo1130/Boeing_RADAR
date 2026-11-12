@@ -23,7 +23,7 @@ const reasons = {
   CHANNEL_UNAVAILABLE: '입력 장치를 사용할 수 없습니다', INPUT_QUALITY_UNVERIFIED: '입력 품질 확인 필요',
 };
 
-function useFlight(flightId, refresh) {
+export function useFlight(flightId, refresh) {
   const [state, setState] = useState({ snapshot: null, connected: false, error: '', receivedAt: null });
   const sessionRef = useRef(null);
   useEffect(() => {
@@ -135,16 +135,17 @@ export default function Operations() {
   }
   async function end() {
     if (actionRef.current || !connected || ended) return;
+    if (!window.confirm('운항을 종료하고 리포트를 생성할까요? 미해결 오류도 종료 기록에 남습니다.')) return;
     actionRef.current = true; setBusy(true); setError('');
     try {
       await request(`/api/v2/flights/${encodeURIComponent(flightId)}/end`, { method: 'POST' });
-      setRefresh(value => value + 1);
+      window.location.assign(`/report?flight=${encodeURIComponent(flightId)}`);
     } catch (e) { setError(e.message); setRefresh(value => value + 1); }
     finally { actionRef.current = false; setBusy(false); }
   }
   return <main className={`operations ${snapshot && !ended ? 'op-demo-active' : ''}`}>
     <header className="op-header"><a className="brand" href="/operations">RADAR<span> / FLIGHT MONITOR</span></a>
-      <nav aria-label="화면 선택"><a href="/" target="_blank" rel="noreferrer">모의 MCP 열기 ↗</a></nav>
+      <nav aria-label="화면 선택"><a href="/cockpit" target="_blank" rel="noreferrer">Vision AI 화면 ↗</a> <a href={`/pilot${flightId ? `?flight=${encodeURIComponent(flightId)}` : ''}`} target="_blank" rel="noreferrer">조종사 화면 ↗</a> <a href="/" target="_blank" rel="noreferrer">모의 MCP 열기 ↗</a></nav>
       <span className="op-muted">모의 환경 · 설정은 직접 조작</span></header>
     <div className="op-intro"><p className="eyebrow">FLIGHT OPERATIONS</p><h1>비행 상태 확인</h1><p>관제 지시와 복명복창, 카메라가 읽은 설정값을 함께 확인하세요.</p></div>
     {ackMessage && <p className="op-notice" role="status">{ackMessage}</p>}
@@ -162,7 +163,7 @@ export default function Operations() {
         <div><p className="eyebrow">{ended ? 'ENDED FLIGHT' : 'CURRENT FLIGHT'}</p><h2>{snapshot?.callsign || '세션 확인 중'}</h2><p className="op-id">{flightId}</p></div>
         <div className="op-session-actions"><span className={`op-connection ${connected ? 'is-connected' : ''}`} role="status">{connected ? '서버 연결됨' : '서버 확인 불가 · 판단 보류'}</span>
           <button onClick={() => setRefresh(value => value + 1)} disabled={busy}>다시 연결</button>
-          {!ended && <button className="op-end" onClick={end} disabled={!connected || busy || !snapshot}>{busy ? '종료 확인 중…' : 'END FLIGHT'}</button>}
+          {!ended && <button className="op-end" onClick={end} disabled={!connected || busy || !snapshot}>{busy ? '종료 확인 중…' : '운항 종료 및 리포트 보기'}</button>}
           {!connected && <button disabled={busy} onClick={() => attach('')}>비행 선택으로</button>}
           {ended && <button onClick={() => attach('')}>새 비행 준비</button>}</div>
       </section>

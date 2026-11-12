@@ -1,0 +1,1089 @@
+{
+  "annotation_basis": "Assistant-reviewed original corpus transcripts, before BERT inference; no labels from evaluated extractor; not independently expert/audio-adjudicated. CALLSIGN spoken mention, not ICAO mapping. ALT feet, HDG degrees; null field means unscored ambiguity, [] means absent.",
+  "source_report_sha256": "e2083d2388c633680026057593104fafd463a34fe26a553686b0024617965540",
+  "rows": [
+    {
+      "id": "uwb-atcc_TWR-FJ5hyZ_001080_001791_AT",
+      "set": "tower60",
+      "reference": "so stop at the holding point runway one three there is one more landing traffic runway three one expect five minutes delay",
+      "audio_sha256": "cb237faef1a6b179526dceec035c2d44c23c3cc13f8839df95ab99577979a5b1",
+      "CALLSIGN": [],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-BBFd00_002694_002934_AT",
+      "set": "tower60",
+      "reference": "csa seven three two two ruzyne tower roger",
+      "audio_sha256": "4574b106afe82ed6fa7c16b4325e498fa56ee5ba1bcf44b224675a62261adf06",
+      "CALLSIGN": [
+        "csa seven three two two"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-ahaj40_000215_000755_AT",
+      "set": "tower60",
+      "reference": "german wings seven papa runway three one cleared to land wind zero eight zero degrees two knots",
+      "audio_sha256": "55fc355bb4243cd99ecd16de358303e868c57f3d916e20ee7534e9dbcd089973",
+      "CALLSIGN": [
+        "german wings seven papa"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-QuV24w_000448_000563_AT",
+      "set": "tower60",
+      "reference": "stand five one",
+      "audio_sha256": "9a208ede6b2871382910d5f1279a588fd272273cf009fef431f79c20fad2b1b8",
+      "CALLSIGN": [],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-gRJghk_000099_000744_AT",
+      "set": "tower60",
+      "reference": "nor shuttle one five one five runway three one cleared for takeoff wind one seven zero degrees and three knots have a good day",
+      "audio_sha256": "1fd8e77c9e812854cf35711a3c960625bf0f0063ef24ad6cd1c4fd4da5903c51",
+      "CALLSIGN": [
+        "nor shuttle one five one five"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-uktQeK_000596_001274_AT",
+      "set": "tower60",
+      "reference": "lufthansa five mike echo tower continue approach runway three one and reduce your speed one more deaprture ahead",
+      "audio_sha256": "7304e4d5af835d04120aa00329c592c9948a4064b0c95afb3eacfba53dcc0cfd",
+      "CALLSIGN": [
+        "lufthansa five mike echo"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-CRqcIt_000702_000961_AT",
+      "set": "tower60",
+      "reference": "nor shuttle three five eight zero start reduce final speed",
+      "audio_sha256": "cd2a420f3be82f89c693109ca95926bf927e8d12a9bb3538173b229053964089",
+      "CALLSIGN": [
+        "nor shuttle three five eight zero"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-ULzSyS_000141_000602_AT",
+      "set": "tower60",
+      "reference": "csa three kilo foxtrot runway one three cleared for takeoff wind one six zero degrees two knots",
+      "audio_sha256": "e4b2cffe747ed6ecc032dcd6a2eb128aeebfacc83c01652ca584a62cffa55114",
+      "CALLSIGN": [
+        "csa three kilo foxtrot"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-oeoOFT_000720_000972_AT",
+      "set": "tower60",
+      "reference": "sky travel eight two four line up runway one three",
+      "audio_sha256": "a1aa9d905863f33a915015e4eedd84031b4e45ce0def9b07b64aa29ac128a01d",
+      "CALLSIGN": [
+        "sky travel eight two four"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-GFlkiM_000535_000997_AT",
+      "set": "tower60",
+      "reference": "skytavel one one zero two roger line up runway three one cleared for takeoff wind is calm",
+      "audio_sha256": "eb85ecd2cc861ac80d996922351b7bfc72b348ca673dbbf06305cac588af8fd9",
+      "CALLSIGN": [
+        "skytavel one one zero two"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-MbiR6u_000000_000394_AT",
+      "set": "tower60",
+      "reference": "emirates one three nine contact ruzyne ground one two one decimal nine bye",
+      "audio_sha256": "8e82c86142c804c52062e721cf60c647b23efbd102c6e2696123b2c62135dcd3",
+      "CALLSIGN": [
+        "emirates one three nine"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-fJmiuy_000425_000707_AT",
+      "set": "tower60",
+      "reference": "csa six papa charlie ruzyne tower roger",
+      "audio_sha256": "55e6848313d611aaa7e7a489914f190df7663371cc961ec57b14ecc1b3b5b2b0",
+      "CALLSIGN": [
+        "csa six papa charlie"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-ElE08x_001128_001366_AT",
+      "set": "tower60",
+      "reference": "there is runway inspection ahead i ll call you",
+      "audio_sha256": "563ed3dcb2f1bd61b55ac85db8aa699260df6c4c127acbce0d528b5c77e72b75",
+      "CALLSIGN": [],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-fSfNvY_000169_000641_AT",
+      "set": "tower60",
+      "reference": "csa three mike zulu runway three one clear to land wind two zero zero degrees five knots",
+      "audio_sha256": "fd756b6acda09a28d947925e0f95dcd8f873093bba43ebfbcfcf20a3f6d51795",
+      "CALLSIGN": [
+        "csa three mike zulu"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-X4uzKy_001605_001862_AT",
+      "set": "tower60",
+      "reference": "hello wizziar four xray zulu ruzyne tower",
+      "audio_sha256": "5e4ae57fb3a9beb477a127a97bee576b45bc86ede7b3a4fc2425f6fa4baa8165",
+      "CALLSIGN": [
+        "wizziar four xray zulu"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-GhNuts_000811_001270_AT",
+      "set": "tower60",
+      "reference": "swiss one two four bravo runway three one cleared to land wind zero seven zero degrees five knots",
+      "audio_sha256": "74d2ee9e54205f53104450c49ec70b2777d991191ecbf0c4225d499485a55373",
+      "CALLSIGN": [
+        "swiss one two four bravo"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-jQHzqW_000897_001316_AT",
+      "set": "tower60",
+      "reference": "two eight seven runway three one clear to land wind one seven zero degrees four knots",
+      "audio_sha256": "8e5ff07ae8381b40a15270c8862a1029732c1b631f95e174e165fd8f762f2855",
+      "CALLSIGN": [
+        "two eight seven"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": "Abbreviated callsign; canonical aircraft identity not inferred"
+    },
+    {
+      "id": "uwb-atcc_TWR-cXln8e_000457_000553_AT",
+      "set": "tower60",
+      "reference": "roger",
+      "audio_sha256": "0268e67054fab1d9c585bc428dd9582ec7a4b1423e44ebb65c358d65da2033d0",
+      "CALLSIGN": [],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-hb2QLO_001447_001697_AT",
+      "set": "tower60",
+      "reference": "jobair zero six one ruzyne tower",
+      "audio_sha256": "3c7319e9bacdf61ad19b74c356ddecf17d88c64d27e70fd66ab28c759dda3c82",
+      "CALLSIGN": [
+        "jobair zero six one"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-i8efNN_000107_000344_AT",
+      "set": "tower60",
+      "reference": "malev eight two one line up runway three one",
+      "audio_sha256": "ab11419d11f77c499badef38a253be1bec9207279571562a5520bc752ba0d296",
+      "CALLSIGN": [
+        "malev eight two one"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-MgoekB_000488_000772_AT",
+      "set": "tower60",
+      "reference": "air france one three eight two tower good morning continue approach",
+      "audio_sha256": "5e98fd6737b42ebe895287969cbc30985adc293fdc7e4e56d0b7ab1c9f372e35",
+      "CALLSIGN": [
+        "air france one three eight two"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-rtJ0mQ_000569_000788_AT",
+      "set": "tower60",
+      "reference": "lufthansa six mike alfa pushback approved",
+      "audio_sha256": "5cd3abdd578c8fcce34129f139c0748731ed1aa255eeb164fa20cc4b1bc519fd",
+      "CALLSIGN": [
+        "lufthansa six mike alfa"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-cWTEtl_001350_001693_AT",
+      "set": "tower60",
+      "reference": "austrian seven one zulu left lima and ground one two one nine",
+      "audio_sha256": "af48da69e20c3616c9ca71b81babb0d823989f15cbdb0724d49ce5f51c222a2d",
+      "CALLSIGN": [
+        "austrian seven one zulu"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-osPbMP_000383_000736_AT",
+      "set": "tower60",
+      "reference": "sky travel one zero three six good afternoon hold short of runway one three",
+      "audio_sha256": "4e2382ff85a8c1483b9f9e347cbc1df959bf98f9c2b9254de641130d2dcc9641",
+      "CALLSIGN": [
+        "sky travel one zero three six"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-HW66KT_001555_001866_AT",
+      "set": "tower60",
+      "reference": "hello easy five four nine eight ruzyne tower line up runway one three",
+      "audio_sha256": "326f1333035ae85aafd4b2807747129b275d5642dfae827175b51800caa1b541",
+      "CALLSIGN": [
+        "easy five four nine eight"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-HRKVwj_000000_000507_AT",
+      "set": "tower60",
+      "reference": "csa one nine six three runway one three clear to land wind zero five zero degrees six knots",
+      "audio_sha256": "458b963aa567fd07beee0075d564e2423b176772464f83bade238924d274ebca",
+      "CALLSIGN": [
+        "csa one nine six three"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-xaiX9E_000000_000300_AT",
+      "set": "tower60",
+      "reference": "csa nine two delta line up runway three one and wait",
+      "audio_sha256": "3af94d74bb0471c1d3e1467ba4a3e06ebd55a32c3a083843d2536ba6a77e85d3",
+      "CALLSIGN": [
+        "csa nine two delta"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-i6n5mJ_000980_001228_AT",
+      "set": "tower60",
+      "reference": "csa six three bravo line up runway one three",
+      "audio_sha256": "84cec976c5b14ef649490f29e07951135d8cd1879e18fffa785c645b314708f4",
+      "CALLSIGN": [
+        "csa six three bravo"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-TGy7f2_000861_001102_AT",
+      "set": "tower60",
+      "reference": "hello swedestar zero five two ruzyne tower",
+      "audio_sha256": "d9d35d6a7a2bc17fc053f3ab1ab34ff64e621c135eafe4da54017fc312b5ab77",
+      "CALLSIGN": [
+        "swedestar zero five two"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-ByTq2w_000098_000538_AT",
+      "set": "tower60",
+      "reference": "csa seven five nine runway three one clear to land wind one eight zero degrees six knots",
+      "audio_sha256": "8baa9ebe79bb45d4006fd6da3df31d6598f7dc2fe266d451b586d4946fa088d1",
+      "CALLSIGN": [
+        "csa seven five nine"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-rkhorq_002605_002899_AT",
+      "set": "tower60",
+      "reference": "o kilo hotel uniform u",
+      "audio_sha256": "667c1ea2dfe92b22b3f6177a43664d2f7e8ffafbc155862763018beee39eff1c",
+      "CALLSIGN": [
+        "o kilo hotel uniform u"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-C04DJt_000152_000593_AT",
+      "set": "tower60",
+      "reference": "csa eight three five runway one three clear to land wind zero two zero degrees six knots",
+      "audio_sha256": "8facac81a398cd221a6ce39211b95e14dc6ec9612f5278c2b511742625fb8fc4",
+      "CALLSIGN": [
+        "csa eight three five"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-BBGy10_003013_003288_AT",
+      "set": "tower60",
+      "reference": "csa one zulu alfa ruzyne tower roger",
+      "audio_sha256": "fb8c1e29b8bce1dad9296846114b3be4be4d710f727c30b4a18c153a2fab3797",
+      "CALLSIGN": [
+        "csa one zulu alfa"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-Q7Byqz_000730_001085_AT",
+      "set": "tower60",
+      "reference": "calibra",
+      "audio_sha256": "6e9c4323c7f676b9eae5f957850a4d94c9ff8029a236e5deae68832a5423c061",
+      "CALLSIGN": null,
+      "ALT": [],
+      "HDG": [],
+      "notes": "Unclear standalone calibra: exclude CALLSIGN score; no ALT/HDG target"
+    },
+    {
+      "id": "uwb-atcc_TWR-K1kxNg_000950_001415_AT",
+      "set": "tower60",
+      "reference": "air malta five three eight runway one three cleared to land wind one zero zero degrees five knots",
+      "audio_sha256": "3d83de60cb57da3a17431c0b38e5b76af6c2f864cdb8d400c08fa600ab5339b8",
+      "CALLSIGN": [
+        "air malta five three eight"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-pPtjY9_000670_000875_AT",
+      "set": "tower60",
+      "reference": "contact one two zero five two five",
+      "audio_sha256": "8f0f5014d8f693aea53bb5eebd90c10ad278053597bc2877e1fa1fe0bbc984ea",
+      "CALLSIGN": [],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-rZ8jDS_000361_000733_AT",
+      "set": "tower60",
+      "reference": "continue via lima and contact ground one point nine",
+      "audio_sha256": "8441553d2ee18ae11d7dbe769559df31bdfc9d7e9108bbde653d8217e17f11cd",
+      "CALLSIGN": [],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-vuswC8_001839_002371_AT",
+      "set": "tower60",
+      "reference": "wizz air four nine one runway three one cleared for takeoff wind one zero zero degrees three knots traffic four miles final",
+      "audio_sha256": "380b48ffee98bcc8bcfab141a858c7336f8fabba1d3a7afc7025c9750051e9c3",
+      "CALLSIGN": [
+        "wizz air four nine one"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-oXu4Pe_002559_002927_AT",
+      "set": "tower60",
+      "reference": "fedex five six continue for moment departing ahead seven three",
+      "audio_sha256": "8e760c35e8b4e47fadb5fd723889cb8cf93e89df2cdfeeb4b58dae6dc26a3fb8",
+      "CALLSIGN": [
+        "fedex five six"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-APTIBR_000000_000646_AT",
+      "set": "tower60",
+      "reference": "jobair zero eight one runway three one cleared for takeoff wind three four zero degrees and four knots",
+      "audio_sha256": "b40227b6cab9b4111974e88654cf0cd00f8fa80499b1d70313d43c74c2907fb5",
+      "CALLSIGN": [
+        "jobair zero eight one"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-RggWaO_000522_000896_AT",
+      "set": "tower60",
+      "reference": "french navy five five alfa two tower good morning continue approach",
+      "audio_sha256": "4a6c0c3afcdef02bc3a973a47b505147b8559e02e3298264d9a9bb08b36f0617",
+      "CALLSIGN": [
+        "french navy five five alfa two"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-h8c1fz_000000_000471_AT",
+      "set": "tower60",
+      "reference": "wizz air four quebec sierra runway three one cleared for takeoff wind zero eight zero six knots",
+      "audio_sha256": "14986e4d5667d68b5440936f9153123c4fde9b7873f0a226b1b4d31af0b9de0c",
+      "CALLSIGN": [
+        "wizz air four quebec sierra"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-wNLOtD_000170_000516_AT",
+      "set": "tower60",
+      "reference": "bee line seven zero victor any chance for intersection departure form romeo",
+      "audio_sha256": "1a3c2a2db43d8d5f591b660448ef689b39af2315824ec02943c0a17143474bae",
+      "CALLSIGN": [
+        "bee line seven zero victor"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-qltAgU_000620_000810_AT",
+      "set": "tower60",
+      "reference": "via lima holding point runway three one",
+      "audio_sha256": "cbb11d0383b2df5e838a56d880cf304e1c34a19bca24cc2b5778a726f7953406",
+      "CALLSIGN": [],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-vcVzdV_000077_000367_AT",
+      "set": "tower60",
+      "reference": "csa six one eight line up runway one three and wait",
+      "audio_sha256": "8ec68bc25b376c3cb5bb80025f7faedc72e24731f5b3d0bea00e358b068dae58",
+      "CALLSIGN": [
+        "csa six one eight"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-NAtjPg_000000_000526_AT",
+      "set": "tower60",
+      "reference": "air france one seven eight two runway three one clear to land wind one nine zero degrees five knots",
+      "audio_sha256": "be81bc6ee84873d2f3f322c75a7b71b984dd225be0227db4aa9f26889f9b85e3",
+      "CALLSIGN": [
+        "air france one seven eight two"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-VnSYrI_000636_000944_AT",
+      "set": "tower60",
+      "reference": "good evening bee line eight hotel sierra ruzyne tower runway",
+      "audio_sha256": "375e3722ce88daf09fd15e8d99766e9d07aaaf42cb3f636e617908d5836b94c7",
+      "CALLSIGN": [
+        "bee line eight hotel sierra"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-O5prwK_000666_001109_AT",
+      "set": "tower60",
+      "reference": "csa eight five seven runway one three clear to land wind zero one zero degrees seven knots",
+      "audio_sha256": "e599b024e406779173dbf7f29ad29d2626d3d002116158493a0b2125666fe4b3",
+      "CALLSIGN": [
+        "csa eight five seven"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-hFvm1Y_001834_002257_AT",
+      "set": "tower60",
+      "reference": "via one bravo departure squawk one four zer",
+      "audio_sha256": "c35e544367bb080fb869f51e7681ef89a88a9de33504511bebe386d41e7fb345",
+      "CALLSIGN": [],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-FxfhED_006180_006806_AT",
+      "set": "tower60",
+      "reference": "good morning break shamrock six four five now line up runway three one and cleared for takeoff wind one two zero degrees five knots",
+      "audio_sha256": "a7536ddb941119b28de5eaa3c0f23331fe91977b7e9e4e4601b6844ebb930e2c",
+      "CALLSIGN": [
+        "shamrock six four five"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-w5sYZ6_000000_000370_AT",
+      "set": "tower60",
+      "reference": "easy two five eight quebec line up runway three one and wait",
+      "audio_sha256": "485ebefa7cb7a434eb8989af54c0aef69cfba496546dfd63248401ffaad1b5e3",
+      "CALLSIGN": [
+        "easy two five eight quebec"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-xkeauM_000992_001565_AT",
+      "set": "tower60",
+      "reference": "good evening sky travel one zero three seven ruzyne tower runway one three",
+      "audio_sha256": "ef61b4d08115afc7e18c0abf0a660ea2d7175a8b1165811042f2097d89286c6d",
+      "CALLSIGN": [
+        "sky travel one zero three seven"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-Nen2Ui_000142_000563_AT",
+      "set": "tower60",
+      "reference": "lot five two eight runway three one cleared for takeoff wind zero six zero degrees",
+      "audio_sha256": "1d5de8fa4a11eff932314861606136d6b0c3fce1aa5c6ea3b09f05d32a6a89d5",
+      "CALLSIGN": [
+        "lot five two eight"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-aCwScp_000000_000250_AT",
+      "set": "tower60",
+      "reference": "sky travel six seven zero squawk one four four four",
+      "audio_sha256": "d6aff23988daed9dcba4d906ac11e32ef11e9b8954ae8f65e702ab05d97c93ce",
+      "CALLSIGN": [
+        "sky travel six seven zero"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-wFLD9U_000685_000934_AT",
+      "set": "tower60",
+      "reference": "csa two eight whiskey ruzyne tower roger",
+      "audio_sha256": "4b8e51e320a2d8c9857f272de93d8d21807da8666cb5b9029765ed2129d6ebf4",
+      "CALLSIGN": [
+        "csa two eight whiskey"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-RrMwlo_000501_000894_AT",
+      "set": "tower60",
+      "reference": "swiss four nine charlie roger expect one more landing",
+      "audio_sha256": "b74be3b48161d5409f2f9e63ae1b876970568de2d3cf2c458f61ff8ad769c4c8",
+      "CALLSIGN": [
+        "swiss four nine charlie"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-Es9irm_001053_001441_AT",
+      "set": "tower60",
+      "reference": "beline eight hotel sierra for vectors contact radar",
+      "audio_sha256": "1510993876cc761c97b5a976fba9c6c87f18e29c32f75da8febbc592b19e0b75",
+      "CALLSIGN": [
+        "beline eight hotel sierra"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-qrEc8d_001123_001562_AT",
+      "set": "tower60",
+      "reference": "jobair zero six one runway three one cleared for takeoff wind one nine zero degrees six knots",
+      "audio_sha256": "b8ec44ad079c79c291766dee5b8b482369d965c49b6d4b56b0c4cfec3a34cb50",
+      "CALLSIGN": [
+        "jobair zero six one"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-wCvRaI_000119_000621_AT",
+      "set": "tower60",
+      "reference": "csa seven nine zero runway three one cleared for takeoff wind one seven zero degrees five knots",
+      "audio_sha256": "fa153e094ae698df1b1e8f6593d3e3881c60ea96934594d4f8049d61b1b598a4",
+      "CALLSIGN": [
+        "csa seven nine zero"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_TWR-V4DR1t_002112_002395_AT",
+      "set": "tower60",
+      "reference": "romeo echo mike echo india ruzyne tower hello roger",
+      "audio_sha256": "02867a55bd39f725977c6d89ec205bf848e39b05a22d4e92766fc4bc6348a638",
+      "CALLSIGN": [
+        "romeo echo mike echo india"
+      ],
+      "ALT": [],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_ACCU-5EErU8_001557_002322_AT",
+      "set": "altitude15",
+      "reference": "good afternoon austrian one seven one juliett praha radar contact climb flight level three zero zero further climb in two minutes opposite traffic in three one zero",
+      "audio_sha256": "c304c9647565f867c92a3034ff5bc1d43122f29e40f8514fb1cbd44e1dfc0953",
+      "CALLSIGN": [
+        "austrian one seven one juliett"
+      ],
+      "ALT": [
+        30000
+      ],
+      "HDG": [],
+      "notes": "Assigned FL300; later 310 is opposing traffic, not target"
+    },
+    {
+      "id": "uwb-atcc_ACCU-0iyG6P_000000_000605_AT",
+      "set": "altitude15",
+      "reference": "csa two nine six proceed to pepik climb to flight level three nine zero",
+      "audio_sha256": "d74d2287cea0d2b86a6a57ab086283a732402ca748f10246c809a96379fdc1df",
+      "CALLSIGN": [
+        "csa two nine six"
+      ],
+      "ALT": [
+        39000
+      ],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_APP-fyyEVq_000776_001157_AT",
+      "set": "altitude15",
+      "reference": "csa eight tango praha radar radar contact descend flight level one three zero",
+      "audio_sha256": "39ae94d0c60569035fb0235f3d3e7f85c6e2c98e6ac4a2c4af359fdad785ac7e",
+      "CALLSIGN": [
+        "csa eight tango"
+      ],
+      "ALT": [
+        13000
+      ],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_ACCU-5tsu1H_002196_002639_AT",
+      "set": "altitude15",
+      "reference": "turkish one seven six nine descend flight level two nine zero",
+      "audio_sha256": "69d5305dffb524fab648c8809a7046546cf47b60736ba705475cceff9791ec06",
+      "CALLSIGN": [
+        "turkish one seven six nine"
+      ],
+      "ALT": [
+        29000
+      ],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_ACCU-0YuNK8_000635_001200_AT",
+      "set": "altitude15",
+      "reference": "ryan air six quebec uniform praha good morning radar contact descend to flight level two nine zero",
+      "audio_sha256": "e24fc981a637c34518bdadd65d2d08c9039e7923f7103cb9a3cdc369c2c26c17",
+      "CALLSIGN": [
+        "ryan air six quebec uniform"
+      ],
+      "ALT": [
+        29000
+      ],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_ACCU-gq651q_000143_000500_AT",
+      "set": "altitude15",
+      "reference": "sky travel six six one when ready descend flight level two nine zero",
+      "audio_sha256": "95e47cb3a304e48ac3733ab612c2dc603af08539b75b257b6af9e253d49020ce",
+      "CALLSIGN": [
+        "sky travel six six one"
+      ],
+      "ALT": [
+        29000
+      ],
+      "HDG": [],
+      "notes": "When-ready conditional target: value explicit but execution needs review"
+    },
+    {
+      "id": "uwb-atcc_APP-N6RiDF_000143_000413_AT",
+      "set": "altitude15",
+      "reference": "sky travel one one nine three descend flight level eight zero",
+      "audio_sha256": "00453f44f645f16ab48505f7ab7e1c895662a4cab230e2d3bc735779e965d9b5",
+      "CALLSIGN": [
+        "sky travel one one nine three"
+      ],
+      "ALT": [
+        8000
+      ],
+      "HDG": [],
+      "notes": "FL80 means 8000ft although spoken with two digits"
+    },
+    {
+      "id": "uwb-atcc_ACCU-w6GVDT_000997_001590_AT",
+      "set": "altitude15",
+      "reference": "scandinavian four seven five nine descend flight level three one zero one thousand or greater",
+      "audio_sha256": "434acb57b3fa171cbe7d87fd232388650e6b591ea2267577b3238f689e69c088",
+      "CALLSIGN": [
+        "scandinavian four seven five nine"
+      ],
+      "ALT": [
+        31000
+      ],
+      "HDG": [],
+      "notes": "310 is target FL; one thousand or greater is an incomplete rate phrase, not a second altitude"
+    },
+    {
+      "id": "uwb-atcc_ACCU-LELzuI_001929_002580_AT",
+      "set": "altitude15",
+      "reference": "ryan air nine one seven three proceed direct oscar kilo golf climb flight level three four zero",
+      "audio_sha256": "8ed992d26fc775583a38178b7660e27068ed4016ca80bd296df2dfd8f2d7ba01",
+      "CALLSIGN": [
+        "ryan air nine one seven three"
+      ],
+      "ALT": [
+        34000
+      ],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_ACCU-rK8uiZ_000802_001281_AT",
+      "set": "altitude15",
+      "reference": "csa eight zero four praha radar contact climb to flight level three four zero",
+      "audio_sha256": "aaed3acc4b75e6649ecf362aa8eae96f25c868cb9710b17179851e0ef99604c3",
+      "CALLSIGN": [
+        "csa eight zero four"
+      ],
+      "ALT": [
+        34000
+      ],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_ACCU-KtVcCX_000133_000484_AT",
+      "set": "altitude15",
+      "reference": "lufthansa one uniform xray climb flight level three one zero",
+      "audio_sha256": "c1ce7ae26f9aace6b2659eab61c6cb0f7bb5aea2782748af20a059a2db468561",
+      "CALLSIGN": [
+        "lufthansa one uniform xray"
+      ],
+      "ALT": [
+        31000
+      ],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_ACCU-0yPJ4f_000063_000644_AT",
+      "set": "altitude15",
+      "reference": "air berlin three six zero five descend flight level two nine zero rate one thousand five hundred feet per minute or greater",
+      "audio_sha256": "f025502b8361bf505fd87a42fb30c7ee3ad74ef131d7aff0852bc710d4bba8ae",
+      "CALLSIGN": [
+        "air berlin three six zero five"
+      ],
+      "ALT": [
+        29000
+      ],
+      "HDG": [],
+      "notes": "1500 feet/min is vertical rate, not assigned altitude"
+    },
+    {
+      "id": "uwb-atcc_ACCU-VQAATY_000955_001589_AT",
+      "set": "altitude15",
+      "reference": "charter ukraine five nine six praha good morning radar contact climb flight level two five zero",
+      "audio_sha256": "c09ba89d08a7a078c4c4ae095739d51947f547b241b3cbcf7b8579a7d80ad04c",
+      "CALLSIGN": [
+        "charter ukraine five nine six"
+      ],
+      "ALT": [
+        25000
+      ],
+      "HDG": [],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_ACCU-gwvtLw_002348_002937_AT",
+      "set": "altitude15",
+      "reference": "lufthansa seven five seven radar contact descend flight level three hundred reach level by rapet",
+      "audio_sha256": "e50f80a642258672b745e3fd84b18e2cbf68dbbf5953b139129d52f81d91df74",
+      "CALLSIGN": [
+        "lufthansa seven five seven"
+      ],
+      "ALT": [
+        30000
+      ],
+      "HDG": [],
+      "notes": "Flight level three hundred = FL300 = 30000ft; reach-by constraint needs review"
+    },
+    {
+      "id": "uwb-atcc_APP-dTJmF8_000000_000482_AT",
+      "set": "altitude15",
+      "reference": "csa correction grossjet seven whiskey descend flight level one zero zero",
+      "audio_sha256": "205b50ef868ff586ba41782cf7a5ef026c570142a6a35476dd218837da7b0d9b",
+      "CALLSIGN": [
+        "grossjet seven whiskey"
+      ],
+      "ALT": [
+        10000
+      ],
+      "HDG": [],
+      "notes": "Callsign correction: grossjet seven whiskey is addressed callsign; csa is superseded incomplete prefix; review required"
+    },
+    {
+      "id": "uwb-atcc_APP-6Zvma5_000000_000640_AT",
+      "set": "heading13_diagnostic",
+      "reference": "easy five three kilo romeo turn right heading zero six zero vectoring for ils approach runway three one track distance to touch down three fi",
+      "audio_sha256": "382da3649321be28541cb09a60e9ba512f556aadbd8c7c9d756cf7fabfe4b78e",
+      "CALLSIGN": [
+        "easy five three kilo romeo"
+      ],
+      "ALT": [],
+      "HDG": [
+        60
+      ],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_APP-l2xHxi_001646_002285_AT",
+      "set": "heading13_diagnostic",
+      "reference": "information oscar correct after passing gosek set heading zero five zero for vectoring ils runway three one",
+      "audio_sha256": "e93d6d9844e51ce71befb22a04843c24d2110d63189f91ff46543eacce985959",
+      "CALLSIGN": [],
+      "ALT": [],
+      "HDG": [
+        50
+      ],
+      "notes": "After-passing conditional heading target; review required"
+    },
+    {
+      "id": "uwb-atcc_APP-5B6FPZ_005960_006401_AT",
+      "set": "heading13_diagnostic",
+      "reference": "channex eight eight papa romeo turn left heading three one zero radar departure",
+      "audio_sha256": "71e31ef7a3f5ab187881354786379ee5019cae071b606ad7086867134abf41cc",
+      "CALLSIGN": [
+        "channex eight eight papa romeo"
+      ],
+      "ALT": [],
+      "HDG": [
+        310
+      ],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_APP-YNd9S2_000570_001026_AT",
+      "set": "heading13_diagnostic",
+      "reference": "continue to the left heading one nine zero",
+      "audio_sha256": "61eaede7ace74e03c049f9d71392f818a874336afdcdb9952c55db21caf4ef0f",
+      "CALLSIGN": [],
+      "ALT": [],
+      "HDG": [
+        190
+      ],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_APP-dVAgtn_002008_002382_AT",
+      "set": "heading13_diagnostic",
+      "reference": "and continue to the right heading two nine zero",
+      "audio_sha256": "375d8ba71ee40f827996e544b28f4f317be5d111f9fd28933361e7d6f69cec73",
+      "CALLSIGN": [],
+      "ALT": [],
+      "HDG": [
+        290
+      ],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_APP-mJGsJT_003343_003801_AT",
+      "set": "heading13_diagnostic",
+      "reference": "csa three charlie zulu right heading one one zero cleared for ils approach runway one three",
+      "audio_sha256": "49c7e6c4311d2eb91be03df6e5287f335e5dc829cfdf8e2d7f8d4f2b8595c324",
+      "CALLSIGN": [
+        "csa three charlie zulu"
+      ],
+      "ALT": [],
+      "HDG": [
+        110
+      ],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_APP-Ofb8XM_007373_007656_AT",
+      "set": "heading13_diagnostic",
+      "reference": "german wings seven papa left heading one zero zero",
+      "audio_sha256": "20261d06a7227a5e3776a7f6fd53638ce45b4e454d2e909752e76f0fbf8a546f",
+      "CALLSIGN": [
+        "german wings seven papa"
+      ],
+      "ALT": [],
+      "HDG": [
+        100
+      ],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_APP-MSUPxM_000098_000698_AT",
+      "set": "heading13_diagnostic",
+      "reference": "lot five two five to the right heading two seven zero vectoring for sequence",
+      "audio_sha256": "fe264568d4e975ee54d5ba2c047b7cd0b342f9d457fa11f94b33faa4f553255f",
+      "CALLSIGN": [
+        "lot five two five"
+      ],
+      "ALT": [],
+      "HDG": [
+        270
+      ],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_APP-IwuXTz_000971_001383_AT",
+      "set": "heading13_diagnostic",
+      "reference": "proceed two one zero radar departure trun right heading three six zero",
+      "audio_sha256": "b19e797b1df00009634f3dd5427346d8fbb64d3530c11c739bb5178c6be8c21b",
+      "CALLSIGN": null,
+      "ALT": [],
+      "HDG": [
+        0
+      ],
+      "notes": "Source says heading360: north represented as0 by RADAR 0–359 contract. Opening proceed two one zero is ambiguous, CALLSIGN unscored"
+    },
+    {
+      "id": "uwb-atcc_APP-Q1M9yF_009089_009373_AT",
+      "set": "heading13_diagnostic",
+      "reference": "heading two seven zero vectors for shortcut",
+      "audio_sha256": "2fdc1bf46fe54dd2adeb05613ea9493b9810adff96d05b2d886fb3ae49d89751",
+      "CALLSIGN": [],
+      "ALT": [],
+      "HDG": [
+        270
+      ],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_APP-TlRJPi_001517_001832_AT",
+      "set": "heading13_diagnostic",
+      "reference": "sierra two two one turn right heading two two zero",
+      "audio_sha256": "eb48884c960134fa243b05121dcfc6f5187f882d89dc296d00e04e25e8dd98ca",
+      "CALLSIGN": [
+        "sierra two two one"
+      ],
+      "ALT": [],
+      "HDG": [
+        220
+      ],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_APP-MzkrD4_000572_001208_AT",
+      "set": "heading13_diagnostic",
+      "reference": "roger continue to the right heading three zero zero expect vectoring for ils one three",
+      "audio_sha256": "17fbfb12ecaa9285afced4c69e437886564973da0f57f2e9f177f09f955b4053",
+      "CALLSIGN": [],
+      "ALT": [],
+      "HDG": [
+        300
+      ],
+      "notes": ""
+    },
+    {
+      "id": "uwb-atcc_APP-Xyh3pr_000000_000292_AT",
+      "set": "heading13_diagnostic",
+      "reference": "el al five two one left heading two seven zero",
+      "audio_sha256": "ec82cde86df24c5754180f9e80d76b659d559bbfd536ea92c52161dfb8f92cb5",
+      "CALLSIGN": [
+        "el al five two one"
+      ],
+      "ALT": [],
+      "HDG": [
+        270
+      ],
+      "notes": ""
+    }
+  ],
+  "supplement_plan_sha256": "cbfef90b70a04227c7c957951bdaf9903fc62cf9d1610f4f7444e7b2fe3f1cc5"
+}

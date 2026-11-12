@@ -120,3 +120,31 @@ WI-02는 이 dev 기준 별도 브랜치에서 수신/문맥/중복/시간/원�
 | [SPEC-009-WI-05](009-evaluation-demo/workitem/wi-05.md) | 노트북 장치·ROI·복창·등록 관제를 조작하는 로컬 시연 콘솔 | 기존 v2 운영·근거·음성 우선순위, 로컬 Whisper, Vision OCR | reviewing |
 
 | [SPEC-009-WI-06](009-evaluation-demo/workitem/wi-06.md) | GLB 전체 조종석 메시·MCP 수동 조작·시점 전환 | 기존 MCP UI | reviewing |
+
+## 2026-11-12 Flight Safety Report·PDF
+
+사용자 첨부 요청 추가 범위 [SPEC-008-WI-05](008-safety-trace-report/workitem/wi-05.md): verifying. 기존 입력/Trace/Incident/고정 리포트를 확장해 5개 섹션, 사건 중복 방지·미해결 분리, 브라우저 접근 권한, 규칙/선택적 AI 요약, 한글 PDF와 실제 다운로드를 구현했다. 기존 WI의 실제 장치 인수를 자동 완료로 바꾸지 않는다. 변경·검증·리뷰·실행·제한은 해당 WI 문서에 기록한다.
+
+2026-11-12 리포트 브랜드 제거 후속: PDF머리글/제목/작성자, 리포트UI상단, 서버·브라우저다운로드명 정리. 새 파일명 Flight_Safety_Report_<UTC 종료일>.pdf. 관련backend17/frontend49/다운로드E2E1 및빌드통과, fixture PDF4쪽재생성·렌더검토. 저장된데이터·폴더/저장소URL·기종출처이름은유지. [수정위치·검증기록](008-safety-trace-report/workitem/wi-05.md#2026-11-12-리포트-브랜드-문구-제거-후속). 기존WI검증상태유지, 미커밋.
+
+## 2026-11-12 ZIP AI 연결
+
+[SPEC-009-WI-07](009-evaluation-demo/workitem/wi-07.md): verifying. 사용자 요청으로 ZIP Whisper·BERT·OCR을 기존 프로젝트에 연결. 모델은 ZIP 경로 참조, 별도 로컬 DB/포트 사용. 13개 테스트 통과; 실제 마이크·카메라 검증과 PR 제출은 미실행.
+
+2026-11-12 WI-07 후속 verifying: 사용자 요청으로 ZIP 음성·운영·Pilot 기능을 병합하고 기존 Report/PDF와 Vision 소스·모델 참조·LAB 화면을 보존했다. backend680/HTTP50/Vision API57/frontend69 및 빌드 통과. 실장비·브라우저 조작·전용 PR은 미실행. [상세 기록](009-evaluation-demo/workitem/wi-07.md#2026-11-12-음성운영-zip-통합-및-vision리포트-보존-후속).
+
+## 2026-11-12 사진 증강·추가 학습
+
+[SPEC-003-WI-06](003-cockpit-vision/workitem/wi-06.md): verifying. 사용자 승인으로 원본과 해시 일치하는 학습용 복사본 약1GB 정리, 사진 숫자/각도 코드 합성600쌍 생성, 별도 OCR 후보 학습. 기존 모델/원본/평가 기록 보존. 실제 실행 모델 교체와 독립 실카메라 인수는 포함하지 않는다.
+
+2026-11-12 WI-06 결과: 사진 합성600쌍 및 원본 train 혼합으로 HDG/ALT16epochs 후보 학습 종료. 소비된 개발40장씩에서 HDG20/40·ALT24/40으로 부족해 실행 모델 교체하지 않음. Vision 회귀62개 통과. [상세 결과](003-cockpit-vision/workitem/wi-06.md#학습-결과). 독립 실카메라 평가와 PR 미실행, verifying 유지.
+
+2026-11-12 WI-06 빛번짐 후속 verifying: 빛번짐 합성300쌍, render ACK 기반 실제20조합60프레임 train 촬영 완료·270/03000 복원. 단계별 CNN 단독 진단 및 회귀64개 통과. 두 번째 실제 각도/거리 조건 변경 확인 대기이며 새 후보 학습·새 독립 최종 평가는 미실행. [진행 기록](003-cockpit-vision/workitem/wi-06.md#빛번짐실촬영단계-분리-평가-후속-진행-중).
+
+2026-11-12 WI-06 후속 verifying: train실촬영122장·개발24장·동결 후 새최종36장 수집, 빛번짐300쌍 합성 및character 후보 학습. 최종 동일ROI에서 새결합 HDG36정답/0오답/0보류, ALT35정답/0오답/1보류로 로컬 적용. 기존결합 ALT오답1건을 보류로 전환. 상관된12설정그룹의 제한된 측정이며 독립 반복/브라우저 안정화 인수는 남음. Vision71개·무정보 live API 검증 통과. [상세](003-cockpit-vision/workitem/wi-06.md#실제-각도-추가개발-분리동결-최종-평가-결과).
+
+2026-11-12 SPEC-003-WI-06 reviewing: [Draft PR #35](https://github.com/kkyo1130/Boeing_RADAR/pull/35), 전용브랜치 codex/glare-capture-training-20261112→feat/vision-ai. 구현69732bd 격리worktree에서도Vision71개통과. 실제새36장범위에서새결합 HDG36정답·ALT35정답/1보류/출력오답0, 로컬적용·원본보존. 기존사용자브랜치/미커밋변경보존. 외부리뷰/병합·독립반복인수미실행.
+
+## 2026-11-12 파일 음성 직접 STT
+
+[SPEC-004-WI-05](004-speech-communication/workitem/wi-05.md): verifying. 사용자 요청으로 관제/조종사 복창 각각 파일 직접 STT 버튼과 사용법 구현. frontend75/backend684·실제Whisper/BERT 합성파일 임시DB 검증 통과, 브라우저 파일 선택은 제어 연결 문제로 미실행. 기존 마이크·카메라·리포트·비행DB 보존.

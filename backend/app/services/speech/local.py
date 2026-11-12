@@ -8,12 +8,13 @@ class LocalWhisper:
         if not Path(model_path).is_dir():
             raise ValueError("Supply an existing local faster-whisper model directory")
         from faster_whisper import WhisperModel
-        self.model = WhisperModel(model_path, device=device, compute_type="int8",
+        self.model = WhisperModel(model_path, device=device, compute_type="int8", cpu_threads=2, num_workers=1,
                                   local_files_only=True)
 
-    def transcribe(self, path):
+    def transcribe(self, path, *, callsign_context=None):
         segments, info = self.model.transcribe(str(path), language="en", beam_size=5,
                                                condition_on_previous_text=False, vad_filter=True,
+                                               hotwords=(callsign_context or {}).get("hotwords"),
                                                initial_prompt=("Air traffic control phraseology: climb and maintain, "
                                                    "descend and maintain, feet, flight level, turn left, turn right, "
                                                    "heading. Numbers: zero, one, two, three, four, five, six, "
@@ -24,5 +25,6 @@ class LocalWhisper:
                  if speech and all(math.isfinite(s.avg_logprob) for s in speech) else None)
         return {"transcript": " ".join(s.text.strip() for s in speech),
                 "model_score": score, "score_calibrated": False,
+                "callsign_context": callsign_context,
                 "segments": [{"start": s.start, "end": s.end, "text": s.text,
                               "no_speech_prob": s.no_speech_prob} for s in rows]}

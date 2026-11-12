@@ -71,7 +71,7 @@ def test_readback_error_is_confirmed_while_camera_is_unreadable(scenario):
     s = scenario
     atc = s.adopt(); s.tick()
     data = s.speech(s.segment(atc))
-    data["transcript"] = "Radar one two three maintain four thousand feet heading two seven zero"
+    data["transcript"] = "Radar one two three climb and maintain four thousand feet heading two seven zero"
     data["fields"]["ALT"].update(value=4000, raw_text="4000")
     assert s.send(data).status_code == 201
     state = s.state()

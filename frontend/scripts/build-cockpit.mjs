@@ -16,8 +16,9 @@ box('mcp_face',10.85,2.55,.12,'panel',0,0,0);
 box('lower_sill',11.5,.25,.95,'edge',0,-1.46,-.2);
 for(const x of [-5.18,-1.92,1.92,5.18])for(const y of [-1.1,1.1]){cylinder(`screw_${x}_${y}`,.066,.035,'screw',x,y,.09);box(`screw_slot_${x}_${y}`,.08,.012,.009,'black',x,y,.112);}
 for(const [key,x,w] of [['speed',-3.55,1.65],['heading',0,1.65],['altitude',3.55,2.05]]){
- box(`${key}_bezel`,w+.18,.76,.12,'edge',x,.58,.11);
- box(`${key}_display`,w,.57,.03,'black',x,.58,.187);
+ const displayWidth=w*1.2,displayHeight=.57*1.6;
+ box(`${key}_bezel`,displayWidth+.18,displayHeight+.19,.12,'edge',x,.58,.11);
+ box(`${key}_display`,displayWidth,displayHeight,.03,'black',x,.58,.187);
  const knob=new T.Group();knob.name=`${key}_knob`;knob.position.set(x,-.48,.16);scene.add(knob);
  const rim=new T.Mesh(new T.CylinderGeometry(.41,.43,.18,48),materials.edge);rim.rotation.x=Math.PI/2;knob.add(rim);
  const cap=new T.Mesh(new T.CylinderGeometry(.31,.36,.26,48),materials.knob);cap.rotation.x=Math.PI/2;cap.position.z=.17;knob.add(cap);
@@ -187,7 +188,8 @@ for(const unit of scene.children.filter(o=>o.name.startsWith('fmc_'))){
 }
 // Slim, grey MCP on the full-width black glareshield.
 for(const o of mcp.children){for(const [key,shift] of [['speed',.8],['heading',-.35],['altitude',-1.45]])if(o.name.startsWith(key+'_'))o.position.x+=shift;}
-mcp.scale.set(1.05,.52,1);mcp.position.y=2.18;
+// Enlarge the MCP and its runtime digit planes vertically for tablet readability.
+mcp.scale.set(1.05,1.5,1);mcp.position.y=2.18;
 for(const side of [-1,1]){
  const wing=round(`efis_panel_${side}`,3.6,1.42,.23,'panel',side*8.05,2.16,.08,.045);
  for(const dx of [-1.18,-.4,.4,1.18]){

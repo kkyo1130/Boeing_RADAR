@@ -48,6 +48,24 @@ def test_camera_stabilizes_clears_and_preserves_zero(client,flight,monkeypatch):
 def test_disabled(client,monkeypatch):
     monkeypatch.delenv('RADAR_DEMO_ENABLED',raising=False);assert client.get('/api/demo/status').status_code==404
 
+def test_demo_runtime_prepares_model_once_and_limits_tracking_threads(monkeypatch):
+    import cv2
+    from app.services.speech import local
+    calls=[]
+    sentinel=object()
+    monkeypatch.setattr(demo,'MODEL',None)
+    monkeypatch.setattr(local,'LocalWhisper',lambda path: calls.append(path) or sentinel)
+    threads=[]
+    monkeypatch.setattr(cv2,'setNumThreads',threads.append)
+    monkeypatch.delenv('RADAR_DEMO_ENABLED',raising=False)
+    demo.prepare_runtime()
+    assert calls==[] and threads==[]
+    monkeypatch.setenv('RADAR_DEMO_ENABLED','1')
+    monkeypatch.setenv('RADAR_WHISPER_MODEL','local-model')
+    demo.prepare_runtime();demo.prepare_runtime()
+    assert calls==['local-model'] and demo.MODEL is sentinel
+    assert threads==[1,1]
+
 def test_tracking_translation_ignores_changed_digits():
     import numpy as np
     from app.services.demo.tracking import reference,locate
@@ -93,3 +111,56 @@ def test_homophone_readback_preserves_raw_and_compares_actual(client,flight,monk
     row=next(row for row in state['validation']['readback']['fields'] if row['field']=='HDG')
     assert row['actual']==expected
     assert row['result']==('NORMAL' if expected==270 else 'MISMATCH')
+
+
+def test_enabled_ner_follows_stt_and_failure_blocks_pass(client,flight,monkeypatch):
+    from app.services.speech import ner
+    monkeypatch.setenv('RADAR_NER_MODEL','configured-test-model')
+    text='Radar one two three climb and maintain three thousand feet heading two seven zero'
+    labels='B-CALLSIGN I-CALLSIGN I-CALLSIGN I-CALLSIGN B-ACTION I-ACTION I-ACTION B-ALT I-ALT I-ALT O B-HDG I-HDG I-HDG'.split()
+    calls=[]
+    def extract(raw):
+        calls.append(raw)
+        return ner.assemble(raw,labels,[.9]*len(labels))
+    monkeypatch.setattr(ner,'extract_atc',extract)
+    now=intake.utc_now()
+    r=client.post(f'/api/demo/{flight}/scenario/baseline',json={'started_at':intake.stamp(now-timedelta(seconds=4)),'ended_at':intake.stamp(now-timedelta(seconds=3))})
+    assert r.status_code==200,r.text
+    state=client.get(f'/api/v2/flights/{flight}/state').json()
+    assert state['targets']['ALT']['value']==3000
+    class ASR:
+        def transcribe(self,path): return {'transcript':text,'model_score':.9}
+    monkeypatch.setattr(demo,'MODEL',ASR())
+    def unavailable(raw):
+        calls.append(raw)
+        raise RuntimeError('unavailable')
+    monkeypatch.setattr(ner,'extract_atc',unavailable)
+    response=client.post(f'/api/demo/{flight}/readback',json={'started_at':intake.stamp(now-timedelta(seconds=2)),'ended_at':intake.stamp(now-timedelta(seconds=1)),'atc_input_id':state['readback_required']['atc_input_id'],'audio':base64.b64encode(wav_bytes()).decode()})
+    assert response.status_code==200,response.text
+    assert calls[-1]==text and response.json()['transcript']==text
+    assert response.json()['ner']['issues']==['NER_UNAVAILABLE']
+    assert response.json()['quality_reason']=='ner_engine_unavailable'
+    assert client.get(f'/api/v2/flights/{flight}/state').json()['result']!='NORMAL'
+
+
+def test_auto_calibration_uses_vision_regions_and_clears_previous_on_failure(client,flight,monkeypatch):
+    import sys
+    from pathlib import Path
+    monkeypatch.syspath_prepend(str(Path(__file__).resolve().parents[2]))
+    import vision.auto_windows as windows
+    from app.services.demo import tracking
+    image=io.BytesIO();Image.new('RGB',(320,200),'orange').save(image,format='JPEG')
+    encoded=base64.b64encode(image.getvalue()).decode()
+    monkeypatch.setattr(windows,'locate_windows',lambda image: {'hdg':[10,20,70,50],'alt':[100,20,200,50]})
+    monkeypatch.setattr(tracking,'reference',lambda image,rois: {'auto':True})
+    response=client.post(f'/api/demo/{flight}/auto-calibration',json={'image':encoded})
+    assert response.status_code==200,response.text
+    data=response.json()
+    assert data['rois']=={'HDG':[10,20,70,50],'ALT':[100,20,200,50]}
+    assert demo.CAMERAS[data['token']]['rois']==data['rois']
+    monkeypatch.setattr(windows,'locate_windows',lambda image: None)
+    failed=client.post(f'/api/demo/{flight}/auto-calibration',json={'image':encoded})
+    assert failed.status_code==200
+    assert failed.json()['status']=='SEARCHING'
+    assert failed.json()['token'] is None and failed.json()['rois'] is None
+    assert data['token'] not in demo.CAMERAS

@@ -66,6 +66,18 @@ test('request timeout and cancellation abort a stuck connection', async () => {
   try { await assert.rejects(request('/api/v2/flights/x/state', { timeout: 10 }), /서버 응답/); }
   finally { global.fetch = previous; }
 });
+test('plain-text and empty HTTP failures report status instead of a JSON parser error', async () => {
+  const previous = global.fetch;
+  try {
+    for (const body of ['Internal Server Error', '']) {
+      global.fetch = async () => new Response(body, { status: 500 });
+      await assert.rejects(request('/api/demo/x/calibration'), error =>
+        error.status === 500 && error.message.includes('서버 요청 실패 (500)'));
+    }
+    global.fetch = async () => new Response('not-json', { status: 200 });
+    await assert.rejects(request('/api/demo/status'), /서버 응답 형식/);
+  } finally { global.fetch = previous; }
+});
 test('same flight retry preserves historical snapshot and time but clears current connection', () => {
   const previous = { snapshot: snapshot(), connected: false, error: 'offline', receivedAt: 't0' };
   const retry = restartFlightState(previous, 'FLT2-a');

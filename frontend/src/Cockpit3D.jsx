@@ -5,12 +5,12 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import './cockpit3d.css';
 
 const slots=[['speed',-2.75,1.65,3,'IAS / MACH','SPEED'],['heading',-.35,1.65,3,'HEADING','HDG SEL'],['altitude',2.1,2.05,5,'ALTITUDE','ALT HLD']];
-function textPlane(text,width,height,color,size=64){
- const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=256;
+function textPlane(text,width,height,color,size=64,canvasWidth=1024){
+ const canvas=document.createElement('canvas');canvas.width=canvasWidth;canvas.height=256;
  const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;
  const material=new T.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false});
  const plane=new T.Mesh(new T.PlaneGeometry(width,height),material);
- plane.userData.paint=value=>{const ctx=canvas.getContext('2d');ctx.clearRect(0,0,1024,256);ctx.fillStyle=color;ctx.font=`bold ${size}px "Courier New", monospace`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(value,512,138,960);texture.needsUpdate=true;};
+ plane.userData.paint=value=>{const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,256);ctx.fillStyle=color;ctx.font=`bold ${size}px "Courier New", monospace`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(value,canvas.width/2,138,canvas.width-32);texture.needsUpdate=true;};
  plane.userData.paint(text);return plane;
 }
 export default function Cockpit3D({values,hidden,onEdit,onChange,capture}){
@@ -45,7 +45,7 @@ export default function Cockpit3D({values,hidden,onEdit,onChange,capture}){
    if(disposed){disposeScene(gltf.scene);return;}scene.add(gltf.scene);
    const mcp=gltf.scene.getObjectByName('mcp_root');gltf.scene.traverse(object=>{if(object.isMesh){object.castShadow=!object.material.transparent;object.receiveShadow=true;}});
    for(const [name,x,width,digits,title,knobTitle] of slots){
-    const display=textPlane('',width*.94,.5,'#ffba69',190);display.position.set(x,.58,.208);display.name=`${name}_display_text`;display.userData.field=name;display.userData.edit=true;mcp.add(display);displays[name]=display;
+    const display=textPlane('',width*.94*1.2,.5*1.6,'#ffba69',190,digits*128+64);display.position.set(x,.58,.208);display.name=`${name}_display_text`;display.userData.field=name;display.userData.edit=true;mcp.add(display);displays[name]=display;
 
 
     const turnLabel=textPlane('−     +',1.9,.22,'#bdc6c8',76);turnLabel.position.set(x,-.88,.5);mcp.add(turnLabel);

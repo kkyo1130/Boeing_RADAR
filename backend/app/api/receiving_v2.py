@@ -41,8 +41,14 @@ def install_handlers(app):
 
 
 @router.post("", status_code=201)
-def start(payload: StartFlightV2, db: Session = Depends(get_db)):
-    return service.start(db, payload.callsign)
+def start(payload: StartFlightV2, request: Request, db: Session = Depends(get_db)):
+    from app.services.reports.access import browser_token, digest, COOKIE
+    token=browser_token(request)
+    data=service.start(db,payload.callsign,report_owner_hash=digest(token))
+    response=JSONResponse(data,status_code=201)
+    response.set_cookie(COOKIE,token,httponly=True,samesite='strict',secure=request.url.scheme=='https',max_age=31536000,path='/')
+    response.headers['Cache-Control']='no-store'
+    return response
 
 
 @router.post("/{flight_id}/end")

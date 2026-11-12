@@ -1,0 +1,6 @@
+-r requirements.txt
+# Versions from RADAR-Mac-740df89; weights are external local files.
+faster-whisper==1.2.1
+torch==2.8.0
+transformers==4.57.1
+opencv-python==4.14.0.94
