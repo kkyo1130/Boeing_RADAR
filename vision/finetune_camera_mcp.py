@@ -22,86 +22,116 @@ from pathlib import Path
 FIELDS = ["image_path", "kind", "text", "split", "session_id", "source_image"]
 
 
-def load(root):
-    with (root / "labels.csv").open(newline="", encoding="utf-8") as f:
-        return list(csv.DictReader(f))
+from mcp_dataset import validate_dataset, disjoint, separate_output
 
+def load(root):
+    with (root / 'labels.csv').open(newline='',encoding='utf-8') as fp:
+        return list(csv.DictReader(fp))
 
 def verify(root, rows, splits):
-    if not rows:
-        raise ValueError(f"No labels in {root}")
+    checked=validate_dataset(root,splits)
+    if rows!=checked['rows']: raise ValueError('Rows differ from validated dataset')
+
+
+def prepare(base, cameras, initial, output, real_test=None, *, camera_val=None):
+    datasets=[validate_dataset(base,{'train','val','test'})]
+    for kind in ('hdg','alt'):
+        for split in ('train','val','test'):
+            if not any(r['kind']==kind and r['split']==split for r in datasets[0]['rows']):
+                raise ValueError(f'Base missing {kind}/{split}')
+    datasets += [validate_dataset(c,{'train'},paired=True) for c in cameras]
+    test=validate_dataset(real_test,{'test'},paired=True) if real_test else None
+    development=validate_dataset(camera_val,{'val','test'},paired=True) if camera_val else None
+    disjoint(datasets+([test] if test else [])+([development] if development else []))
+    initial=Path(initial).resolve()
+    for kind in ('hdg','alt'):
+        if not (initial/f'{kind}_best.pt').is_file(): raise ValueError(f'Missing initial checkpoint: {kind}')
+    # Also reject a held-out set that overlaps the v5 training provenance if available.
+    ancestor=initial/'merged_training_data'
+    if ancestor.exists():
+        for held in (test,development):
+            if held:disjoint([validate_dataset(ancestor,{'train','val','test'}),held])
+    output=separate_output(output,[base,*cameras,initial,*([real_test] if real_test else []),*([camera_val] if camera_val else [])])
+    output.mkdir(parents=True)
+    merged=output/'merged_training_data'; merged.mkdir()
+    rows_out=[]
+    for index,data in enumerate(datasets+([development] if development else [])):
+        tag='camera_val' if data is development else ('base' if index==0 else f'camera_{index}')
+        for i,row in enumerate(data['rows']):
+            target_split='val' if data is development else row['split']
+            rel=Path(target_split)/row['kind']/f'{tag}_{i:06d}.png'
+            dest=merged/rel;dest.parent.mkdir(parents=True,exist_ok=True)
+            # Re-encode decoded pixels; sources are never edited.
+            from PIL import Image
+            with Image.open(Path(data['root'])/row['image_path']) as im: im.save(dest)
+            item=dict(row,split=target_split,image_path=rel.as_posix(),session_id=f"{tag}:{row['session_id']}",
+                      source_image=f"{tag}/{row['source_image']}")
+            rows_out.append(item)
+    with (merged/'labels.csv').open('w',newline='',encoding='utf-8') as fp:
+        extra_fields=sorted({key for row in rows_out for key in row}-set(FIELDS))
+        writer=csv.DictWriter(fp,fieldnames=FIELDS+extra_fields);writer.writeheader();writer.writerows(rows_out)
+    manifest={'camera_validation':({k:development[k] for k in ('root','fingerprint')} if development else None),
+              'validation_policy':'CAMERA_DEVELOPMENT_NOT_FINAL' if development else 'SYNTHETIC',
+              'initial':str(initial),'datasets':[{k:d[k] for k in ('root','fingerprint')} for d in datasets],
+              'test':({k:test[k] for k in ('root','fingerprint')} if test else None),
+              'preprocessing':'camera_amber_align_v1 then grayscale_bilinear_36n_48',
+              'counts':dict(Counter(f"{r['split']}/{r['kind']}" for r in rows_out))}
+    (output/'training_manifest.json').write_text(json.dumps(manifest,indent=2))
+    return merged
+
+
+def verify_plan(path, presets, split):
+    rows=validate_dataset(path,{split},paired=True)['rows']
+    groups={}
     for row in rows:
-        kind = row.get("kind")
-        value = row.get("text", "")
-        rel = Path(row.get("image_path", ""))
-        if (kind not in ("hdg", "alt") or len(value) != (3 if kind == "hdg" else 5)
-                or not value.isascii() or not value.isdigit()
-                or row.get("split") not in splits
-                or rel.is_absolute() or ".." in rel.parts
-                or not (root / rel).is_file()):
-            raise ValueError(f"Invalid record in {root}: {row}")
+        groups.setdefault((row['session_id'],row['source_image']),{})[row['kind']]=row['text']
+    counts=Counter((v['hdg'],v['alt']) for v in groups.values())
+    if counts!=Counter({pair:20 for pair in presets}):
+        raise ValueError(f'Expected exactly 20 pairs for each v6 {split} preset: {counts}')
+    if not (Path(path)/'collection.json').exists():
+        raise ValueError('v6 batch requires original collection.json session provenance')
 
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--base", type=Path, required=True, help="Original diverse OCR dataset with train/val/test")
-    p.add_argument("--camera", type=Path, required=True, help="Verified camera training batch")
+    p.add_argument("--camera", type=Path, required=True, action="append", help="Camera train batch; repeat for multiple batches")
     p.add_argument("--init-checkpoints", type=Path, required=True)
     p.add_argument("--output", type=Path, default=Path("vision/checkpoints/mcp_ocr_v4"))
     p.add_argument("--real-test", type=Path, help="Independent unseen webcam test dataset; must contain test split")
+    p.add_argument("--camera-val",type=Path,help="Separate camera development session, val or consumed test split; never an independent final test")
     p.add_argument("--epochs", type=int, default=15)
     p.add_argument("--device", choices=("cpu", "mps", "cuda"), default="cpu")
+    p.add_argument("--v6", action="store_true", help="Require exactly 120 old + 160 new train pairs and independent 40-pair v6 test")
+    p.add_argument("--prepare-only", action="store_true", help="Validate and merge without training")
+    p.add_argument("--lr", type=float, default=0.0001)
     args = p.parse_args()
-    base, camera = args.base.resolve(), args.camera.resolve()
-    output = args.output.resolve()
-    if base == camera or output in (base, camera) or base in output.parents or camera in output.parents:
-        p.error("Keep output separate from input datasets")
-    if args.epochs < 1:
-        p.error("--epochs must be positive")
-    if any(not (args.init_checkpoints / f"{kind}_best.pt").is_file() for kind in ("hdg", "alt")):
-        p.error("Missing original HDG/ALT checkpoints")
-    original, cam = load(base), load(camera)
-    verify(base, original, {"train", "val", "test"})
-    verify(camera, cam, {"train"})
-    for kind in ("hdg", "alt"):
-        for split in ("train", "val", "test"):
-            if not any(r["kind"] == kind and r["split"] == split for r in original):
-                p.error(f"Base dataset missing {kind}/{split}")
-        if not any(r["kind"] == kind for r in cam):
-            p.error(f"Camera dataset missing {kind}")
-    distinct = {kind: sorted({r["text"] for r in cam if r["kind"] == kind}) for kind in ("hdg", "alt")}
-    print("Camera labels:", json.dumps(distinct))
-    if any(len(values) == 1 for values in distinct.values()):
-        print("WARNING: single-value camera batch; this does not prove generalization.")
-    merged = output / "merged_training_data"
-    if merged.exists():
-        p.error(f"Merged output exists: {merged}; choose a new --output to avoid overwriting")
-    output.mkdir(parents=True, exist_ok=True)
-    merged.mkdir()
-    rows_out = []
-    # Never copy webcam frames into validation or test: they were captured in the same session.
-    for source, tag, rows in ((base, "base", original), (camera, "camera", cam)):
-        for i, row in enumerate(rows):
-            split, kind = row["split"], row["kind"]
-            suffix = Path(row["image_path"]).suffix or ".png"
-            rel = Path(split) / kind / f"{tag}_{i:06d}{suffix}"
-            dst = merged / rel
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source / row["image_path"], dst)
-            item = dict(row)
-            item["image_path"] = rel.as_posix()
-            item["session_id"] = f"{tag}_{row.get('session_id', 'unknown')}"
-            item["source_image"] = f"{tag}/{row.get('source_image', row['image_path'])}"
-            rows_out.append({key: item.get(key, "") for key in FIELDS})
-    with (merged / "labels.csv").open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=FIELDS)
-        writer.writeheader()
-        writer.writerows(rows_out)
-    print("Merged counts:", dict(Counter((r["split"], r["kind"]) for r in rows_out)), flush=True)
+    if not 10 <= args.epochs <= 15:
+        p.error('--epochs must be 10–15 for camera fine-tuning')
+    try:
+        if args.v6:
+            from mcp_camera_presets import V6_TRAIN, V6_TEST
+            if not args.real_test or len(args.camera)!=2:
+                raise ValueError('--v6 needs two --camera batches (120 old + 160 new) and --real-test')
+            counts=[]
+            for path in args.camera:
+                data=validate_dataset(path,{'train'},paired=True)
+                counts.append(len(data['rows'])//2)
+                if len(data['rows'])==320:
+                    verify_plan(path,V6_TRAIN,'train')
+            if sorted(counts)!=[120,160]: raise ValueError('Expected 120 + 160 camera train pairs')
+            verify_plan(args.real_test,V6_TEST,'test')
+        merged=prepare(args.base,args.camera,args.init_checkpoints,args.output,args.real_test,camera_val=args.camera_val)
+    except (ValueError,OSError) as exc:
+        p.error(str(exc))
+    output=args.output.resolve()
+    if args.prepare_only:
+        print(f'Validated and merged: {merged}'); return
     script = Path(__file__).with_name("train_mcp_ocr_v2.py")
     command = [sys.executable, str(script), "--data", str(merged),
                "--output", str(output), "--init-checkpoints", str(args.init_checkpoints),
-               "--epochs", str(args.epochs), "--device", args.device, "--augment"]
+               "--epochs", str(args.epochs), "--lr", str(args.lr), "--device", args.device, "--augment", "--camera-preprocessing"]
+    if args.camera_val:command += ["--camera-validation"]
     print("Starting fine-tuning...", flush=True)
     subprocess.run(command, check=True)
     evaluate = Path(__file__).with_name("evaluate_mcp_ocr.py")
@@ -109,7 +139,7 @@ def main():
     subprocess.run([sys.executable, str(evaluate), "--data", str(merged),
                     "--checkpoints", str(output), "--output", str(output / "base_test_report"),
                     "--device", args.device], check=True)
-    if args.real_test:
+    if args.real_test and not args.v6:
         test_root = args.real_test.resolve()
         test_rows = load(test_root)
         verify(test_root, test_rows, {"test"})
@@ -123,6 +153,10 @@ def main():
         for kind in ("hdg", "alt"):
             value = summary[kind]["exact_accuracy"]
             print(f"REAL CAMERA {kind.upper()} exact: {value:.2%}; target >= 90%: {value >= .9}")
+    elif args.camera_val:
+        print("Camera development data selected checkpoints; independent final camera test remains unexecuted.")
+    elif args.v6:
+        print("V6 held-out camera test validated but reserved for compare_camera_mcp.py; no model selection from test.")
     else:
         print("NO REAL CAMERA TEST: 90% webcam accuracy cannot be determined.")
     print(f"Fine-tuned checkpoints saved at {output}; original images/checkpoints retained.")

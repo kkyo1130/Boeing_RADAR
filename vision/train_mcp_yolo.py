@@ -10,6 +10,12 @@ from pathlib import Path
 
 
 def validate_dataset(root: Path):
+    # Apply the same pending-label and human-review integrity checks as fine-tuning.
+    try:
+        from .yolo_camera_data import load_dataset
+    except ImportError:
+        from yolo_camera_data import load_dataset
+    load_dataset(root)
     manifest = root / "manifest.csv"
     if not manifest.exists():
         raise FileNotFoundError(f"Missing {manifest}; run vision.label_mcp first")

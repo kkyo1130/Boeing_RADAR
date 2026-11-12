@@ -1,0 +1,232 @@
+{
+  "measured_on": "2026-11-12",
+  "scope": "Simulated cockpit, fixed actual webcam setups; correlated video frames, no operational accuracy claim",
+  "yolo": {
+    "test_images": 40,
+    "label_mode": "BLIND",
+    "evaluation_mode": "FINAL_BLIND_INDEPENDENT",
+    "requested_imgsz": 960,
+    "models": {
+      "old": {
+        "precision": 0.1838684412222668,
+        "recall": 0.225,
+        "mAP50": 0.09625622489176122,
+        "mAP50_95": 0.01747563861104371,
+        "weights_sha256": "9c09b066216d370bf091d8fdface0ab684fa1a03b98deaa0b0e6e8e21eb5fa0a",
+        "spatial_gate_coverage": 0.075
+      },
+      "new": {
+        "precision": 0.9221818450863919,
+        "recall": 0.925,
+        "mAP50": 0.8886026603214231,
+        "mAP50_95": 0.20527308448933623,
+        "weights_sha256": "10b9e814ef7be1c338de10ea550e9fa099029c298a86f25770e44fbb6ee24202",
+        "spatial_gate_coverage": 1.0
+      }
+    },
+    "camera_split": {
+      "train": 120,
+      "val": 30,
+      "test": 40
+    },
+    "synthetic_split": {
+      "train": 12,
+      "val": 3,
+      "test": 3
+    }
+  },
+  "ocr": {
+    "model": "mcp_character_v2",
+    "initialization": "trained from scratch",
+    "test_settings": 20,
+    "scheduled_frames": 400,
+    "scheduled_strings": 800,
+    "training_display_crops": 1429,
+    "training_glyphs": 5701,
+    "development_crops": 160,
+    "complete_test_crops": 720,
+    "character_sha256": "234c1f1e454d0d9037674e3134158f9f1de64633b4bc4b587c78f8479390e1c6",
+    "results": {
+      "v5": {
+        "hdg": {
+          "scheduled": 400,
+          "cropped": 360,
+          "raw_exact_correct": 224,
+          "crop_string_accuracy": 0.6222222222222222,
+          "all_frame_raw_exact_accuracy": 0.56,
+          "accepted": 210,
+          "accepted_correct": 165,
+          "accepted_accuracy": 0.7857142857142857,
+          "all_frame_accepted_exact_accuracy": 0.4125
+        },
+        "alt": {
+          "scheduled": 400,
+          "cropped": 360,
+          "raw_exact_correct": 48,
+          "crop_string_accuracy": 0.13333333333333333,
+          "all_frame_raw_exact_accuracy": 0.12,
+          "accepted": 55,
+          "accepted_correct": 15,
+          "accepted_accuracy": 0.2727272727272727,
+          "all_frame_accepted_exact_accuracy": 0.0375
+        }
+      },
+      "character": {
+        "hdg": {
+          "scheduled": 400,
+          "cropped": 360,
+          "raw_exact_correct": 360,
+          "crop_string_accuracy": 1.0,
+          "all_frame_raw_exact_accuracy": 0.9,
+          "accepted": 360,
+          "accepted_correct": 360,
+          "accepted_accuracy": 1.0,
+          "all_frame_accepted_exact_accuracy": 0.9
+        },
+        "alt": {
+          "scheduled": 400,
+          "cropped": 360,
+          "raw_exact_correct": 360,
+          "crop_string_accuracy": 1.0,
+          "all_frame_raw_exact_accuracy": 0.9,
+          "accepted": 360,
+          "accepted_correct": 360,
+          "accepted_accuracy": 1.0,
+          "all_frame_accepted_exact_accuracy": 0.9
+        }
+      }
+    },
+    "notes": "Raw full-string predictions before OCR score acceptance; upstream missing crops count incorrect. Selection/development and final-test sessions separated."
+  },
+  "final_ui_regression": {
+    "view": "MCP front",
+    "settings": 15,
+    "scheduled_frames": 300,
+    "results": {
+      "hdg": {
+        "scheduled": 300,
+        "cropped": 270,
+        "raw_exact_correct": 270,
+        "crop_string_accuracy": 1.0,
+        "all_frame_raw_exact_accuracy": 0.9,
+        "accepted": 270,
+        "accepted_correct": 270,
+        "accepted_accuracy": 1.0,
+        "all_frame_accepted_exact_accuracy": 0.9
+      },
+      "alt": {
+        "scheduled": 300,
+        "cropped": 270,
+        "raw_exact_correct": 270,
+        "crop_string_accuracy": 1.0,
+        "all_frame_raw_exact_accuracy": 0.9,
+        "accepted": 269,
+        "accepted_correct": 269,
+        "accepted_accuracy": 1.0,
+        "all_frame_accepted_exact_accuracy": 0.8966666666666666
+      }
+    },
+    "all_nondecrease_checks_pass": true,
+    "checks": [
+      {
+        "kind": "hdg",
+        "metric": "all_frame_raw_exact_accuracy",
+        "before": 0.9,
+        "after": 0.9,
+        "nondecreasing": true
+      },
+      {
+        "kind": "hdg",
+        "metric": "all_frame_accepted_exact_accuracy",
+        "before": 0.9,
+        "after": 0.9,
+        "nondecreasing": true
+      },
+      {
+        "kind": "hdg",
+        "metric": "accepted_accuracy",
+        "before": 1.0,
+        "after": 1.0,
+        "nondecreasing": true
+      },
+      {
+        "kind": "hdg",
+        "metric": "crop_coverage",
+        "before": 0.9,
+        "after": 0.9,
+        "nondecreasing": true
+      },
+      {
+        "kind": "hdg",
+        "metric": "ocr3_stable_correct_all_frames",
+        "before": 0.8,
+        "after": 0.8,
+        "nondecreasing": true
+      },
+      {
+        "kind": "hdg",
+        "metric": "ocr3_stable_output_accuracy",
+        "before": 1.0,
+        "after": 1.0,
+        "nondecreasing": true
+      },
+      {
+        "kind": "hdg",
+        "metric": "minimum_all_frame_exact",
+        "before": 0.9,
+        "after": 0.9,
+        "nondecreasing": true
+      },
+      {
+        "kind": "alt",
+        "metric": "all_frame_raw_exact_accuracy",
+        "before": 0.9,
+        "after": 0.9,
+        "nondecreasing": true
+      },
+      {
+        "kind": "alt",
+        "metric": "all_frame_accepted_exact_accuracy",
+        "before": 0.8966666666666666,
+        "after": 0.8966666666666666,
+        "nondecreasing": true
+      },
+      {
+        "kind": "alt",
+        "metric": "accepted_accuracy",
+        "before": 1.0,
+        "after": 1.0,
+        "nondecreasing": true
+      },
+      {
+        "kind": "alt",
+        "metric": "crop_coverage",
+        "before": 0.9,
+        "after": 0.9,
+        "nondecreasing": true
+      },
+      {
+        "kind": "alt",
+        "metric": "ocr3_stable_correct_all_frames",
+        "before": 0.79,
+        "after": 0.79,
+        "nondecreasing": true
+      },
+      {
+        "kind": "alt",
+        "metric": "ocr3_stable_output_accuracy",
+        "before": 1.0,
+        "after": 1.0,
+        "nondecreasing": true
+      },
+      {
+        "kind": "alt",
+        "metric": "minimum_all_frame_exact",
+        "before": 0.9,
+        "after": 0.9,
+        "nondecreasing": true
+      }
+    ],
+    "scope": "Paired display-style regression, not an unused generalization test"
+  }
+}

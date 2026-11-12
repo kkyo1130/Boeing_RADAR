@@ -3,6 +3,7 @@
 Example:
  python vision/evaluate_mcp_ocr.py --data vision/data/mcp_ocr_aligned --checkpoints vision/checkpoints/mcp_ocr_v3 --output vision/reports/mcp_ocr_v3_test
 """
+from mcp_preprocessing import normalize_aligned
 import argparse
 import csv
 import json
@@ -17,6 +18,10 @@ def main():
     p.add_argument("--batch", type=int, default=16)
     p.add_argument("--device", choices=["cpu", "mps", "cuda"], default="cpu")
     args = p.parse_args()
+    from mcp_dataset import validate_dataset
+    validate_dataset(args.data, {'train','val','test'})
+    if args.output.exists():
+        p.error('Evaluation output exists; choose a new directory')
     import numpy as np
     import torch
     from torch import nn
@@ -68,8 +73,7 @@ def main():
                 raise ValueError(f"Unsafe image path: {rel}")
             with Image.open(args.data / rel) as f:
                 im = ImageOps.exif_transpose(f).convert("L")
-            width = 36 * len(row["text"])
-            im = im.resize((width, 48), Image.Resampling.BILINEAR)
+            im = normalize_aligned(im, row["kind"])
             x = torch.from_numpy(np.asarray(im, dtype="float32").copy()).unsqueeze(0) / 255
             return x, row["text"], row["image_path"]
 

@@ -4,17 +4,20 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import './cockpit3d.css';
 
+const readoutHeightScale=1.5,windowHeightScale=1.45,readoutY=.5;
+const mcpVerticalScale=1.25;
 const slots=[['speed',-2.75,1.65,3,'IAS / MACH','SPEED'],['heading',-.35,1.65,3,'HEADING','HDG SEL'],['altitude',2.1,2.05,5,'ALTITUDE','ALT HLD']];
-function textPlane(text,width,height,color,size=64,canvasWidth=1024){
- const canvas=document.createElement('canvas');canvas.width=canvasWidth;canvas.height=256;
- const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;
- const material=new T.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false});
+function textPlane(text,width,height,color,size=64,canvasWidth=1024,sharp=false){
+ const density=sharp?4:1;
+ const canvas=document.createElement('canvas');canvas.width=canvasWidth*density;canvas.height=256*density;
+ const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;texture.anisotropy=sharp?8:1;
+ const material=new T.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,toneMapped:!sharp,alphaTest:sharp?.05:0});
  const plane=new T.Mesh(new T.PlaneGeometry(width,height),material);
- plane.userData.paint=value=>{const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,256);ctx.fillStyle=color;ctx.font=`bold ${size}px "Courier New", monospace`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(value,canvas.width/2,138,canvas.width-32);texture.needsUpdate=true;};
+ plane.userData.paint=value=>{const ctx=canvas.getContext('2d');ctx.setTransform(density,0,0,density,0,0);ctx.clearRect(0,0,canvasWidth,256);ctx.fillStyle=color;ctx.font=`${sharp&&!/^\d+$/.test(String(value))?'normal':'bold'} ${size}px "Courier New", monospace`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(value,canvasWidth/2,138,canvasWidth-32);texture.needsUpdate=true;};
  plane.userData.paint(text);return plane;
 }
-export default function Cockpit3D({values,hidden,onEdit,onChange,capture}){
- const host=useRef(null),runtime=useRef(null),latest=useRef({values,hidden,onEdit,onChange});latest.current={values,hidden,onEdit,onChange};
+export default function Cockpit3D({values,hidden,onEdit,onChange,capture,onRendered}){
+ const host=useRef(null),runtime=useRef(null),latest=useRef({values,hidden,onEdit,onChange});latest.current={values,hidden,onEdit,onChange,onRendered};
  const [status,setStatus]=useState('loading');
  const [view,setView]=useState('pilot');
  useEffect(()=>{
@@ -40,28 +43,29 @@ export default function Cockpit3D({values,hidden,onEdit,onChange,capture}){
   }
   const resize=()=>{const w=element.clientWidth,h=element.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();cameraView(currentView);};
   const observer=new ResizeObserver(resize);observer.observe(element);resize();
-  const displays={},knobs={};runtime.current={camera,controls,displays,knobs,front:()=>cameraView('mcp'),cameraView};
+  let painted=null;const displays={},knobs={};runtime.current={camera,controls,displays,knobs,front:()=>cameraView('mcp'),cameraView};
   new GLTFLoader().load('/models/cockpit.glb',gltf=>{
    if(disposed){disposeScene(gltf.scene);return;}scene.add(gltf.scene);
-   const mcp=gltf.scene.getObjectByName('mcp_root');gltf.scene.traverse(object=>{if(object.isMesh){object.castShadow=!object.material.transparent;object.receiveShadow=true;}});
+   const mcp=gltf.scene.getObjectByName('mcp_root');mcp.scale.y*=mcpVerticalScale;gltf.scene.traverse(object=>{if(object.isMesh){object.castShadow=!object.material.transparent;object.receiveShadow=true;}});
    for(const [name,x,width,digits,title,knobTitle] of slots){
-    const display=textPlane('',width*.94*1.2,.5*1.6,'#ffba69',190,digits*128+64);display.position.set(x,.58,.208);display.name=`${name}_display_text`;display.userData.field=name;display.userData.edit=true;mcp.add(display);displays[name]=display;
+    const display=textPlane('',width*.94*1.2,.5*1.6*readoutHeightScale,'#ffd28a',190,digits*128+64,true);display.position.set(x,readoutY,.208);display.name=`${name}_display_text`;display.userData.field=name;display.userData.edit=true;mcp.add(display);displays[name]=display;
 
 
     if(name==='heading'||name==='altitude'){
-     const backing=new T.Mesh(new T.PlaneGeometry(width*1.2,.26),new T.MeshBasicMaterial({color:0x424d52}));backing.position.set(x,1.14,.23);mcp.add(backing);
-     const label=textPlane(name==='heading'?'HDG':'ALT',1,.336,'#f5f6ed',180,448);label.name=`${name}_field_label`;label.position.set(x,1.15,.245);mcp.add(label);
+     const backing=new T.Mesh(new T.PlaneGeometry(width*1.2,.45),new T.MeshBasicMaterial({color:0x080d0e,toneMapped:false}));backing.position.set(x,1.14,.41);mcp.add(backing);
+     const label=textPlane(name==='heading'?'HDG':'ALT',1.3,.72,'#d0dce5',180,448,true);label.name=`${name}_field_label`;label.position.set(x,1.15,.425);mcp.add(label);
     }
     const turnLabel=textPlane('−     +',1.9,.22,'#bdc6c8',76);turnLabel.position.set(x,-.88,.5);mcp.add(turnLabel);
     const knob=gltf.scene.getObjectByName(`${name}_knob`);if(knob){knob.userData.field=name;knob.userData.knob=true;knobs[name]=knob;}
-    const screen=gltf.scene.getObjectByName(`${name}_display`);screen.userData.field=name;screen.userData.edit=true;
+    const screen=gltf.scene.getObjectByName(`${name}_display`);screen.material=new T.MeshBasicMaterial({color:0x050809,toneMapped:false});screen.scale.y*=windowHeightScale;screen.position.y=readoutY;screen.userData.field=name;screen.userData.edit=true;
+    const bezel=gltf.scene.getObjectByName(`${name}_bezel`);if(bezel){bezel.scale.y*=windowHeightScale;bezel.position.y=readoutY;}
    }
    const title=textPlane('RADAR / FLIGHT DECK',8,.6,'#9eb6c3',185);title.position.set(0,-6.52,9.4);title.rotation.x=-Math.PI/2;scene.add(title);
    for(const [x,label] of [[-8.05,'EFIS / CAPTAIN'],[8.05,'EFIS / FIRST OFFICER']]){const t=textPlane(label,3,.13,'#d7ded5',175);t.position.set(x,2.78,.22);scene.add(t);}
    for(const [x,label] of [[-5,'COURSE'],[5,'COURSE'],[4.12,'VERT SPEED']]){const value=textPlane(x===4.12?'----':'005',x===4.12?1:.6,.43,'#e3eed8',190);value.position.set(x,.58,.24);mcp.add(value);}
    setStatus('ready');update();
   },undefined,()=>!disposed&&setStatus('error'));
-  function update(){renderer.shadowMap.needsUpdate=true;for(const [name,,,digits] of slots){displays[name]?.userData.paint(latest.current.hidden[name]?'':String(latest.current.values[name]).padStart(digits,'0'));if(knobs[name])knobs[name].rotation.z=-latest.current.values[name]*(name==='altitude'?.0008:.025);}}
+  function update(){painted={...latest.current.values};renderer.shadowMap.needsUpdate=true;for(const [name,,,digits] of slots){displays[name]?.userData.paint(latest.current.hidden[name]?'':String(latest.current.values[name]).padStart(digits,'0'));if(knobs[name])knobs[name].rotation.z=-latest.current.values[name]*(name==='altitude'?.0008:.025);}}
   runtime.current.update=update;
   const raycaster=new T.Raycaster(),pointer=new T.Vector2();let down=null;
   function hit(e){const rect=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);for(const h of raycaster.intersectObjects(scene.children,true)){let object=h.object;while(object){if(object.userData.field)return {object,point:h.point};object=object.parent;}const material=h.object.material;if(material&&!material.transparent)return null;}return null;}
@@ -69,7 +73,7 @@ export default function Cockpit3D({values,hidden,onEdit,onChange,capture}){
   const pointerUp=e=>{if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>5)return;down=null;const h=hit(e);if(!h)return;const {field,edit}=h.object.userData;if(edit)latest.current.onEdit(field);else latest.current.onChange(field,h.point.x<h.object.position.x?-1:1);};
   const move=e=>{renderer.domElement.style.cursor=hit(e)?'pointer':'grab';};
   renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointerup',pointerUp);renderer.domElement.addEventListener('pointermove',move);
-  renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera);});
+  renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera);if(displays.heading&&displays.altitude&&!renderer.getContext().isContextLost()&&element.clientWidth&&element.clientHeight){if(painted)latest.current.onRendered?.(painted);}});
   return()=>{disposed=true;observer.disconnect();renderer.setAnimationLoop(null);controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointermove',move);disposeScene(scene);renderer.dispose();renderer.domElement.remove();runtime.current=null;};
  },[]);
  useEffect(()=>{runtime.current?.update?.();},[values,hidden]);

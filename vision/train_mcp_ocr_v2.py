@@ -3,6 +3,7 @@
 Usage:
  python vision/train_mcp_ocr_v2.py --data vision/data/mcp_ocr_1004 --output vision/checkpoints/mcp_ocr_v2 --epochs 60 --device cpu --augment
 """
+from mcp_preprocessing import normalize_aligned
 import argparse
 import csv
 import json
@@ -10,6 +11,10 @@ import random
 from collections import Counter
 from pathlib import Path
 
+
+def validation_rows(records,kind,camera=False):
+    return [r for r in records if r['kind']==kind and r['split']=='val'
+            and (not camera or r['session_id'].startswith('camera_val:'))]
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
@@ -24,6 +29,8 @@ def main():
     p.add_argument("--test", action="store_true", help="Evaluate held-out test split after training")
     p.add_argument("--kinds", choices=("both", "hdg", "alt"), default="both", help="Train one or both readout models")
     p.add_argument("--init-checkpoints", type=Path, help="Load existing HDG/ALT weights for fine-tuning")
+    p.add_argument("--camera-preprocessing", action="store_true", help="Record raw camera preprocessing contract in checkpoints")
+    p.add_argument("--camera-validation",action="store_true",help="Select checkpoints on camera_val session rows; retain initializer as epoch0 baseline")
     args = p.parse_args()
     import torch
     from torch import nn
@@ -49,6 +56,7 @@ def main():
     class OCRDataset(Dataset):
         def __init__(self, kind, split):
             self.rows = [r for r in records if r["kind"] == kind and r["split"] == split]
+            if split == "val":self.rows=validation_rows(records,kind,args.camera_validation)
             self.kind = kind
             self.aug = args.augment and split == "train"
             if not self.rows:
@@ -61,9 +69,7 @@ def main():
             row = self.rows[i]
             with Image.open(args.data / row["image_path"]) as f:
                 im = ImageOps.exif_transpose(f).convert("L")
-            # Normalize each display to its own number of digit cells; no letterbox padding.
-            width = 36 * len(row["text"])
-            im = im.resize((width, 48), Image.Resampling.BILINEAR)
+            im = normalize_aligned(im, self.kind)
             if self.aug:
                 im = ImageEnhance.Brightness(im).enhance(random.uniform(.8, 1.2))
                 im = ImageEnhance.Contrast(im).enhance(random.uniform(.85, 1.15))
@@ -111,6 +117,21 @@ def main():
         weights = torch.tensor([[min(5., (len(train_ds) / 10) / max(1, frequencies[pos][d])) for d in range(10)] for pos in range(n)], dtype=torch.float32, device=args.device)
         weights = weights / weights.mean(dim=1, keepdim=True)
         history, best = [], -1.
+        selection='CAMERA_DEVELOPMENT_NOT_FINAL' if args.camera_validation else 'SYNTHETIC'
+        if args.camera_validation:
+            if not args.init_checkpoints:raise ValueError('Camera validation requires an initializer baseline')
+            model.eval();initial_correct=initial_total=0
+            with torch.no_grad():
+                for x,y,_ in val:
+                    initial_correct+=(model(x.to(args.device)).argmax(-1).cpu()==y).all(dim=1).sum().item()
+                    initial_total+=len(y)
+            best=initial_correct/initial_total
+            torch.save({'model':model.state_dict(),'kind':kind,'digits':n,'epoch':0,
+                'preprocessing':'camera_amber_align_v1' if args.camera_preprocessing else 'amber_align_v1',
+                'val_exact_accuracy':best,'validation_policy':selection,'architecture':'digit_cnn_v2',
+                'input_size':[36*n,48]},args.output/f'{kind}_best.pt')
+            print(json.dumps(dict(kind=kind,initial_camera_validation_exact=best,samples=initial_total)),flush=True)
+
         for epoch in range(1, args.epochs + 1):
             model.train()
             losses = []
@@ -135,13 +156,14 @@ def main():
                     if len(examples) < 4 and (epoch == 1 or epoch % 10 == 0 or epoch == args.epochs):
                         examples.extend({"truth": t, "pred": "".join(map(str, pred[i].tolist()))} for i, t in enumerate(texts[:4-len(examples)]))
             stat = {"kind": kind, "epoch": epoch, "train_loss": round(sum(losses)/len(losses), 5),
-                    "val_exact_accuracy": round(exact/total, 5), "val_digit_accuracy": round(digits/(total*n), 5), "examples": examples}
+                    "val_exact_accuracy": round(exact/total, 5), "val_digit_accuracy": round(digits/(total*n), 5), "examples": examples, "validation_policy":selection}
             history.append(stat)
             print(json.dumps(stat, ensure_ascii=False), flush=True)
-            if stat["val_exact_accuracy"] > best:
-                best = stat["val_exact_accuracy"]
+            if exact/total > best:
+                best = exact/total
                 torch.save({"model": model.state_dict(), "kind": kind, "digits": n, "epoch": epoch,
-                            "val_exact_accuracy": best, "architecture": "digit_cnn_v2", "input_size": [36*n, 48]}, args.output / f"{kind}_best.pt")
+                            "preprocessing": "camera_amber_align_v1" if args.camera_preprocessing else "amber_align_v1",
+                            "validation_policy":selection, "val_exact_accuracy": best, "architecture": "digit_cnn_v2", "input_size": [36*n, 48]}, args.output / f"{kind}_best.pt")
             (args.output / f"{kind}_metrics.json").write_text(json.dumps(history, indent=2), encoding="utf-8")
         print(f"{kind} best validation exact: {best:.2%}", flush=True)
         if args.test:

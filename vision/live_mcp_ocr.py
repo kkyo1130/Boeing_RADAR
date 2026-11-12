@@ -5,6 +5,7 @@ Example:
  python vision/live_mcp_ocr.py --source demo.mp4 --checkpoints vision/checkpoints/mcp_ocr_v3
 Keys: H/A manual fallback ROI, R reset, Q quit. Automatic mode is default.
 """
+from mcp_preprocessing import prepare_camera_crop, normalize_aligned
 import argparse
 from collections import deque
 from pathlib import Path
@@ -19,9 +20,16 @@ def main():
     p.add_argument("--width", type=int, default=0, help="Optional camera capture width")
     p.add_argument("--manual", action="store_true", help="Disable automatic detection; select ROIs with H and A")
     p.add_argument("--yolo-weights", type=Path, default=None, help="Optional trained YOLO MCP best.pt")
-    p.add_argument("--yolo-conf", type=float, default=0.25)
+    p.add_argument("--yolo-conf", type=float, default=0.5)
     p.add_argument("--debug-ocr", action="store_true", help="Save OCR preprocessing images")
+    p.add_argument('--yolo-imgsz',type=int,default=960)
+    p.add_argument('--yolo-stable-frames',type=int,default=3)
+    p.add_argument('--character-checkpoint',type=Path,help='Explicit shared-character CNN candidate; requires YOLO and fixed minimum safety gates')
+    p.add_argument('--window-readouts',action='store_true',help='Use complete glass-backed glyph groups inside the YOLO panel')
     args = p.parse_args()
+    if args.character_checkpoint and (not args.yolo_weights or args.manual or args.yolo_conf<.5 or args.yolo_stable_frames<3 or args.stable_frames<3):
+        p.error('Character candidate requires automatic YOLO mode, confidence>=.5 and panel/OCR stability>=3')
+    if args.window_readouts and not args.yolo_weights:p.error('--window-readouts requires a YOLO panel')
     if args.stable_frames < 1:
         p.error("--stable-frames must be positive")
     try:
@@ -52,8 +60,16 @@ def main():
         def forward(self, x):
             return self.head(self.features(x).squeeze(2).transpose(1, 2))
 
+    character=None
+    if args.character_checkpoint:
+        from mcp_character_ocr import CharacterOCR
+        character=CharacterOCR(args.character_checkpoint,args.device)
+    if args.window_readouts or character is not None:
+        from mcp_window_readouts import detect_mcp_readouts
+        panel_readouts=detect_mcp_readouts
+    else:panel_readouts=detect_readouts
     models = {}
-    for kind, n in (("hdg", 3), ("alt", 5)):
+    for kind, n in (() if character is not None else (("hdg", 3), ("alt", 5))):
         path = args.checkpoints / f"{kind}_best.pt"
         if not path.is_file():
             p.error(f"Checkpoint not found: {path}")
@@ -65,6 +81,8 @@ def main():
         model.to(args.device).eval()
         models[kind] = model
 
+    from mcp_yolo_gate import PanelGate, detect_panel_readouts, validate_detector
+    gate=PanelGate(args.yolo_conf,args.yolo_stable_frames)
     yolo = None
     if args.yolo_weights:
         if not args.yolo_weights.is_file():
@@ -74,6 +92,7 @@ def main():
         except ImportError:
             p.error("Install ultralytics for --yolo-weights")
         yolo = YOLO(str(args.yolo_weights))
+        validate_detector(yolo)
 
     source = int(args.source) if args.source.isdecimal() else args.source
     capture = cv2.VideoCapture(source)
@@ -81,7 +100,7 @@ def main():
         p.error(f"Could not open video source: {args.source}")
     if args.width:
         capture.set(cv2.CAP_PROP_FRAME_WIDTH, args.width)
-    window = "MCP OCR v3 AUTO - Q:Quit R:Reset"
+    window = "MCP character CNN AUTO - Q:Quit R:Reset" if character is not None else "MCP OCR v3 AUTO - Q:Quit R:Reset"
     cv2.namedWindow(window, cv2.WINDOW_NORMAL)
     regions = {"hdg": None, "alt": None}
     history = {"hdg": deque(maxlen=args.stable_frames), "alt": deque(maxlen=args.stable_frames)}
@@ -94,11 +113,11 @@ def main():
         rgb = cv2.cvtColor(crop, cv2.COLOR_BGR2RGB)
         # Camera readouts are white/cream, whereas synthetic training digits were amber.
         # Normalize camera colors before applying the original alignment pipeline.
-        aligned = align(camera_to_amber(Image.fromarray(rgb)), kind)
+        aligned = prepare_camera_crop(Image.fromarray(rgb), kind)
         if aligned is None:
             return None, None
         # Match training preprocessing: RGB aligned image -> grayscale -> bilinear resize.
-        gray = aligned.convert("L")
+        gray = normalize_aligned(aligned, kind)
         n = 3 if kind == "hdg" else 5
         gray = gray.resize((36*n, 48), Image.Resampling.BILINEAR)
         if args.debug_ocr:
@@ -107,6 +126,9 @@ def main():
             cv2.imwrite(str(debug_dir / f"{kind}_raw.png"), crop)
             aligned.save(debug_dir / f"{kind}_aligned.png")
             gray.save(debug_dir / f"{kind}_cnn_input.png")
+        if character is not None:
+            result=character.infer_aligned(aligned,kind)
+            return result['value'],result['model_score']
         tensor = torch.from_numpy(np.asarray(gray, dtype=np.float32).copy()).unsqueeze(0).unsqueeze(0).to(args.device) / 255.
         with torch.no_grad():
             probabilities = models[kind](tensor).softmax(-1)[0]
@@ -115,7 +137,7 @@ def main():
         confidence = float(probabilities.max(-1).values.min().item())
         return value, confidence
 
-    print("Automatic HDG/ALT detection enabled. H/A select manual fallback ROIs, R reset, Q quit.")
+    print("Character CNN + YOLO automatic mode. R reset, Q quit. Model scores are not accuracy." if character is not None else "Automatic HDG/ALT detection enabled. H/A select manual fallback ROIs, R reset, Q quit.",flush=True)
     auto_history = deque(maxlen=5)
     manual_override = False
     try:
@@ -124,26 +146,16 @@ def main():
             if not ok:
                 print("End of video or camera read failed.")
                 break
+            raw_frame=frame.copy()
             if not args.manual and not manual_override:
                 if yolo is None:
                     detected = detect_readouts(frame)
                 else:
-                    predictions = yolo.predict(frame, conf=args.yolo_conf, device=args.device, verbose=False)
-                    boxes = predictions[0].boxes
-                    detected = {}
-                    if boxes is not None and len(boxes):
-                        idx = int(boxes.conf.argmax().item())
-                        x1, y1, x2, y2 = map(int, boxes.xyxy[idx].tolist())
-                        fh, fw = frame.shape[:2]
-                        x1, y1, x2, y2 = max(0, x1), max(0, y1), min(fw, x2), min(fh, y2)
-                        if x2 > x1 and y2 > y1:
-                            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                            cv2.putText(frame, f"MCP {float(boxes.conf[idx]):.2f}",
-                                        (x1, max(20, y1 - 8)), cv2.FONT_HERSHEY_SIMPLEX,
-                                        .55, (0, 255, 0), 2, cv2.LINE_AA)
-                            local = detect_readouts(frame[y1:y2, x1:x2])
-                            detected = {kind: (box[0] + x1, box[1] + y1, box[2], box[3])
-                                        for kind, box in local.items()}
+                    detected,reason=detect_panel_readouts(yolo,frame,gate,panel_readouts,args.device,imgsz=args.yolo_imgsz)
+                    if reason:
+                        cv2.putText(frame,reason,(12,45),cv2.FONT_HERSHEY_SIMPLEX,.5,(0,180,255),1)
+                # Never reuse previous ROIs after low score, motion, partial readouts or detector failure.
+                regions={'hdg':None,'alt':None}
                 auto_history.append(detected)
                 if not detected:
                     regions = {"hdg": None, "alt": None}
@@ -160,10 +172,11 @@ def main():
             for kind, color in (("hdg", (0, 230, 255)), ("alt", (255, 190, 40))):
                 roi = regions[kind]
                 if roi is None:
+                    history[kind].clear()
                     continue
                 x, y, w, h = roi
                 cv2.rectangle(frame, (x, y), (x+w, y+h), color, 2)
-                value, conf = infer(frame, kind, roi)
+                value, conf = infer(raw_frame, kind, roi)
                 if value is None:
                     history[kind].clear()
                     label = f"{kind.upper()}: NO DIGITS"
@@ -173,7 +186,7 @@ def main():
                     label = f"{kind.upper()}: {value} {'STABLE' if stable else 'CHECK'} conf={conf:.2f}"
                 cv2.putText(frame, label, (max(0, x), max(20, y-8)),
                             cv2.FONT_HERSHEY_SIMPLEX, .55, color, 2, cv2.LINE_AA)
-            cv2.putText(frame, "AUTO detect | H/A: manual fallback | R: reset | Q: quit",
+            cv2.putText(frame, "YOLO + character CNN | R: reset | Q: quit" if character is not None else "AUTO detect | H/A: manual fallback | R: reset | Q: quit",
                         (12, max(25, frame.shape[0]-18)), cv2.FONT_HERSHEY_SIMPLEX,
                         .55, (240,240,240), 2, cv2.LINE_AA)
             cv2.imshow(window, frame)
@@ -187,6 +200,8 @@ def main():
                 for h in history.values():
                     h.clear()
             if key in (ord("h"), ord("a")):
+                if character is not None:
+                    print("Manual ROI override disabled in gated character mode.");continue
                 kind = "hdg" if key == ord("h") else "alt"
                 # selectROI blocks until ENTER/SPACE; press C to cancel.
                 roi = tuple(map(int, cv2.selectROI(window, frame, showCrosshair=True, fromCenter=False)))

@@ -4,6 +4,7 @@ import numpy as np
 import torch
 from torch import nn
 from .preprocess_mcp_ocr import align
+from .mcp_preprocessing import prepare_camera_crop, normalize_aligned
 
 class DigitCNN(nn.Module):
     def __init__(self, n):
@@ -21,19 +22,22 @@ class OCRv3:
     def __init__(self, checkpoints=None):
         checkpoints=Path(checkpoints or Path(__file__).parent/'checkpoints/mcp_ocr_v3')
         self.models={}
+        self.preprocessing={}
         for kind,n in (('hdg',3),('alt',5)):
             saved=torch.load(checkpoints/f'{kind}_best.pt',map_location='cpu',weights_only=True)
             if saved.get('kind')!=kind or saved.get('digits')!=n:
                 raise ValueError(f'Unexpected checkpoint metadata: {kind}')
             model=DigitCNN(n);model.load_state_dict(saved['model']);model.eval()
             self.models[kind]=model
+            self.preprocessing[kind]=saved.get("preprocessing","amber_align_v1")
     def infer(self,image,kind):
         from PIL import Image
-        aligned=align(image.convert('RGB'),kind)
+        aligned=(prepare_camera_crop(image,kind) if getattr(self,'preprocessing',{}).get(kind,'amber_align_v1')=='camera_amber_align_v1'
+                 else align(image.convert('RGB'),kind))
         if aligned is None:
             return {'value':None,'model_score':None,'reason':'NO_AMBER_DIGITS'}
         n=3 if kind=='hdg' else 5
-        image=aligned.convert('L').resize((36*n,48),Image.Resampling.BILINEAR)
+        image=normalize_aligned(aligned,kind)
         x=torch.from_numpy(np.asarray(image,dtype=np.float32).copy())[None,None]/255.
         with torch.inference_mode(): probabilities=self.models[kind](x).softmax(-1)[0]
         value=''.join(map(str,probabilities.argmax(-1).tolist()))

@@ -27,3 +27,8 @@ htmlcov/
 vision/data/
 vision/roi.local.json
 vision/checkpoints/
+
+# Local camera evidence, generated evaluations and downloaded AI weights
+/vision/reports/
+/yolo11n.pt
+*.bak
