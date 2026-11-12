@@ -43,7 +43,7 @@ export default function WebcamOCR(){
   tick();watchdog=setInterval(()=>{if(last&&performance.now()-last>1500)clear();},250);
   return()=>{cancelled=true;clearTimeout(timer);clearInterval(watchdog);abort.current?.abort();};
  },[running]);
- return <section className="ocr-panel" aria-label="웹캠 OCR v3"><h2>웹캠 자동 OCR v3</h2><p>실험용 관측 · STABLE은 연속 3회 같은 판독값이며 정확도나 운항 판정이 아닙니다.</p>
+ return <section className="ocr-panel" aria-label="웹캠 OCR"><h2>웹캠 자동 OCR</h2><p>실험용 관측 · STABLE은 연속 3회 같은 판독값이며 정확도나 운항 판정이 아닙니다.</p>
  <div className="ocr-actions"><button onClick={start} disabled={running}>웹캠 시작</button><button onClick={stop} disabled={!running}>중지</button></div>
  <p>웹캠을 켜면 HDG·ALT 숫자 창을 자동으로 찾아 연속 인식합니다. 계기판 전체가 보이도록 고정하세요. 위치를 찾지 못하면 값을 비웁니다.</p>
  <div className="ocr-camera"><video ref={video} muted playsInline onLoadedMetadata={()=>{overlay.current.width=video.current.videoWidth;overlay.current.height=video.current.videoHeight;}}/><canvas ref={overlay}/></div>

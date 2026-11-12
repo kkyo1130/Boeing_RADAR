@@ -10,9 +10,11 @@ except ImportError:from preprocess_mcp_ocr import amber_mask
 
 LEGACY_PREPROCESSING='amber_components_glyph_v1'
 PREPROCESSING='amber_components_glyph_v2_stretch'
+BORDER_PREPROCESSING='amber_components_glyph_v3_border_reject'
+ARTIFACT_PREPROCESSING='amber_components_glyph_v4_components'
 
 def segment(image,kind,preprocessing=PREPROCESSING):
-    if preprocessing not in (PREPROCESSING,LEGACY_PREPROCESSING):raise ValueError("Unknown glyph normalization")
+    if preprocessing not in (PREPROCESSING,LEGACY_PREPROCESSING,BORDER_PREPROCESSING,ARTIFACT_PREPROCESSING):raise ValueError("Unknown glyph normalization")
     if kind not in ('hdg','alt'):raise ValueError('Unknown kind')
     n=3 if kind=='hdg' else 5
     image=image.convert('RGB');mask=amber_mask(image).astype(np.uint8)
@@ -22,10 +24,22 @@ def segment(image,kind,preprocessing=PREPROCESSING):
     tallest=max(s[cv2.CC_STAT_HEIGHT] for s in components)
     # Thin horizontal artifacts cannot be digits. No value/template lookup.
     keep=[i for i in range(1,count) if stats[i,cv2.CC_STAT_AREA]>=3 and stats[i,cv2.CC_STAT_HEIGHT]>=max(4,tallest*.5)]
+    if preprocessing in (BORDER_PREPROCESSING,ARTIFACT_PREPROCESSING):
+        # Very narrow, tall panel edges are not glyphs. Missing actual digits
+        # still fail the exact glyph-count check below; never reconstruct them.
+        keep=[i for i in keep if stats[i,cv2.CC_STAT_WIDTH]>=max(2,stats[i,cv2.CC_STAT_HEIGHT]*.06)]
+    if preprocessing==ARTIFACT_PREPROCESSING and keep:
+        typical=float(np.median([stats[i,cv2.CC_STAT_WIDTH] for i in keep]))
+        keep=[i for i in keep if stats[i,cv2.CC_STAT_WIDTH]>=max(2,typical*.35)]
     cleaned=np.isin(labels,keep)
     if not cleaned.any():return None
     xs=np.flatnonzero(cleaned.sum(0)>0)
     groups=np.split(xs,np.where(np.diff(xs)>1)[0]+1)
+    if len(groups)!=n and preprocessing==ARTIFACT_PREPROCESSING and len(keep)==n:
+        ordered=sorted(keep,key=lambda i:stats[i,cv2.CC_STAT_LEFT])
+        centers=[stats[i,cv2.CC_STAT_TOP]+stats[i,cv2.CC_STAT_HEIGHT]/2 for i in ordered]
+        if max(centers)-min(centers)<=tallest*.35:
+            groups=[np.arange(stats[i,cv2.CC_STAT_LEFT],stats[i,cv2.CC_STAT_LEFT]+stats[i,cv2.CC_STAT_WIDTH]) for i in ordered]
     if len(groups)!=n:return None # Never guess missing/merged glyphs.
     glyphs=[];boxes=[]
     for group in groups:
@@ -58,7 +72,7 @@ class CharacterOCR:
         self.device=device
         saved=torch.load(checkpoint,map_location='cpu',weights_only=True)
         self.preprocessing=saved.get('preprocessing')
-        if self.preprocessing not in (PREPROCESSING,LEGACY_PREPROCESSING):raise ValueError('Character preprocessing mismatch')
+        if self.preprocessing not in (PREPROCESSING,LEGACY_PREPROCESSING,BORDER_PREPROCESSING,ARTIFACT_PREPROCESSING):raise ValueError('Character preprocessing mismatch')
         self.model=CharacterCNN().to(device);self.model.load_state_dict(saved['model']);self.model.eval()
     def infer_aligned(self,image,kind):
         result=segment(image,kind,self.preprocessing)

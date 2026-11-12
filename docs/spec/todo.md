@@ -216,3 +216,8 @@ verifying(범용 촬영 인수는 대기). MCP세로압축 완화·숫자높이 
 2026-11-12 GitHub 제출 준비: feat/vision-ai의 사용자 요청 Vision 변경을 커밋·푸시한다. AI가중치/촬영원본/로컬상세보고서/백업은 제외하며 경로를 정리한 실측 요약은 vision/evaluation/camera-20261112.json에 포함. 광범위 실물 인수·미검증 조건 상태는 그대로 유지한다.
 
 GitHub 제출 전 최종검증: Vision120 passed(5.08s), frontend58 passed, frontend build PASS(1.25s; 기존chunk경고). 스테이징56파일의 대용량원본/가중치/백업/개인절대경로 점검통과. 기존단계의 verifying는 실물범용인수상태로유지.
+
+
+## SPEC-003-WI-06 사진·빛번짐 추가 학습
+
+reviewing: [WI-06](003-cockpit-vision/workitem/wi-06.md). 실제train122/개발24/동결후최종36장, 합성300쌍. 새결합최종 HDG36정답/0오답, ALT35정답/0오답/1보류. Vision71개통과. 12설정그룹의한조건결과이며 독립반복·브라우저인수는남음. 원본·모델·사진은Git제외.

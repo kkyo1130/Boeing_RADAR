@@ -5,6 +5,13 @@ from .preprocess_mcp_ocr import amber_mask
 
 
 def locate_windows(image):
+    # A label-anchored OCR path handles pale, narrow camera glyphs. Numeric
+    # targets and previous values never participate in localization.
+    from .text_windows import locate_text_windows
+    return locate_text_windows(image) or _locate_color_windows(image)
+
+
+def _locate_color_windows(image):
     strict = _locate_mask(amber_mask(image).astype(np.uint8), .12)
     if strict is not None:
         return strict
@@ -14,7 +21,7 @@ def locate_windows(image):
     r, g, b = rgb[:,:,0], rgb[:,:,1], rgb[:,:,2]
     camera_mask = ((r > 110) & (g > 65) & (r > g*1.03) & (g > b*1.15) & (r-b > 40))
     proposals = [_locate_mask(camera_mask.astype(np.uint8), fraction)
-                 for fraction in (.18, .22, .26, .30, .34)]
+                 for fraction in (.06, .07, .08, .10, .12, .18, .22, .26, .30, .34)]
     proposals = [proposal for proposal in proposals if proposal is not None]
     if not proposals:
         return None
@@ -79,6 +86,12 @@ def _locate_mask(mask, column_fraction):
             gap = ax-hr
             if (0 < gap < max(ah,hh)*14 and .6 < hh/ah < 1.65
                     and abs((hy+hb-ay-ab)/2) < max(ah,hh)*.7):
+                # Do not jump over another illuminated readout (IAS is left of
+                # HDG). An unreadable middle window must not relabel IAS as HDG.
+                middle = mask[max(hy, ay):min(hb, ab), hr:ax]
+                occupied = np.count_nonzero(middle.sum(axis=0) >= 2)
+                if occupied > max(ah, hh) * .45:
+                    continue
                 nearby.append(hdg)
         if nearby:
             # IAS is further left than HDG on the supported MCP layout.
