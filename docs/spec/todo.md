@@ -221,3 +221,5 @@ GitHub 제출 전 최종검증: Vision120 passed(5.08s), frontend58 passed, fron
 ## SPEC-003-WI-06 사진·빛번짐 추가 학습
 
 reviewing: [WI-06](003-cockpit-vision/workitem/wi-06.md). 실제train122/개발24/동결후최종36장, 합성300쌍. 새결합최종 HDG36정답/0오답, ALT35정답/0오답/1보류. Vision71개통과. 12설정그룹의한조건결과이며 독립반복·브라우저인수는남음. 원본·모델·사진은Git제외.
+
+Draft PR: https://github.com/kkyo1130/Boeing_RADAR/pull/35 . 구현69732bd 격리worktree에서도Vision71개통과. 외부리뷰·병합미실행.
