@@ -64,3 +64,31 @@ def test_desaturated_camera_digits_are_localized_without_color_guessing():
     assert rois is not None
     assert 170<rois['hdg'][0]<190
     assert 360<rois['alt'][0]<380
+
+
+def test_pale_thin_camera_strokes_keep_digits_grouped():
+    # Synthetic image, not a user camera capture; pale amber narrow digits.
+    from pathlib import Path
+    from PIL import ImageFilter
+    source=Image.open(Path(__file__).parent/'fixtures/synthetic-pale-thin-digits.png')
+    for blur in (0, .5, 1, 1.5):
+        rois=locate_windows(source.filter(ImageFilter.GaussianBlur(blur)))
+        if blur == 0:
+            assert rois is not None
+        if rois is None:
+            continue  # Blurred input may remain unverified; never substitute IAS.
+        assert 500 < rois['hdg'][0] < 540
+        assert 600 < rois['alt'][0] < 650
+    missing=source.copy()
+    ImageDraw.Draw(missing).rectangle((600,200,750,320),fill='black')
+    assert locate_windows(missing) is None
+
+
+def test_busy_ocr_refuses_to_queue_old_frames():
+    app.state.lock=threading.Lock();app.state.lock.acquire()
+    image=io.BytesIO();panel().save(image,format='PNG')
+    try:
+        response=TestClient(app).post('/infer-frame',json={'image':base64.b64encode(image.getvalue()).decode()})
+        assert response.status_code==429
+    finally:
+        app.state.lock.release()
