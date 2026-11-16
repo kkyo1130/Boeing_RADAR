@@ -215,3 +215,7 @@ backend701/skip7, frontend82·빌드, 브라우저4 통과. 실제 고정4154이
 | WI | 범위 | 상태 |
 | --- | --- | --- |
 | [SPEC-006-WI-07](006-advisory-interface/workitem/wi-07.md) | 음성·장치 설정 하단 독립 결과 섹션과 복명복창/Cockpit 2열 배치 | verifying |
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-006-WI-08](006-advisory-interface/workitem/wi-08.md) | RADAR AI Flight Guard 브랜드·파랑/하늘색 화면 테마 | verifying |

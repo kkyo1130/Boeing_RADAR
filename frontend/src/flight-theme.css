@@ -1,0 +1,28 @@
+/* Blue/sky interface palette. Keep the cockpit image and status semantics intact. */
+@media screen {
+ :root{background:#071629;color:#e6f2ff}
+ .operations{--flight-surface:#0d2540;--flight-inset:#091c32;--flight-border:#294f73;--flight-accent:#7dd3fc;color:#e6f2ff}
+ .operations .op-header{padding:16px 20px;border:1px solid #28537b;border-radius:12px;background:linear-gradient(115deg,#103865,#0c2544)}
+ .operations .op-header .brand{color:#f0f9ff;letter-spacing:.7px;line-height:1.4}
+ .operations .op-header .brand span{color:#8edbff;font-size:inherit;font-weight:650;letter-spacing:.3px}
+ .operations a{color:#8edbff}.operations .eyebrow{color:#7db8e5}
+ .operations .op-panel,.operations .file-speech-panel{background:var(--flight-surface);border-color:var(--flight-border)}
+ .operations input,.operations select{background:var(--flight-inset);border-color:#3c6488;color:#e6f2ff}
+ .operations button{background:#163b60;border-color:#386b99;color:#dff3ff}
+ .operations button:hover:not(:disabled){background:#20517f;border-color:#7dd3fc}
+ .operations button.primary{background:linear-gradient(110deg,#176cce,#199dd3);color:#fff;border-color:#59beff;box-shadow:0 3px 12px #027ac425}
+ .operations button.primary:hover:not(:disabled){background:linear-gradient(110deg,#2581e7,#25b6e7)}
+ .operations button[aria-pressed="true"]{color:#c7efff;background:#164b76;border-color:#7dd3fc}
+ .operations :focus-visible{outline:3px solid #7dd3fc;outline-offset:3px}
+ .operations .op-targets article,.operations .op-health article,.operations .demo-values>div,.operations .demo-transcript,.operations .report-cards>div{background:var(--flight-inset);border-color:var(--flight-border)}
+ .operations .demo-result{background:#102c49}
+ .operations .demo-result.op-NORMAL,.operations .op-overview.op-NORMAL{background:#0b354d;border-color:#55c8f2}
+ .operations .demo-result.op-NORMAL .demo-verdict,.operations .op-connection.is-connected{color:#81ddff}
+ .operations .demo-values .op-NORMAL{box-shadow:inset 0 -4px #55c8f2}
+ .operations .op-badge.op-NORMAL{background:#0e3b59;color:#a5e8ff;border-color:#55bde8}
+ .operations .demo-result.op-MISMATCH{background:#321f30;border-color:#ff7676}
+ .operations .op-notice{background:#123b5b;border-color:#4d94c3;color:#d7efff}
+ .operations .op-evidence{border-color:#4586b8}.operations .op-evidence blockquote{background:#0a2038;border-left-color:#70c9ff}
+ .operations .op-muted,.operations .op-meta,.operations small,.operations details,.operations .demo-live-status,.operations .demo-progress{color:#a9c5e0}
+ .operations .flight-report{color:#e6f2ff}.operations .flight-report section{border-color:var(--flight-border)}
+}

@@ -5,6 +5,7 @@ import './operations.css';
 import VoicePanel from './VoicePanel.jsx';
 import DemoPanel from './DemoPanel.jsx';
 import EvidencePanel, { selectionFor, recordInteraction } from './EvidencePanel.jsx';
+import './flight-theme.css';
 
 const STORAGE_KEY = 'radar.v2.flight-id';
 const readFlight = () => { if (typeof window === 'undefined') return ''; try { return window.localStorage.getItem(STORAGE_KEY) || ''; } catch { return ''; } };
@@ -138,7 +139,7 @@ export default function Operations() {
     finally { actionRef.current = false; setBusy(false); }
   }
   return <main className={`operations ${snapshot && !ended ? 'op-demo-active' : ''}`}>
-    <header className="op-header"><a className="brand" href="/operations">RADAR<span> / FLIGHT MONITOR</span></a>
+    <header className="op-header"><a className="brand" href="/operations">RADAR <span>AI Flight Guard</span></a>
       <nav aria-label="화면 선택"><a href="/cockpit" target="_blank" rel="noreferrer">Cockpit 설정 화면 ↗</a> <a href={`/pilot${flightId ? `?flight=${encodeURIComponent(flightId)}` : ''}`} target="_blank" rel="noreferrer">조종사 화면 ↗</a></nav>
       </header>
     <div className="op-intro"><p className="eyebrow">FLIGHT OPERATIONS</p><h1>비행 상태 확인</h1><p>관제 지시와 복명복창, 카메라가 읽은 설정값을 함께 확인하세요.</p></div>
