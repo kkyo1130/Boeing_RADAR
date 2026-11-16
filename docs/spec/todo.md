@@ -149,10 +149,12 @@ WI-02는 이 dev 기준 별도 브랜치에서 수신/문맥/중복/시간/원�
 
 [SPEC-004-WI-05](004-speech-communication/workitem/wi-05.md): verifying. 사용자 요청으로 관제/조종사 복창 각각 파일 직접 STT 버튼과 사용법 구현. frontend75/backend684·실제Whisper/BERT 합성파일 임시DB 검증 통과, 브라우저 파일 선택은 제어 연결 문제로 미실행. 기존 마이크·카메라·리포트·비행DB 보존.
 
-## 2026-11-16 Operation·Vision·기록 개선 PR 제출
+## 2026-11-16 사용자 첨부 Operation·Vision·기록 개선
 
-| WI | PR | 상태 |
+| WI | 범위 | 상태 |
 | --- | --- | --- |
-| [SPEC-003-WI-08](003-cockpit-vision/workitem/wi-08.md) | [Draft PR #38](https://github.com/kkyo1130/Boeing_RADAR/pull/38) | reviewing |
+| [SPEC-006-WI-05](006-advisory-interface/workitem/wi-05.md) | Operation 기본 문구·ID·사용법 정리 · [Draft PR #36](https://github.com/kkyo1130/Boeing_RADAR/pull/36) | reviewing |
+| [SPEC-003-WI-07](003-cockpit-vision/workitem/wi-07.md) | 자동·수동 ROI 공통 OCR·관측 경로 · [Draft PR #37](https://github.com/kkyo1130/Boeing_RADAR/pull/37) | reviewing |
+| [SPEC-003-WI-08](003-cockpit-vision/workitem/wi-08.md) | 새프레임3회·인식일정·상세시간진단 · [Draft PR #38](https://github.com/kkyo1130/Boeing_RADAR/pull/38) | reviewing |
 
-2026-11-16 사용자 명시 승인으로 새 기준·작업 브랜치 푸시와 Draft PR 제출을 완료했다. 실장비 인수·외부 리뷰·병합은 미실행이다.
+사용자 명시 승인으로 새 기준·작업 브랜치 푸시와 Draft PR 제출을 완료했다. 기존 WI 상태는 유지하며 실장비 인수·외부 리뷰·PR 병합은 미실행이다.
