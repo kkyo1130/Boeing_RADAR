@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { request } from './flight-client.js';
 import './report.css';
-import {groupTimeline} from './report-timeline.js';
+import {groupTimeline,errorTimeline} from './report-timeline.js';
 
 const value = v => v === null || v === undefined ? '확인 불가' : String(v);
 const stateLabel = { DETECTED:'오류 탐지', WARNED:'경고 재생 완료', CORRECTING:'수정 관측·재검증', RESOLVED:'수정·재검증 완료', UNRESOLVED:'미해결 종료' };
@@ -11,7 +11,7 @@ export function SafetyReport({ report, flightId, connected=true }) {
   const [page,setPage]=useState(0),[downloadError,setDownloadError]=useState(''),[downloading,setDownloading]=useState(false);
   useEffect(()=>{
     let opened=[];
-    const prepare=()=>{opened=[...document.querySelectorAll('.flight-report details:not(.report-raw-observations):not([open])')];opened.forEach(node=>{node.open=true;});};
+    const prepare=()=>{opened=[...document.querySelectorAll('.flight-report details:not(.report-raw-observations):not(.report-full-timeline):not([open])')];opened.forEach(node=>{node.open=true;});};
     const restore=()=>{opened.forEach(node=>{node.open=false;});opened=[];};
     window.addEventListener('beforeprint',prepare);window.addEventListener('afterprint',restore);
     return()=>{restore();window.removeEventListener('beforeprint',prepare);window.removeEventListener('afterprint',restore);};
@@ -55,10 +55,16 @@ export function SafetyReport({ report, flightId, connected=true }) {
       <h4>{item.stage==='READBACK'?'Readback Error':'Cockpit Setting Error'} · {item.field} · {stateLabel[item.state]||item.state}</h4>
       <p>발생 {value(item.detected_at)} · 해결 소요 {item.resolved_at&&item.detected_at?`${Math.max(0,(Date.parse(item.resolved_at)-Date.parse(item.detected_at))/1000).toFixed(1)}초`:'미해결'}</p><p>목표 {number(item.field,item.expected)} · 최초 관측 {number(item.field,item.initial_actual)} → 마지막 관측 {number(item.field,item.final_actual)}</p>
       <p>발생 당시 복명복창 {number(item.field,item.readback_actual)} · 조종석 인식 {number(item.field,item.cockpit_actual)}</p><p>마지막 검증 {item.verification} · 경고 재생 완료 {item.warning_completed?'기록 있음':'확인 불가'} · 해결 시각 {value(item.resolved_at)}</p>
-      <ol>{(safety.presentation?.correction_groups?.[item.occurrence_id]||item.steps.map(step=>({step,count:1}))).map(({step,count,last_at},index)=><li key={index}>{step.at}{count>1&&` ~ ${last_at} · 동일 상태 ${count}회`} · {step.state} ({stateLabel[step.state]}) {step.verification||''}</li>)}</ol>
+      <details className="report-raw-observations"><summary>수정 관측 상세 펼치기 ({item.steps.length}건)</summary><ol>{(safety.presentation?.correction_groups?.[item.occurrence_id]||item.steps.map(step=>({step,count:1}))).map(({step,count,last_at},index)=><li key={index}>{step.at}{count>1&&` ~ ${last_at} · 동일 상태 ${count}회`} · {step.state} ({stateLabel[step.state]}) {step.verification||''}</li>)}</ol></details>
       <small>사건 {item.occurrence_id} · 지시 {item.instruction_id} · 원본 상태 {item.stored_status}</small>
     </article>)}</section>
-    <section aria-label="Error Timeline"><h3>3. 상세 타임라인</h3>{safety.presentation&&<p>원본 {safety.presentation.raw_event_count}건 → 표시 {groups.length}개 구간 · 근거 저장 {safety.presentation.evidence_storage_event_count}건은 원본 JSON에서 확인할 수 있습니다.</p>}<p>입력·검증·경고 기록을 연결합니다. 숫자 단위: ALT feet / HDG degrees.</p>
+    <section aria-label="Error Timeline"><h3>3. 오류 사건 타임라인</h3>
+      {!safety.correction_trace.length&&<p>저장된 오류 사건이 없습니다. 확인 미완료 입력은 비행 요약과 전체 기록에서 확인하세요.</p>}
+      {errorTimeline(safety.correction_trace,safety.presentation).map(item=><article className="report-incident" key={item.occurrence_id}>
+        <h4>{item.stage==='READBACK'?'Readback Error':'Cockpit Setting Error'} · {item.field}</h4>
+        <ol className="report-milestones">{item.milestones.map((step,i)=><li key={i}><strong>{i===3?'최종 상태: ':''}{stateLabel[step.state]||step.state}</strong><span>{value(step.at)}</span>{i===1&&!step.at&&<small>경고 재생 완료 기록 없음</small>}{i===2&&<small>{step.count?`수정·재검증 관측 ${step.count}회${step.last_at&&step.last_at!==step.at?` · 마지막 ${step.last_at}`:''}`:'수정 관측 기록 없음'}</small>}</li>)}</ol>
+      </article>)}
+      <details className="report-full-timeline"><summary>전체 입력·검증 기록 펼치기 ({groups.length}개 구간)</summary>{safety.presentation&&<p>원본 {safety.presentation.raw_event_count}건 → 표시 {groups.length}개 구간 · 근거 저장 {safety.presentation.evidence_storage_event_count}건은 원본 JSON에서 확인할 수 있습니다.</p>}<p>입력·검증·경고 기록을 연결합니다. 숫자 단위: ALT feet / HDG degrees.</p>
       <ol className="report-timeline">{groups.map((group,index)=>{const event=group.event||group.events[0],checks=group.display_checks??event.checks;return <li key={event.sequence} value={index+1} className={Math.floor(index/size)===page?'':'report-print-only'}>
         {group.events.length>1&&<><p className="report-repeat">동일 상태 {group.events.length}회 · {group.first_at||event.occurred_at} ~ {group.last_at||group.events.at(-1).occurred_at}</p><details className="report-raw-observations"><summary>원본 관측 펼치기</summary><ol>{group.events.map(original=><li key={original.sequence}>#{original.sequence} · {original.occurred_at} · {Object.entries(original.fields).map(([key,row])=>`${key}: ${number(key,row.value)} [${row.validity}]`).join(' / ')}</li>)}</ol></details></>}
         <div><time>{event.occurred_at}</time><strong>{event.event_type}</strong></div>
@@ -74,6 +80,7 @@ export function SafetyReport({ report, flightId, connected=true }) {
       </li>;})}</ol>
       {!safety.timeline.length&&<p>저장된 이벤트가 없습니다.</p>}
       <nav className="report-pagination" aria-label="리포트 타임라인 페이지"><button disabled={page===0} onClick={()=>setPage(p=>p-1)}>이전</button><span>{page+1} / {pages}</span><button disabled={page>=pages-1} onClick={()=>setPage(p=>p+1)}>다음</button></nav>
+      </details>
     </section>
     <section aria-label="AI Safety Summary"><h3>4. AI Safety Summary</h3><p className="eyebrow">{safety.ai_summary.source==='AI_ASSISTED_FACTS'?'AI 보조 사실 요약':'규칙 기반 요약 · AI 미설정 또는 응답 검증 실패'}</p><p>{safety.ai_summary.text}</p><small>판정은 저장된 검증 엔진 결과입니다. AI가 판정하거나 오류를 해결하지 않습니다.</small></section>
     <footer><p>{safety.terminal?'운항 종료 기록':'진행 중 기록'} · 리포트 생성 {safety.generated_at}</p>{button()} <a href={`/api/v2/flights/${encodeURIComponent(flightId)}/report.json`} download>리포트 JSON 저장</a></footer>

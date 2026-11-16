@@ -142,14 +142,15 @@ def test_access_code_exchange_requires_secret_and_never_leaks(scenario):
     assert token not in response.text and token not in str(s.trace())
 
 
-def test_long_korean_transcript_splits_across_pages(scenario):
+def test_long_transcript_stays_in_original_without_expanding_pdf(scenario):
     from app.services.reports.pdf import render_pdf
     s=scenario;atc=s.adopt();match_readback(s,atc);cockpit(s)
     safety=finish(s)['safety'];safety['timeline'][0]['transcript']='한글 긴 관제 기록 <문자> & 원문 보존. '*700
     safety['timeline'][0]['source']='ATC'
     pdf=render_pdf(safety);reader=PdfReader(BytesIO(pdf))
     text=''.join(p.extract_text() for p in reader.pages)
-    assert len(reader.pages)>3 and '한글 긴 관제 기록' in text and 'AI Safety Summary' in text
+    assert len(reader.pages)<=3 and '한글 긴 관제 기록' not in text and 'AI Safety Summary' in text
+    assert safety['timeline'][0]['transcript'].count('한글 긴 관제 기록')==700
 
 
 def test_unresolved_pdf_contains_same_incident_and_verdict_as_json(scenario):
@@ -176,7 +177,7 @@ def test_legacy_korean_summary_is_rendered_in_english_without_mutation(scenario)
     assert safety==original
 
 
-def test_pdf_includes_every_event_after_thirty_and_frozen_refresh(scenario):
+def test_pdf_summarizes_incidents_and_full_events_stay_in_json(scenario):
     s=scenario
     atc=s.adopt();match_readback(s,atc);cockpit(s)
     for _ in range(35):cockpit(s)
@@ -187,12 +188,12 @@ def test_pdf_includes_every_event_after_thirty_and_frozen_refresh(scenario):
     text='\n'.join(page.extract_text() for page in PdfReader(BytesIO(response.content)).pages)
     presentation=report['safety']['presentation']
     assert any(group['count']>=35 for group in presentation['groups'])
-    for group in presentation['groups']:
-        assert f"#{group['event']['sequence']} " in text
+    assert 'One incident per timeline' in text
+    assert 'Cockpit observation' not in text
     represented={sequence for group in presentation['groups'] for sequence in group['sequences']}
     auxiliary={event['sequence'] for event in report['safety']['timeline'] if event['event_type']=='EVIDENCE_STORED'}
     assert represented|auxiliary=={event['sequence'] for event in report['safety']['timeline']}
-    assert 'Repeated ' in text
+    assert 'Repeated 35 times' not in text
     assert s.client.get(s.url+'/report').json()==report
 
 

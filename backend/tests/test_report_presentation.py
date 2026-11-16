@@ -66,3 +66,24 @@ def test_correction_reobservations_group_but_changed_actual_and_recurrence_do_no
     assert [group['count'] for group in groups]==[2,1,1]
     assert groups[0]['last_at']=='2'
     assert len(correction_groups(steps))==4
+
+
+def test_incident_summary_is_bounded_and_does_not_promote_unknown_or_superseded():
+    from app.services.reports.presentation import error_timeline
+    steps=[dict(state='CORRECTING',at=str(i),verification='UNVERIFIED') for i in range(100)]
+    incident=dict(occurrence_id='one',stage='SETTING',field='ALT',detected_at='start',
+        state='UNRESOLVED',resolved_at=None,warning_completed=False,steps=steps)
+    original=deepcopy(incident)
+    out=error_timeline([incident])
+    assert len(out)==1 and len(out[0]['milestones'])==4
+    assert out[0]['milestones'][1]['at'] is None
+    assert out[0]['milestones'][2]['count']==100
+    assert out[0]['milestones'][2]['last_at']=='99'
+    assert out[0]['milestones'][3]['state']=='UNRESOLVED'
+    assert incident==original
+    second=deepcopy(incident);second.update(occurrence_id='recurrence',state='RESOLVED',resolved_at='end',warning_completed=True)
+    second['steps'].append(dict(state='WARNED',at='warning'))
+    out=error_timeline([incident,second])
+    assert len(out)==2
+    assert out[1]['milestones'][1]['at']=='warning'
+    assert out[1]['milestones'][3]==dict(state='RESOLVED',at='end',count=1)

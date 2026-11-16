@@ -13,3 +13,19 @@ export function groupTimeline(events,presentation){
  }
  return groups;
 }
+
+// Bounded incident summary; the full timeline remains available separately.
+export function errorTimeline(incidents,presentation){
+ if(Array.isArray(presentation?.error_timeline))return presentation.error_timeline;
+ return incidents.map(item=>{
+  const warnings=(item.steps||[]).filter(s=>s.state==='WARNED');
+  const corrections=(item.steps||[]).filter(s=>s.state==='CORRECTING');
+  const resolved=item.state==='RESOLVED'&&Boolean(item.resolved_at);
+  return {occurrence_id:item.occurrence_id,stage:item.stage,field:item.field,milestones:[
+   {state:'DETECTED',at:item.detected_at,count:1},
+   {state:'WARNED',at:item.warning_completed?warnings[0]?.at:null,count:item.warning_completed?warnings.length:0},
+   {state:'CORRECTING',at:corrections[0]?.at,last_at:corrections.at(-1)?.at,count:corrections.length},
+   {state:resolved?'RESOLVED':item.state,at:resolved?item.resolved_at:null,count:1}
+  ]};
+ });
+}

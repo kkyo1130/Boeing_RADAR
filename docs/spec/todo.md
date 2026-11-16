@@ -193,3 +193,11 @@ backend692/skip7, frontend79·빌드, 모의 카메라 브라우저4, 로컬 렌
 | WI | 범위 | 상태 |
 | --- | --- | --- |
 | [SPEC-003-WI-10](003-cockpit-vision/workitem/wi-10.md) | YOLO 자동 영역·추적 + 공통 CNN, Apple Vision 대체 제거, 실제 촬영 검증 | verifying |
+
+## 2026-11-17 오류 사건 중심 보고서
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-008-WI-08](008-safety-trace-report/workitem/wi-08.md) | 사건당4단계 기본 타임라인·전체기록 접기·PDF/인쇄 요약 | verifying |
+
+backend701/skip7, frontend82·빌드, 브라우저4 통과. 실제 고정4154이벤트/2사건은8단계/PDF2쪽, 원본 JSON 불변. 외부 리뷰·원격 게시·실제 프린터 미실행.

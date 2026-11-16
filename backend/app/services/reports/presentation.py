@@ -92,5 +92,24 @@ def with_presentation(data):
     result=deepcopy(data)
     if 'safety' in result:
         result['safety']['presentation']=timeline_groups(result['safety']['timeline'],result.get('timeline',[]))
+        result['safety']['presentation']['error_timeline']=error_timeline(result['safety'].get('correction_trace',[]))
         result['safety']['presentation']['correction_groups']={item['occurrence_id']:correction_groups(item['steps'],result.get('timeline',[])) for item in result['safety'].get('correction_trace',[])}
+    return result
+
+
+def error_timeline(incidents):
+    """Four bounded milestones per incident; all source steps stay in detail/JSON."""
+    result=[]
+    for item in incidents:
+        steps=item.get('steps',[])
+        warnings=[s for s in steps if s['state']=='WARNED']
+        corrections=[s for s in steps if s['state']=='CORRECTING']
+        resolved=item['state']=='RESOLVED' and bool(item.get('resolved_at'))
+        milestones=[dict(state='DETECTED',at=item.get('detected_at'),count=1),
+            dict(state='WARNED',at=warnings[0]['at'] if warnings and item.get('warning_completed') else None,
+                 count=len(warnings) if item.get('warning_completed') else 0),
+            dict(state='CORRECTING',at=corrections[0]['at'] if corrections else None,
+                 last_at=corrections[-1]['at'] if corrections else None,count=len(corrections)),
+            dict(state='RESOLVED' if resolved else item['state'],at=item.get('resolved_at') if resolved else None,count=1)]
+        result.append(dict(occurrence_id=item['occurrence_id'],stage=item['stage'],field=item['field'],milestones=milestones))
     return result

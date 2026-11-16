@@ -72,9 +72,13 @@ test('v2 운영 화면에서 근거·수정·연결 복구·종료 리포트', a
   expect(report.snapshot.result).toBe('NORMAL');
   expect(report.safety.timeline.length).toBeGreaterThan(30);
   const groups=groupTimeline(report.safety.timeline,report.safety.presentation);
+  await expect(page.locator('.report-milestones')).toHaveCount(1);
+  await expect(page.locator('.report-timeline > li:visible')).toHaveCount(0);
+  await page.locator('.report-full-timeline > summary').click();
   await expect(page.locator('.report-timeline > li:visible')).toHaveCount(Math.min(30,groups.length));
   await page.emulateMedia({media:'print'});
-  await expect(page.locator('.report-timeline > li:visible')).toHaveCount(groups.length);
+  await expect(page.locator('.report-timeline > li:visible')).toHaveCount(0);
+  await expect(page.locator('.report-milestones')).toHaveCount(1);
   await page.pdf({path:'/tmp/radar-report-print.pdf',format:'A4',printBackground:true});
   await page.emulateMedia({media:'screen'});
   await page.screenshot({path:testInfo.outputPath('flight-report.png'),fullPage:true});

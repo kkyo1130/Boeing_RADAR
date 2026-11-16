@@ -4,7 +4,7 @@ from pathlib import Path
 from threading import Lock
 from xml.sax.saxutils import escape
 from app.services.reports.summary import english_summary
-from .presentation import timeline_groups,correction_groups
+from .presentation import error_timeline
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import A4
@@ -69,39 +69,13 @@ def render_pdf(safety,*,raw_events=()):
         story.append(p(f"{item['stage']} / {item['field']} · {item['state']}"))
         story.append(p(f"Incident: {item['occurrence_id']}\nInstruction: {item['instruction_id']}\nTarget: {item['expected']} | First observed: {item['initial_actual']} | Last observed: {item['final_actual']}\nLast validation: {item['verification']} | Resolved at: {item['resolved_at'] or 'Not recorded'}",'small'))
         story.append(p(f"Readback: {item.get('readback_actual')} | Cockpit: {item.get('cockpit_actual')} | Resolution seconds: {item.get('resolution_seconds')}",'small'))
-        steps=correction_groups(item['steps'],raw_events)
-        story.append(table([['Status','Recorded time (UTC)','Validation']]+[
-            [g['step']['state']+(f" x{g['count']}" if g['count']>1 else ''),
-             g['first_at']+(f" to {g['last_at']}" if g['count']>1 else ''),g['step'].get('verification','-')] for g in steps]))
         story.append(Spacer(1,8))
-    story += [p('3. Error Timeline','heading'),p('Stored input, validation and advisory events are listed in sequence. An advisory candidate or playback attempt is not evidence of completed playback. ALT values are in feet; HDG values are in degrees.','small')]
-    presentation=timeline_groups(safety['timeline'],raw_events)
-    story.append(p(f"{presentation['raw_event_count']} stored events | {presentation['displayed_group_count']} displayed groups | {presentation['evidence_storage_event_count']} evidence-storage entries retained in the full JSON. Equivalent observations are grouped; state changes remain separate.",'small'))
-    if not presentation['groups']:story.append(p('No stored events.'))
-    previous_instructions=None
-    for group in presentation['groups']:
-        event=group['event']
-        kind=event['event_type']
-        title=({'COCKPIT':'Cockpit observation','ATC':'Controller instruction','READBACK':'Pilot readback'}.get(event.get('source'),'Input received')
-               if kind=='INPUT_RECEIVED' else {'INCIDENT_UPDATED':'Incident updated','REVALIDATED':'Validation changed','FLIGHT_STARTED':'Flight started','FLIGHT_ENDED':'Flight ended'}.get(kind,kind))
-        heading=f"#{event['sequence']} · {event['occurred_at']} · {title}"
-        if group['count']>1:heading+=f" | Repeated {group['count']} times, through {group['last_at']} (last source #{group['sequences'][-1]})"
-        story.append(p(heading,'small'))
-        if event['instruction_ids'] and event['instruction_ids']!=previous_instructions:
-            story.append(p('Instruction: '+', '.join(event['instruction_ids']),'small'))
-            previous_instructions=event['instruction_ids']
-        if kind=='INCIDENT_UPDATED' and event['occurrence_ids']:story.append(p('Incident: '+', '.join(event['occurrence_ids']),'small'))
-        if event['transcript']:story.append(p(f"{event['source']}: {event['transcript']}",'small'))
-        if event['fields']:story.append(p('Observed input: '+' / '.join(f"{k}={v.get('value')} [{v.get('validity','Not recorded')}]" for k,v in event['fields'].items()),'small'))
-        checks=group.get('display_checks',event['checks'])
-        if checks:
-            story.append(p('Validation changes: '+' | '.join(
-                f"{r['stage']}/{r['field']}: target {r.get('expected')}, observed {r.get('actual')} [{r['result']} / {r['reason']}]" for r in checks),'small'))
-        if event['warning_status']:story.append(p(f"Voice advisory: {event['warning_status']} | Completed playback recorded: {'Yes' if event['warning_completed'] else 'No'}",'small'))
-        for item in group.get('display_related_incidents',event.get('related_incidents',[])):
-            story.append(p(f"{item['stage']} · {item['status']} · Completed warning playback: {'Yes' if item['warning_completed'] else 'Not recorded'} | Resolved: {item.get('resolved_at') or 'Not recorded'}",'small'))
-        if event['error_status']:story.append(p('Stored incident status: '+event['error_status'],'small'))
-        story.append(Spacer(1,3))
+    story += [p('3. Error Timeline','heading'),p('One incident per timeline. Repeated observations and full input/validation records are available in the screen details and original JSON. Missing warning or correction evidence is not completion.','small')]
+    for incident in error_timeline(safety['correction_trace']):
+        story.append(p(f"{incident['stage']} / {incident['field']} | {incident['occurrence_id']}",'small'))
+        story.append(table([['Milestone','Recorded time (UTC)','Count']]+[
+            [step['state'],step.get('at') or 'Not recorded',str(step['count'])] for step in incident['milestones']]))
+    if not safety['correction_trace']:story.append(p('No stored error incidents. Missing inputs are not classified as normal.'))
     ai=safety['ai_summary']
     story += [p('4. AI Safety Summary','heading'),p('AI-assisted factual summary (English rendering)' if ai['source']=='AI_ASSISTED_FACTS' else 'Rule-based summary (AI unavailable or response not verified)','small'),p(ai.get('text_en') or english_summary(facts,ai.get('fact_ids'))),p('Missing data is not verifiable. Advisory eligibility and completed playback are separate records. This report does not certify safety for actual flight operations.','small'),
         p(f"Ended flight record | Generated: {safety['generated_at']}",'small')]

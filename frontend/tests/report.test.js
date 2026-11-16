@@ -20,3 +20,16 @@ test('canonical repeated observations show one interval and keep originals out o
  r.safety.presentation={version:'report-presentation/1',raw_event_count:35,evidence_storage_event_count:0,groups:[{event:r.safety.timeline[0],sequences:r.safety.timeline.map(e=>e.sequence),count:35,first_at:'time-0',last_at:'time-34',display_checks:[]}]};
  const html=render(r);assert.match(html,/동일 상태 35회/);assert.match(html,/표시 1개 구간/);assert.match(html,/report-raw-observations/);assert.match(html,/time-34/);assert.match(html,/원본 관측 펼치기/);
 });
+
+test('default error timeline is bounded per incident and full history is collapsed',()=>{
+ const r=report();r.safety.correction_trace[0].steps=Array.from({length:200},(_,i)=>({state:'CORRECTING',at:`time-${i}`,verification:'UNVERIFIED'}));
+ r.safety.timeline=Array.from({length:100},(_,i)=>({sequence:i,occurred_at:'now',event_type:'INPUT_RECEIVED',source:'COCKPIT',fields:{},checks:[],instruction_ids:[],occurrence_ids:[]}));
+ const html=render(r);
+ assert.equal((html.match(/report-milestones/g)||[]).length,1);
+ assert.equal((html.match(/<strong>최종 상태:/g)||[]).length,1);
+ assert.match(html,/수정·재검증 관측 200회/);
+ assert.match(html,/최종 상태: 미해결 종료/);
+ assert.match(html,/경고 재생 완료 기록 없음/);
+ assert.match(html,/<details class="report-full-timeline"><summary>전체 입력·검증 기록 펼치기/);
+ assert.doesNotMatch(html,/<details class="report-full-timeline" open/);
+});
