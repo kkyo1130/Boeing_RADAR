@@ -1,0 +1,961 @@
+{
+  "scope": "Rendered screenshot OCR comparison, not physical camera capture or validated operational accuracy",
+  "viewports": [
+    [
+      1440,
+      1000
+    ],
+    [
+      1024,
+      768
+    ]
+  ],
+  "cases": [
+    [
+      15,
+      4500
+    ],
+    [
+      45,
+      7000
+    ],
+    [
+      123,
+      15000
+    ],
+    [
+      180,
+      24000
+    ],
+    [
+      225,
+      32000
+    ],
+    [
+      315,
+      41000
+    ]
+  ],
+  "source_sha256": "b9639ac3e111159eb076db408e20f29b0e985d51a4ed509a606e81b792942cbc",
+  "checkpoint_sha256": "a1c326f7ba47781364b5a3cd77811167d9dd626bdb6e327ce9a1c18e7722605c",
+  "results": {
+    "before": {
+      "1440x1000/조종석 시점": {
+        "correct": 12,
+        "held": 0,
+        "wrong": 0,
+        "total": 12
+      },
+      "1440x1000/MCP 정면": {
+        "correct": 12,
+        "held": 0,
+        "wrong": 0,
+        "total": 12
+      },
+      "1024x768/조종석 시점": {
+        "correct": 11,
+        "held": 1,
+        "wrong": 0,
+        "total": 12
+      },
+      "1024x768/MCP 정면": {
+        "correct": 12,
+        "held": 0,
+        "wrong": 0,
+        "total": 12
+      }
+    },
+    "after": {
+      "1440x1000/조종석 시점": {
+        "correct": 12,
+        "held": 0,
+        "wrong": 0,
+        "total": 12
+      },
+      "1440x1000/MCP 정면": {
+        "correct": 12,
+        "held": 0,
+        "wrong": 0,
+        "total": 12
+      },
+      "1024x768/조종석 시점": {
+        "correct": 12,
+        "held": 0,
+        "wrong": 0,
+        "total": 12
+      },
+      "1024x768/MCP 정면": {
+        "correct": 12,
+        "held": 0,
+        "wrong": 0,
+        "total": 12
+      }
+    }
+  },
+  "readouts": [
+    {
+      "source": "before",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "hdg",
+      "expected": "015",
+      "actual": "015",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "alt",
+      "expected": "04500",
+      "actual": "04500",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "hdg",
+      "expected": "045",
+      "actual": "045",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "alt",
+      "expected": "07000",
+      "actual": "07000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "hdg",
+      "expected": "123",
+      "actual": "123",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "alt",
+      "expected": "15000",
+      "actual": "15000",
+      "reason": null,
+      "engine": "apple_vision_fallback"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "hdg",
+      "expected": "180",
+      "actual": "180",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "alt",
+      "expected": "24000",
+      "actual": "24000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "hdg",
+      "expected": "225",
+      "actual": "225",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "alt",
+      "expected": "32000",
+      "actual": "32000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "hdg",
+      "expected": "315",
+      "actual": "315",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "alt",
+      "expected": "41000",
+      "actual": "41000",
+      "reason": null,
+      "engine": "apple_vision_fallback"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "hdg",
+      "expected": "015",
+      "actual": "015",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "alt",
+      "expected": "04500",
+      "actual": "04500",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "hdg",
+      "expected": "045",
+      "actual": "045",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "alt",
+      "expected": "07000",
+      "actual": "07000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "hdg",
+      "expected": "123",
+      "actual": "123",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "alt",
+      "expected": "15000",
+      "actual": "15000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "hdg",
+      "expected": "180",
+      "actual": "180",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "alt",
+      "expected": "24000",
+      "actual": "24000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "hdg",
+      "expected": "225",
+      "actual": "225",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "alt",
+      "expected": "32000",
+      "actual": "32000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "hdg",
+      "expected": "315",
+      "actual": "315",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "alt",
+      "expected": "41000",
+      "actual": "41000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/조종석 시점",
+      "field": "hdg",
+      "expected": "015",
+      "actual": "015",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/조종석 시점",
+      "field": "alt",
+      "expected": "04500",
+      "actual": "04500",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/조종석 시점",
+      "field": "hdg",
+      "expected": "045",
+      "actual": "045",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/조종석 시점",
+      "field": "alt",
+      "expected": "07000",
+      "actual": "07000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/조종석 시점",
+      "field": "hdg",
+      "expected": "123",
+      "actual": "123",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/조종석 시점",
+      "field": "alt",
+      "expected": "15000",
+      "actual": null,
+      "reason": "OCR_ENGINE_DISAGREEMENT",
+      "engine": null
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/조종석 시점",
+      "field": "hdg",
+      "expected": "180",
+      "actual": "180",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/조종석 시점",
+      "field": "alt",
+      "expected": "24000",
+      "actual": "24000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/조종석 시점",
+      "field": "hdg",
+      "expected": "225",
+      "actual": "225",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/조종석 시점",
+      "field": "alt",
+      "expected": "32000",
+      "actual": "32000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/조종석 시점",
+      "field": "hdg",
+      "expected": "315",
+      "actual": "315",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/조종석 시점",
+      "field": "alt",
+      "expected": "41000",
+      "actual": "41000",
+      "reason": null,
+      "engine": "apple_vision_fallback"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/MCP 정면",
+      "field": "hdg",
+      "expected": "015",
+      "actual": "015",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/MCP 정면",
+      "field": "alt",
+      "expected": "04500",
+      "actual": "04500",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/MCP 정면",
+      "field": "hdg",
+      "expected": "045",
+      "actual": "045",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/MCP 정면",
+      "field": "alt",
+      "expected": "07000",
+      "actual": "07000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/MCP 정면",
+      "field": "hdg",
+      "expected": "123",
+      "actual": "123",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/MCP 정면",
+      "field": "alt",
+      "expected": "15000",
+      "actual": "15000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/MCP 정면",
+      "field": "hdg",
+      "expected": "180",
+      "actual": "180",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/MCP 정면",
+      "field": "alt",
+      "expected": "24000",
+      "actual": "24000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/MCP 정면",
+      "field": "hdg",
+      "expected": "225",
+      "actual": "225",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/MCP 정면",
+      "field": "alt",
+      "expected": "32000",
+      "actual": "32000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/MCP 정면",
+      "field": "hdg",
+      "expected": "315",
+      "actual": "315",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "before",
+      "viewport": "1024x768/MCP 정면",
+      "field": "alt",
+      "expected": "41000",
+      "actual": "41000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "hdg",
+      "expected": "015",
+      "actual": "015",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "alt",
+      "expected": "04500",
+      "actual": "04500",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "hdg",
+      "expected": "045",
+      "actual": "045",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "alt",
+      "expected": "07000",
+      "actual": "07000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "hdg",
+      "expected": "123",
+      "actual": "123",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "alt",
+      "expected": "15000",
+      "actual": "15000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "hdg",
+      "expected": "180",
+      "actual": "180",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "alt",
+      "expected": "24000",
+      "actual": "24000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "hdg",
+      "expected": "225",
+      "actual": "225",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "alt",
+      "expected": "32000",
+      "actual": "32000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "hdg",
+      "expected": "315",
+      "actual": "315",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/조종석 시점",
+      "field": "alt",
+      "expected": "41000",
+      "actual": "41000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "hdg",
+      "expected": "015",
+      "actual": "015",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "alt",
+      "expected": "04500",
+      "actual": "04500",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "hdg",
+      "expected": "045",
+      "actual": "045",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "alt",
+      "expected": "07000",
+      "actual": "07000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "hdg",
+      "expected": "123",
+      "actual": "123",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "alt",
+      "expected": "15000",
+      "actual": "15000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "hdg",
+      "expected": "180",
+      "actual": "180",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "alt",
+      "expected": "24000",
+      "actual": "24000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "hdg",
+      "expected": "225",
+      "actual": "225",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "alt",
+      "expected": "32000",
+      "actual": "32000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "hdg",
+      "expected": "315",
+      "actual": "315",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1440x1000/MCP 정면",
+      "field": "alt",
+      "expected": "41000",
+      "actual": "41000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/조종석 시점",
+      "field": "hdg",
+      "expected": "015",
+      "actual": "015",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/조종석 시점",
+      "field": "alt",
+      "expected": "04500",
+      "actual": "04500",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/조종석 시점",
+      "field": "hdg",
+      "expected": "045",
+      "actual": "045",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/조종석 시점",
+      "field": "alt",
+      "expected": "07000",
+      "actual": "07000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/조종석 시점",
+      "field": "hdg",
+      "expected": "123",
+      "actual": "123",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/조종석 시점",
+      "field": "alt",
+      "expected": "15000",
+      "actual": "15000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/조종석 시점",
+      "field": "hdg",
+      "expected": "180",
+      "actual": "180",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/조종석 시점",
+      "field": "alt",
+      "expected": "24000",
+      "actual": "24000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/조종석 시점",
+      "field": "hdg",
+      "expected": "225",
+      "actual": "225",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/조종석 시점",
+      "field": "alt",
+      "expected": "32000",
+      "actual": "32000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/조종석 시점",
+      "field": "hdg",
+      "expected": "315",
+      "actual": "315",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/조종석 시점",
+      "field": "alt",
+      "expected": "41000",
+      "actual": "41000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/MCP 정면",
+      "field": "hdg",
+      "expected": "015",
+      "actual": "015",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/MCP 정면",
+      "field": "alt",
+      "expected": "04500",
+      "actual": "04500",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/MCP 정면",
+      "field": "hdg",
+      "expected": "045",
+      "actual": "045",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/MCP 정면",
+      "field": "alt",
+      "expected": "07000",
+      "actual": "07000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/MCP 정면",
+      "field": "hdg",
+      "expected": "123",
+      "actual": "123",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/MCP 정면",
+      "field": "alt",
+      "expected": "15000",
+      "actual": "15000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/MCP 정면",
+      "field": "hdg",
+      "expected": "180",
+      "actual": "180",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/MCP 정면",
+      "field": "alt",
+      "expected": "24000",
+      "actual": "24000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/MCP 정면",
+      "field": "hdg",
+      "expected": "225",
+      "actual": "225",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/MCP 정면",
+      "field": "alt",
+      "expected": "32000",
+      "actual": "32000",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/MCP 정면",
+      "field": "hdg",
+      "expected": "315",
+      "actual": "315",
+      "reason": null,
+      "engine": "character_cnn"
+    },
+    {
+      "source": "after",
+      "viewport": "1024x768/MCP 정면",
+      "field": "alt",
+      "expected": "41000",
+      "actual": "41000",
+      "reason": null,
+      "engine": "character_cnn"
+    }
+  ]
+}

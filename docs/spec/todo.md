@@ -163,3 +163,11 @@ WI-02는 이 dev 기준 별도 브랜치에서 수신/문맥/중복/시간/원�
 2026-11-16 사용자 명시 승인으로 새 기준·작업 브랜치 푸시와 Draft PR 제출을 완료했다. 실장비 인수·외부 리뷰·병합은 미실행이다.
 
 PR 연결: [UI #36](https://github.com/kkyo1130/Boeing_RADAR/pull/36) → [ROI #37](https://github.com/kkyo1130/Boeing_RADAR/pull/37) → [인식 일정 #38](https://github.com/kkyo1130/Boeing_RADAR/pull/38) → [리포트 #39](https://github.com/kkyo1130/Boeing_RADAR/pull/39).
+
+## 2026-11-16 사진 기준 Cockpit 비율 조정
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-009-WI-08](009-evaluation-demo/workitem/wi-08.md) | HDG·ALT/MCP 비율 정리와 동일 실행 모델 paired 비교 | verifying |
+
+화면 캡처 기반 새24화면/48필드 비교: 이전 정답47·보류1·오답0, 변경 정답48·보류0·오답0. 실제 카메라 재촬영/물리 태블릿 인수와 외부 리뷰는 미실행이다.

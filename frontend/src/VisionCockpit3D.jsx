@@ -4,8 +4,11 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import './cockpit3d.css';
 
-const readoutHeightScale=1.5,windowHeightScale=1.45,readoutY=.5;
-const mcpVerticalScale=1.25;
+// Compact MCP proportions from the cockpit reference. Keep the 4x digit
+// textures, un-tonemapped contrast and existing OCR semantics.
+const readoutHeight=.95,windowHeight=.64,readoutY=.5;
+const mcpVerticalScale=.8;
+const windowWidths={speed:1.5,heading:1.5,altitude:1.65};
 const slots=[['speed',-2.75,1.65,3,'IAS / MACH','SPEED'],['heading',-.35,1.65,3,'HEADING','HDG SEL'],['altitude',2.1,2.05,5,'ALTITUDE','ALT HLD']];
 function textPlane(text,width,height,color,size=64,canvasWidth=1024,sharp=false){
  const density=sharp?4:1;
@@ -46,19 +49,20 @@ export default function Cockpit3D({values,hidden,onEdit,onChange,capture,onRende
   let painted=null;const displays={},knobs={};runtime.current={camera,controls,displays,knobs,front:()=>cameraView('mcp'),cameraView};
   new GLTFLoader().load('/models/cockpit.glb',gltf=>{
    if(disposed){disposeScene(gltf.scene);return;}scene.add(gltf.scene);
-   const mcp=gltf.scene.getObjectByName('mcp_root');mcp.scale.y*=mcpVerticalScale;gltf.scene.traverse(object=>{if(object.isMesh){object.castShadow=!object.material.transparent;object.receiveShadow=true;}});
+   const mcp=gltf.scene.getObjectByName('mcp_root');mcp.scale.y=mcpVerticalScale;gltf.scene.traverse(object=>{if(object.isMesh){object.castShadow=!object.material.transparent;object.receiveShadow=true;}});
    for(const [name,x,width,digits,title,knobTitle] of slots){
-    const display=textPlane('',width*.94*1.2,.5*1.6*readoutHeightScale,'#ffd28a',190,digits*128+64,true);display.position.set(x,readoutY,.208);display.name=`${name}_display_text`;display.userData.field=name;display.userData.edit=true;mcp.add(display);displays[name]=display;
+    const windowWidth=windowWidths[name];
+    const display=textPlane('',digits===5?1.35:1.05,readoutHeight,'#ffd28a',190,digits*128+64,true);display.position.set(x,readoutY,.208);display.name=`${name}_display_text`;display.userData.field=name;display.userData.edit=true;mcp.add(display);displays[name]=display;
 
 
     if(name==='heading'||name==='altitude'){
-     const backing=new T.Mesh(new T.PlaneGeometry(width*1.2,.45),new T.MeshBasicMaterial({color:0x080d0e,toneMapped:false}));backing.position.set(x,1.14,.41);mcp.add(backing);
-     const label=textPlane(name==='heading'?'HDG':'ALT',1.3,.72,'#d0dce5',180,448,true);label.name=`${name}_field_label`;label.position.set(x,1.15,.425);mcp.add(label);
+     const backing=new T.Mesh(new T.PlaneGeometry(windowWidth,.28),new T.MeshBasicMaterial({color:0x080d0e,toneMapped:false}));backing.position.set(x,1.03,.41);mcp.add(backing);
+     const label=textPlane(name==='heading'?'HDG':'ALT',.85,.42,'#d0dce5',180,448,true);label.name=`${name}_field_label`;label.position.set(x,1.03,.425);mcp.add(label);
     }
     const turnLabel=textPlane('−     +',1.9,.22,'#bdc6c8',76);turnLabel.position.set(x,-.88,.5);mcp.add(turnLabel);
     const knob=gltf.scene.getObjectByName(`${name}_knob`);if(knob){knob.userData.field=name;knob.userData.knob=true;knobs[name]=knob;}
-    const screen=gltf.scene.getObjectByName(`${name}_display`);screen.material=new T.MeshBasicMaterial({color:0x050809,toneMapped:false});screen.scale.y*=windowHeightScale;screen.position.y=readoutY;screen.userData.field=name;screen.userData.edit=true;
-    const bezel=gltf.scene.getObjectByName(`${name}_bezel`);if(bezel){bezel.scale.y*=windowHeightScale;bezel.position.y=readoutY;}
+    const screen=gltf.scene.getObjectByName(`${name}_display`);screen.material=new T.MeshBasicMaterial({color:0x050809,toneMapped:false});screen.scale.x=windowWidth/(width*1.2);screen.scale.y=windowHeight/(.57*1.6);screen.position.y=readoutY;screen.userData.field=name;screen.userData.edit=true;
+    const bezel=gltf.scene.getObjectByName(`${name}_bezel`);if(bezel){bezel.scale.x=(windowWidth+.18)/(width*1.2+.18);bezel.scale.y=(windowHeight+.19)/(.57*1.6+.19);bezel.position.y=readoutY;}
    }
    const title=textPlane('RADAR / FLIGHT DECK',8,.6,'#9eb6c3',185);title.position.set(0,-6.52,9.4);title.rotation.x=-Math.PI/2;scene.add(title);
    for(const [x,label] of [[-8.05,'EFIS / CAPTAIN'],[8.05,'EFIS / FIRST OFFICER']]){const t=textPlane(label,3,.13,'#d7ded5',175);t.position.set(x,2.78,.22);scene.add(t);}
