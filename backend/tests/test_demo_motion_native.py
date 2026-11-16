@@ -1,4 +1,4 @@
-"""Opt-in local native OCR motion check; requires rendered image inputs, not a webcam."""
+"""Opt-in YOLO + CNN motion check; local images are not a live webcam test."""
 import base64
 import io
 import json
@@ -9,13 +9,11 @@ from PIL import Image
 from app.services import receiving_v2 as intake
 from test_demo import flight
 
-REQUIRED=('RADAR_MOTION_PILOT_FRAME','RADAR_MOTION_MCP_FRAME','RADAR_MOTION_OCR_BINARY','RADAR_MOTION_REGION_BINARY')
+REQUIRED=('RADAR_MOTION_PILOT_FRAME','RADAR_MOTION_MCP_FRAME','RADAR_YOLO_WEIGHTS','RADAR_CHARACTER_CHECKPOINT')
 
-@pytest.mark.skipif(not all(os.getenv(key) and Path(os.environ[key]).is_file() for key in REQUIRED),reason='Provide two local rendered frames and native OCR binaries')
-def test_rendered_motion_with_native_ocr_and_real_intake(client,flight,monkeypatch,tmp_path):
+@pytest.mark.skipif(not all(os.getenv(key) and Path(os.environ[key]).is_file() for key in REQUIRED),reason='Provide two local frames and trained YOLO/CNN checkpoints')
+def test_image_motion_with_yolo_cnn_and_real_intake(client,flight,monkeypatch,tmp_path):
     monkeypatch.syspath_prepend(str(Path(__file__).resolve().parents[2]))
-    monkeypatch.setenv('RADAR_OCR_BINARY',os.environ['RADAR_MOTION_OCR_BINARY'])
-    monkeypatch.setenv('RADAR_REGION_OCR_BINARY',os.environ['RADAR_MOTION_REGION_BINARY'])
     def encoded(path):
         with Image.open(path) as image:
             buffer=io.BytesIO();image.convert('RGB').save(buffer,format='JPEG',quality=92)
@@ -38,4 +36,4 @@ def test_rendered_motion_with_native_ocr_and_real_intake(client,flight,monkeypat
                 assert data['fields']['heading']['value']==(int(os.getenv('RADAR_MOTION_EXPECTED_HDG','123')) if index==2 else None),data
                 assert data['fields']['altitude']['value']==(int(os.getenv('RADAR_MOTION_EXPECTED_ALT','15000')) if index==2 else None),data
     assert results[0]['rois']!=results[3]['rois']
-    (tmp_path/'native_camera_motion.json').write_text(json.dumps(results,indent=2))
+    (tmp_path/'yolo_cnn_camera_motion.json').write_text(json.dumps(results,indent=2))

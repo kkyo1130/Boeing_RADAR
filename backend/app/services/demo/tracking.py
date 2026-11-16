@@ -50,7 +50,7 @@ def follow_regions(image, session):
     """AUTO re-detects from each image; MANUAL follows the last valid panel."""
     previous = session['rois']
     if session.get('method') == 'AUTO':
-        from vision.auto_windows import locate_windows
+        from vision.yolo_cnn_runtime import locate_windows
         found = locate_windows(image)
         rois = ({'ALT': list(found['alt']), 'HDG': list(found['hdg'])}
                 if found and set(found) == {'alt', 'hdg'} else None)

@@ -44,12 +44,12 @@ export default function WebcamOCR(){
   tick();watchdog=setInterval(()=>{if(last&&performance.now()-last>1500)clear();},250);
   return()=>{cancelled=true;clearTimeout(timer);clearInterval(watchdog);abort.current?.abort();};
  },[running]);
- return <section className="ocr-panel" aria-label="웹캠 OCR"><h2>웹캠 자동 OCR</h2><p>실험용 관측 · STABLE은 연속 3회 같은 판독값이며 정확도나 운항 판정이 아닙니다.</p>
+ return <section className="ocr-panel" aria-label="웹캠 OCR"><h2>웹캠 자동 OCR · YOLO + CNN</h2><p>실험용 관측 · STABLE은 연속 3회 같은 판독값이며 정확도나 운항 판정이 아닙니다.</p>
  <div className="ocr-actions"><button onClick={start} disabled={running}>웹캠 시작</button><button onClick={stop} disabled={!running}>중지</button></div>
- <p>웹캠을 켜면 HDG·ALT 숫자 창을 자동으로 찾아 연속 인식합니다. 계기판 전체가 보이도록 고정하세요. 위치를 찾지 못하면 값을 비웁니다.</p>
+ <p>YOLO가 MCP 영역을 찾고 CNN이 HDG·ALT 숫자를 연속 인식합니다. 계기판 전체가 보이도록 고정하세요. 위치를 찾지 못하면 값을 비웁니다.</p>
  <div className="ocr-camera"><video ref={video} muted playsInline onLoadedMetadata={()=>{overlay.current.width=video.current.videoWidth;overlay.current.height=video.current.videoHeight;}}/><canvas ref={overlay} aria-label="MCP·HDG·ALT 인식 영역"/></div>
  <p className="ocr-box-legend"><span>MCP 묶음 영역</span><span>HDG 인식 영역</span><span>ALT 인식 영역</span></p>
- <div className="ocr-readings" aria-live="polite">{['hdg','alt'].map(k=><div key={k}><strong>{k.toUpperCase()} {result[k].value??'—'}</strong><span>{result[k].status}</span><small>{k==='alt'?'feet':'degrees'} · {result[k].reason==='LOW_MODEL_SCORE'?'모델 점수 부족 · ':result[k].reason==='OUT_OF_RANGE'?'범위 밖 판독 · ':''}{result[k].source==='apple_vision_fallback'?'Apple Vision 보조 인식 · ':''}모델 점수 {result[k].model_score?.toFixed(3)??'—'}</small></div>)}</div>
+ <div className="ocr-readings" aria-live="polite">{['hdg','alt'].map(k=><div key={k}><strong>{k.toUpperCase()} {result[k].value??'—'}</strong><span>{result[k].status}</span><small>{k==='alt'?'feet':'degrees'} · {result[k].reason==='LOW_MODEL_SCORE'?'모델 점수 부족 · ':result[k].reason==='OUT_OF_RANGE'?'범위 밖 판독 · ':''}{result[k].source==='character_cnn'?'CNN 숫자 인식 · ':''}모델 점수 {result[k].model_score?.toFixed(3)??'—'}</small></div>)}</div>
  {observed&&<small>서버 관측 UTC: {observed}</small>}{error&&<p role="alert">{error}</p>}
  <TrainingCapture video={video} running={running}/>
  </section>;

@@ -187,3 +187,9 @@ backend692/skip7, frontend79·빌드, 모의 카메라 브라우저4, 로컬 렌
 | [SPEC-008-WI-07](008-safety-trace-report/workitem/wi-07.md) | 반복 관측·사건 갱신·검증표 집계와 화면/PDF/인쇄 공통 표시 | verifying |
 
 실제 최신 리포트 원본817개·오류1개를 보존하며 PDF102→11쪽. 원본 고정 JSON 불변 확인, frontend81·빌드·브라우저4 통과. 원격 게시·외부 리뷰·실제 프린터 출력은 미실행.
+
+## 2026-11-17 YOLO + CNN 복구와 실제 웹캠 검증
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-003-WI-10](003-cockpit-vision/workitem/wi-10.md) | YOLO 자동 영역·추적 + 공통 CNN, Apple Vision 대체 제거, 실제 촬영 검증 | verifying |

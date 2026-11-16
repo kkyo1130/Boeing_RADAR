@@ -5,6 +5,11 @@ from PIL import Image
 from app.services import receiving_v2 as intake
 from app.services.demo import adapters as demo
 
+@pytest.fixture(autouse=True)
+def vision_module_path(monkeypatch):
+    from pathlib import Path
+    monkeypatch.syspath_prepend(str(Path(__file__).resolve().parents[2]))
+
 def wav_bytes():
     b=io.BytesIO()
     with wave.open(b,'wb') as w:
@@ -31,14 +36,14 @@ def test_parser_rejects_unknown_suffix_and_missing_callsign():
     for text in ['maintain three thousand feet heading two seven zero','Radar one two three maintain three thousand feet heading two seven zero if able']:
         p=demo.speech_payload('f',0,seg,text,.9,registry,{'evidence_id':'e','ref':'stored:e'});assert p['instruction_check']=='NEEDS_REVIEW';assert p['fields']=={}
 def test_camera_stabilizes_clears_and_preserves_zero(client,flight,monkeypatch):
-    import radar_vision.poc
+    import vision.yolo_cnn_runtime as cnn_runtime
     import app.services.demo.tracking as tracking
     monkeypatch.setattr(tracking,'locate',lambda *args:(0,0))
     image=Image.new('RGB',(100,100),'gray');b=io.BytesIO();image.save(b,format='JPEG');encoded=base64.b64encode(b.getvalue()).decode()
     c=client.post(f'/api/demo/{flight}/calibration',json={'image':encoded,'rois':{'ALT':[10,10,40,30],'HDG':[50,10,80,30]}});assert c.status_code==200,c.text
     value=[3500,0]
     def recognize(*args,**kwargs):return {'fields':{name:{'value':value[i],'reason':None if value[i] is not None else 'blank_roi','model_score':.9,'raw_text':str(value[i])} for i,name in enumerate(['altitude','heading'])}}
-    monkeypatch.setattr(radar_vision.poc,'recognize',recognize)
+    monkeypatch.setattr(cnn_runtime,'read_fields',recognize)
     for i in range(3):
         body={'token':c.json()['token'],'image':encoded,'captured_at':intake.stamp(intake.utc_now()),'target_revision':0};r=client.post(f'/api/demo/{flight}/frame',json=body);assert r.status_code==200,r.text;assert r.json()['fields']['heading']['value']==(0 if i==2 else None)
     assert client.post(f'/api/demo/{flight}/frame',json=body).status_code==409
@@ -51,6 +56,8 @@ def test_disabled(client,monkeypatch):
 def test_demo_runtime_prepares_model_once_and_limits_tracking_threads(monkeypatch):
     import cv2
     from app.services.speech import local
+    import vision.yolo_cnn_runtime as cnn_runtime
+    monkeypatch.setattr(cnn_runtime,'get_runtime',lambda:object())
     calls=[]
     sentinel=object()
     monkeypatch.setattr(demo,'MODEL',None)
@@ -151,7 +158,7 @@ def test_auto_calibration_uses_vision_regions_and_clears_previous_on_failure(cli
     import sys
     from pathlib import Path
     monkeypatch.syspath_prepend(str(Path(__file__).resolve().parents[2]))
-    import vision.auto_windows as windows
+    import vision.yolo_cnn_runtime as windows
     from app.services.demo import tracking
     image=io.BytesIO();Image.new('RGB',(320,200),'orange').save(image,format='JPEG')
     encoded=base64.b64encode(image.getvalue()).decode()
@@ -171,14 +178,14 @@ def test_auto_calibration_uses_vision_regions_and_clears_previous_on_failure(cli
 
 
 def test_roi_method_and_media_frame_deduplication(client,flight,monkeypatch):
-    import radar_vision.poc
+    import vision.yolo_cnn_runtime as cnn_runtime
     import app.services.demo.tracking as tracking
-    from vision import auto_windows
+    from vision import yolo_cnn_runtime as auto_windows
     monkeypatch.setattr(tracking,'locate',lambda *args:(0,0))
     rois={'ALT':[10,10,40,30],'HDG':[50,10,80,30]}
     monkeypatch.setattr(auto_windows,'locate_windows',lambda image:{'alt':rois['ALT'],'hdg':rois['HDG']})
     image=Image.new('RGB',(100,100),'gray');buffer=io.BytesIO();image.save(buffer,format='JPEG');encoded=base64.b64encode(buffer.getvalue()).decode()
-    monkeypatch.setattr(radar_vision.poc,'recognize',lambda *a,**k:{'fields':{name:{'value':v,'reason':None,'model_score':.9,'raw_text':str(v)} for name,v in [('altitude',3000),('heading',0)]}})
+    monkeypatch.setattr(cnn_runtime,'read_fields',lambda *a,**k:{'fields':{name:{'value':v,'reason':None,'model_score':.9,'raw_text':str(v)} for name,v in [('altitude',3000),('heading',0)]}})
     for route,method in [('calibration','MANUAL'),('auto-calibration','AUTO')]:
         body={'image':encoded,**({'rois':rois} if method=='MANUAL' else {})}
         response=client.post(f'/api/demo/{flight}/{route}',json=body);assert response.status_code==200,response.text
@@ -195,16 +202,16 @@ def test_roi_method_and_media_frame_deduplication(client,flight,monkeypatch):
 
 
 def test_auto_camera_follows_large_moves_loses_and_reacquires_without_restart(client,flight,monkeypatch):
-    import radar_vision.poc
-    from vision import auto_windows
+    import vision.yolo_cnn_runtime as cnn_runtime
+    from vision import yolo_cnn_runtime as auto_windows
     current=[{'hdg':[10,20,50,40],'alt':[80,20,150,40]}]
     monkeypatch.setattr(auto_windows,'locate_windows',lambda image:current[0])
     seen=[]
-    def recognize(path,config,*args):
+    def recognize(image,config):
         seen.append(config)
         return {'fields':{name:dict(value=value,reason=None,model_score=.9,raw_text=str(value))
                           for name,value in [('heading',270),('altitude',3000)]}}
-    monkeypatch.setattr(radar_vision.poc,'recognize',recognize)
+    monkeypatch.setattr(cnn_runtime,'read_fields',recognize)
     image=Image.new('RGB',(500,300),'gray');buffer=io.BytesIO();image.save(buffer,format='JPEG');encoded=base64.b64encode(buffer.getvalue()).decode()
     response=client.post(f'/api/demo/{flight}/auto-calibration',json={'image':encoded});token=response.json()['token']
     seq=[0]
@@ -218,7 +225,7 @@ def test_auto_camera_follows_large_moves_loses_and_reacquires_without_restart(cl
     moved={'hdg':[210,150,270,180],'alt':[310,150,410,180]};current[0]=moved
     result=frame()
     assert result['rois']=={'HDG':moved['hdg'],'ALT':moved['alt']}
-    assert seen[-1]['heading']['roi']==moved['hdg']
+    assert seen[-1]['HDG']==moved['hdg']
     assert result['fields']['heading']['stable_count']==1 and result['fields']['heading']['value'] is None
     current[0]=None;calls=len(seen);result=frame()
     assert result['tracking_status']=='SEARCHING' and result['rois'] is None

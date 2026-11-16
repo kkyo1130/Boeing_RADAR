@@ -11,33 +11,26 @@ from datetime import datetime,timezone
 from fastapi import FastAPI,HTTPException,Request
 from pydantic import BaseModel,Field
 from PIL import Image,UnidentifiedImageError
-from .ocr_v3_runtime import OCRv3
 
 @asynccontextmanager
 async def lifespan(app):
     import torch
     torch.set_num_threads(4)
-    character=os.getenv('RADAR_CHARACTER_CHECKPOINT')
-    if character:
-        from pathlib import Path
-        from .character_runtime import CharacterRuntime
-        expected=os.getenv('RADAR_CHARACTER_SHA256')
-        if expected and hashlib.sha256(Path(character).read_bytes()).hexdigest()!=expected:
-            raise RuntimeError('Active character checkpoint hash differs from frozen candidate')
-        app.state.ocr=CharacterRuntime(character)
-        app.state.vision_engine='character_cnn_glare_v4'
-    else:
-        app.state.ocr=OCRv3(os.getenv("RADAR_VISION_CHECKPOINTS"))
-        app.state.vision_engine='mcp_ocr_v3'
+    from .yolo_cnn_runtime import get_runtime
+    app.state.pipeline=get_runtime()
+    app.state.ocr=app.state.pipeline.ocr
+    app.state.vision_engine='yolo11n_character_cnn'
     app.state.lock=threading.Lock()
     yield
-app=FastAPI(title='RADAR OCR v3 local demo',lifespan=lifespan)
+app=FastAPI(title='RADAR YOLO + CNN local demo',lifespan=lifespan)
 class Crops(BaseModel):
     hdg:str=Field(max_length=400000)
     alt:str=Field(max_length=400000)
 
 @app.get('/health')
-def health():return {'status':'ready','model':getattr(app.state,'vision_engine','mcp_ocr_v3'),'control_enabled':False}
+def health():
+    runtime=getattr(app.state,'pipeline',None)
+    return {'status':'ready','model':getattr(app.state,'vision_engine','unavailable'),'control_enabled':False,'apple_vision_enabled':False,'yolo_sha256':getattr(runtime,'yolo_sha256',None),'cnn_sha256':getattr(runtime,'cnn_sha256',None)}
 
 @contextmanager
 def processing_slot(lock):
@@ -74,7 +67,6 @@ class CameraFrame(BaseModel):
 @app.post('/infer-frame')
 def infer_frame(body: CameraFrame, request: Request):
     request_started = time.time()
-    from .auto_windows import locate_windows
     try:
         blob = base64.b64decode(body.image, validate=True)
         with Image.open(io.BytesIO(blob)) as decoded:
@@ -97,21 +89,9 @@ def infer_frame(body: CameraFrame, request: Request):
             pending = metadata.with_suffix('.partial.json')
             pending.write_text(json.dumps(dict(request_started=request_started, saved_at=time.time(), sha256=digest)))
             pending.replace(metadata)
-        rois = locate_windows(image)
-        result = {}
-        for kind in ('hdg', 'alt'):
-            result[kind] = (request.app.state.ocr.infer(image.crop(rois[kind]), kind) if rois else
-                            dict(value=None, model_score=None, reason='WINDOWS_NOT_FOUND_OR_AMBIGUOUS'))
-            if rois:
-                from .text_windows import read_crop
-                fallback = read_crop(image.crop(rois[kind]), kind)
-                primary = result[kind]
-                if fallback and primary.get('value') is None:
-                    result[kind] = {**fallback, 'primary_reason': primary.get('reason')}
-                elif fallback and primary['value'] != fallback['value']:
-                    result[kind] = dict(value=None, model_score=None, reason='OCR_ENGINE_DISAGREEMENT')
-    return dict(observed_at=datetime.now(timezone.utc).isoformat(), rois=rois, **result,
-                note='Experimental amber MCP localization; no cockpit control.')
+        result=request.app.state.pipeline.infer(image)
+    return dict(observed_at=datetime.now(timezone.utc).isoformat(),**result,
+                note='Trained YOLO MCP detector + CNN OCR; uncalibrated scores. No cockpit control.')
 
 from .webcam_collection import router as collection_router
 app.include_router(collection_router)

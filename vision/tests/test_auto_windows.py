@@ -34,11 +34,18 @@ def test_blank_missing_and_ambiguous_do_not_guess():
     assert locate_windows(image) is None
 
 
-def test_full_frame_api_detects_and_does_not_reuse_old_values():
+def test_full_frame_api_detects_and_does_not_reuse_old_values(monkeypatch):
     class Fake:
         def infer(self,image,kind):
             return dict(value='000' if kind=='hdg' else '03000',model_score=.8,reason=None)
-    app.state.ocr=Fake();app.state.lock=threading.Lock()
+    class FakePipeline:
+        # Endpoint contract fixture; trained YOLO is tested separately.
+        def infer(self, image):
+            from vision.auto_windows import _locate_color_windows
+            rois = _locate_color_windows(image)
+            return dict(rois=rois, **{kind: Fake().infer(image.crop(rois[kind]), kind) if rois else dict(value=None, reason='WINDOWS_MISSING') for kind in ('hdg','alt')}, pipeline='yolo11n_character_cnn', apple_vision_enabled=False)
+    monkeypatch.setattr(app.state, 'pipeline', FakePipeline(), raising=False)
+    monkeypatch.setattr(app.state, 'lock', threading.Lock(), raising=False)
     client=TestClient(app)
     def send(image):
         buf=io.BytesIO();image.save(buf,format='PNG')

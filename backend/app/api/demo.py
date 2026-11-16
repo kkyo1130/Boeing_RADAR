@@ -50,12 +50,18 @@ class Scenario(Model):
 
 @router.get('/status')
 def status():
+    try:
+        from vision.yolo_cnn_runtime import model_paths
+        camera_ready = all(path.is_file() for path in model_paths())
+    except ImportError:
+        camera_ready = False
     return dict(callsign_context_enabled=os.getenv('RADAR_STT_CALLSIGN_CONTEXT') == '1',
                 ner_enabled=bool(os.getenv('RADAR_NER_MODEL') or os.getenv('RADAR_NER_BACKEND')),
                 ner_backend=os.getenv('RADAR_NER_BACKEND', 'v7'),
                 ner_model_present=Path(os.getenv('RADAR_NER_MODEL','/nonexistent'),'model.safetensors').is_file(),
                 speech_ready=Path(os.getenv('RADAR_WHISPER_MODEL','/nonexistent'),'model.bin').is_file(),
-                camera_ready=Path(os.getenv('RADAR_OCR_BINARY','/nonexistent')).is_file(),
+                camera_ready=camera_ready,
+                vision_pipeline='yolo11n_character_cnn',apple_vision_enabled=False,
                 scenarios=demo.SCENARIOS)
 
 @router.get('/scenarios/{scenario}/audio')

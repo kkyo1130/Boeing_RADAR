@@ -193,7 +193,7 @@ def decode_image(encoded):
 
 def auto_calibrate(flight, encoded):
     # Image-only localization: no instruction values or saved manual ROI.
-    from vision.auto_windows import locate_windows
+    from vision.yolo_cnn_runtime import locate_windows
     _, image = decode_image(encoded)
     found = locate_windows(image)
     debug_path = os.getenv('RADAR_VISION_DEBUG_FRAME')
@@ -210,7 +210,7 @@ def auto_calibrate(flight, encoded):
         return dict(status='SEARCHING', token=None, rois=None, reason='WINDOWS_NOT_FOUND_OR_AMBIGUOUS',
                     message='ALT·HDG 창 탐색 중 · 계기판 전체와 주황색 숫자가 선명하게 보이도록 맞추세요.')
     rois = {'ALT': [int(x) for x in found['alt']], 'HDG': [int(x) for x in found['hdg']]}
-    return {**calibrate(flight, encoded, rois, method='AUTO'), 'status': 'READY', 'rois': rois, 'region_source': 'vision_auto_windows'}
+    return {**calibrate(flight, encoded, rois, method='AUTO'), 'status': 'READY', 'rois': rois, 'region_source': 'yolo11n'}
 
 
 def calibrate(flight, encoded, rois, method='MANUAL'):
@@ -236,7 +236,7 @@ def calibrate(flight, encoded, rois, method='MANUAL'):
 
 
 def camera(db, flight, body):
-    from radar_vision.poc import recognize
+    from vision.yolo_cnn_runtime import read_fields
     started = time.monotonic()
     with CAMERA_LOCK:
         session = CAMERAS.get(body['token'])
@@ -264,13 +264,8 @@ def camera(db, flight, body):
         session['targets'] = targets
         from .tracking import follow_regions
         rois = follow_regions(image, session)
-        config = dict(image_size=list(image.size), minimum_model_score=.5)
         if rois:
-            for name, field in [('altitude','ALT'),('heading','HDG')]:
-                config[name] = dict(roi=rois[field], unit='feet' if field=='ALT' else 'degrees')
-            with TemporaryDirectory() as temp:
-                path=Path(temp)/'frame.png'; image.save(path)
-                result=recognize(path, config, os.environ['RADAR_OCR_BINARY'], Path(temp)/'ocr', body['captured_at'])
+            result=read_fields(image,rois)
         else:
             result={'fields':{name:dict(value=None,reason='panel_tracking_lost',model_score=None,raw_text=None)
                               for name in ('altitude','heading')}}
@@ -299,7 +294,7 @@ def camera(db, flight, body):
             payload['fields'][key]=reading(item['value'],key,item['model_score'],item['reason'],item['raw_text'])
         receipt,_=intake.receive(db,flight,ObservationV2.model_validate(payload),'OBSERVATION')
         session['emitted']=time.monotonic()
-        return dict(receipt=receipt,fields=result['fields'],captured_at=body['captured_at'],rois=rois,tracking_status='TRACKING' if rois else 'SEARCHING',timings={'ocr_ms':round((ocr_done-started)*1000),'delivery_ms':round((time.monotonic()-ocr_done)*1000),'stabilization_ms':stable_ms})
+        return dict(receipt=receipt,fields=result['fields'],captured_at=body['captured_at'],rois=rois,tracking_status='TRACKING' if rois else 'SEARCHING',pipeline='yolo11n_character_cnn',apple_vision_enabled=False,timings={'ocr_ms':round((ocr_done-started)*1000),'delivery_ms':round((time.monotonic()-ocr_done)*1000),'stabilization_ms':stable_ms})
 
 
 def expire_camera(db, flight):
@@ -325,7 +320,8 @@ def prepare_runtime():
         return
     import cv2
     from radar_vision.stream import Stabilizer
-    from radar_vision.poc import recognize
+    from vision.yolo_cnn_runtime import get_runtime
+    get_runtime()
     from app.services.speech.local import LocalWhisper
     cv2.setNumThreads(1)
     global MODEL

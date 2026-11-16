@@ -51,3 +51,22 @@ def test_uncertain_model_output_is_not_a_stable_numeric_candidate():
         result=runtime.infer(Image.new('RGB',(180,48)),'alt')
     assert result['value'] is None
     assert result['reason']=='LOW_MODEL_SCORE'
+
+
+def test_full_frame_uses_shared_yolo_cnn_pipeline_without_os_ocr(monkeypatch):
+    class Pipeline:
+        def infer(self, image):
+            assert image.size == (200, 120)
+            return dict(rois=None, hdg=dict(value=None, reason='LOW_OR_MISSING_PANEL_SCORE'),
+                        alt=dict(value=None, reason='LOW_OR_MISSING_PANEL_SCORE'),
+                        pipeline='yolo11n_character_cnn', apple_vision_enabled=False)
+    monkeypatch.setattr(app.state, 'pipeline', Pipeline(), raising=False)
+    monkeypatch.setattr(app.state, 'lock', threading.Lock(), raising=False)
+    client = TestClient(app)
+    assert client.post('/infer-frame', json={'image':'invalid'}).status_code == 422
+    response = client.post('/infer-frame', json={'image':encode(Image.new('RGB', (200, 120)))})
+    assert response.status_code == 200
+    data = response.json()
+    assert data['hdg']['value'] is None and data['alt']['value'] is None
+    assert data['pipeline'] == 'yolo11n_character_cnn'
+    assert data['apple_vision_enabled'] is False
