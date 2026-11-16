@@ -94,7 +94,7 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
   function roiPoint(event){const rect=event.currentTarget.getBoundingClientRect();const c=frame();return framePoint(event.clientX,event.clientY,rect,c.width,c.height);}
   function beginROI(event){if(mode!=='manual'||running||busy||!preview)return;event.currentTarget.setPointerCapture(event.pointerId);drag.current=roiPoint(event);}
   function finishROI(event){if(!drag.current)return;const start=drag.current;drag.current=null;let box;try{box=selectedBox(start,roiPoint(event));}catch(e){setError(e.message);return;}setError('');setRois(previous=>({...previous,[selectedField]:box}));setSelectedField(selectedField==='ALT'?'HDG':'ALT');}
-  async function resetRegions(next=mode){await stopCamera();setMode(next);setRois({});setDiagnostics(null);setSelectedField('ALT');}
+  async function resetRegions(next=mode){const stopped=stopCamera();setMode(next);setRois({});setDiagnostics(null);setSelectedField('ALT');await stopped;}
   async function cancelInput(){const item=capture.current;if(!item)return;capture.current=null;clearTimeout(item.timer);item.audio?.pause();item.reject?.(new Error('입력 취소'));item.abort?.abort();if(item.microphone)mic.current?.stop();setRecording(false);await audioFocus.end(item.focus);await health('MICROPHONE','DEGRADED','capture_cancelled').catch(fail);}
   async function playScenario(){setAtcAttempt('pending');const focus=await audioFocus.begin('ATC');if(!focus)throw new Error('관제 재생 예약 실패 · 음성 안내 연결을 확인하세요.');
     const audio=new Audio(`/api/demo/scenarios/${scenario}/audio`),item={focus,audio,kind:'ATC'};capture.current=item;
