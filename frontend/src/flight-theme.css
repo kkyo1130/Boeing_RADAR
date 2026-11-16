@@ -1,36 +1,38 @@
-/* White/sky interface palette. Keep the cockpit image and status semantics intact. */
+/* Reference palette: white, sky #8FCFE7, mint #83CBC4, teal #4E9EB5, blue #233BA4. */
 @media screen {
- :root{background:#f7fbff;color:#17344d}
- .operations{--flight-surface:#ffffff;--flight-inset:#f0f7ff;--flight-border:#cbdff0;--flight-accent:#7dd3fc;color:#17344d}
- .operations .op-header{padding:16px 20px;border:1px solid #badcf5;border-radius:12px;background:linear-gradient(115deg,#e3f2ff,#f2fbff)}
- .operations .op-header .brand{color:#144b7c;letter-spacing:.7px;line-height:1.4}
- .operations .op-header .brand span{color:#1266a6;font-size:inherit;font-weight:650;letter-spacing:.3px}
- .operations a{color:#1266a6}.operations .eyebrow{color:#47789e}
+ :root{background:#ffffff;color:#23364c}
+ .operations{--flight-surface:#ffffff;--flight-inset:#eef8fb;--flight-border:#c8e4e8;--flight-accent:#83cbc4;--flight-blue:#233ba4;--flight-sky:#8fcfe7;--flight-mint:#83cbc4;--flight-teal:#4e9eb5;color:#23364c}
+ .operations .op-header{padding:16px 20px;border:1px solid #c8e4e8;border-bottom:3px solid var(--flight-mint);border-radius:12px;background:#ffffff}
+ .operations .op-header .brand{color:var(--flight-blue);letter-spacing:.7px;line-height:1.4}
+ .operations .op-header .brand span{color:var(--flight-blue);font-size:inherit;font-weight:650;letter-spacing:.3px}
+ .operations h1,.operations h2,.operations h3{color:var(--flight-blue)}
+ .operations a{color:var(--flight-blue)}.operations .eyebrow{color:#387388}
  .operations .op-panel,.operations .file-speech-panel{background:var(--flight-surface);border-color:var(--flight-border)}
- .operations input,.operations select{background:var(--flight-inset);border-color:#a9cbe5;color:#17344d}
- .operations button{background:#e9f4ff;border-color:#a8cee9;color:#174e79}
- .operations button:hover:not(:disabled){background:#d5ebff;border-color:#7dd3fc}
- .operations button.primary{background:linear-gradient(110deg,#176cce,#199dd3);color:#fff;border-color:#59beff;box-shadow:0 3px 12px #027ac425}
- .operations button.primary:hover:not(:disabled){background:linear-gradient(110deg,#2581e7,#25b6e7)}
- .operations button[aria-pressed="true"]{color:#12558c;background:#d7eeff;border-color:#7dd3fc}
- .operations :focus-visible{outline:3px solid #7dd3fc;outline-offset:3px}
+ .operations .file-speech-panel{background:#eef8fb;border-color:var(--flight-sky)}
+ .operations input,.operations select{background:var(--flight-inset);border-color:#a8d6de;color:#23364c}
+ .operations button{background:#edf7fa;border-color:#a7d6dd;color:var(--flight-blue)}
+ .operations button:hover:not(:disabled){background:#dceff6;border-color:var(--flight-teal)}
+ .operations button.primary{background:var(--flight-blue);color:#fff;border-color:var(--flight-blue);box-shadow:0 3px 10px #233ba419}
+ .operations button.primary:hover:not(:disabled){background:#192e87;border-color:#192e87}
+ .operations button[aria-pressed="true"]{color:var(--flight-blue);background:#ddf2ef;border-color:var(--flight-mint)}
+ .operations :focus-visible{outline:3px solid var(--flight-teal);outline-offset:3px}
  .operations .op-targets article,.operations .op-health article,.operations .demo-values>div,.operations .demo-transcript,.operations .report-cards>div{background:var(--flight-inset);border-color:var(--flight-border)}
- .operations .demo-result{background:#f4f9ff}
- .operations .demo-result.op-NORMAL,.operations .op-overview.op-NORMAL{background:#eaf8ff;border-color:#55c8f2}
- .operations .demo-result.op-NORMAL .demo-verdict,.operations .op-connection.is-connected{color:#086b9c}
- .operations .demo-values .op-NORMAL{box-shadow:inset 0 -4px #55c8f2}
- .operations .op-badge.op-NORMAL{background:#def3ff;color:#075c89;border-color:#55bde8}
+ .operations .demo-result{background:#f5fafc}
+ .operations .demo-result.op-NORMAL,.operations .op-overview.op-NORMAL{background:#eaf7f4;border-color:var(--flight-mint)}
+ .operations .demo-result.op-NORMAL .demo-verdict,.operations .op-connection.is-connected{color:#246577}
+ .operations .demo-values .op-NORMAL{box-shadow:inset 0 -4px var(--flight-mint)}
+ .operations .op-badge.op-NORMAL{background:#e2f4ef;color:#246577;border-color:var(--flight-mint)}
  .operations .demo-result.op-MISMATCH{background:#fff0f2;border-color:#ff7676}
- .operations .op-notice{background:#e9f5ff;border-color:#9cc9eb;color:#245c85}
- .operations .op-evidence{border-color:#a2cce9}.operations .op-evidence blockquote{background:#f1f8ff;border-left-color:#70c9ff}
- .operations .op-muted,.operations .op-meta,.operations small,.operations details,.operations .demo-live-status,.operations .demo-progress{color:#526e85}
- .operations .flight-report{color:#17344d}.operations .flight-report section{border-color:var(--flight-border)}
- .operations .op-intro>p:last-child,.operations .op-id,.operations thead th,.operations footer{color:#526e85}
+ .operations .op-notice{background:#edf7fb;border-color:var(--flight-sky);color:#2c6173}
+ .operations .op-evidence{border-color:var(--flight-teal)}.operations .op-evidence blockquote{background:#f0f9fb;border-left-color:var(--flight-sky)}
+ .operations .op-muted,.operations .op-meta,.operations small,.operations details,.operations .demo-live-status,.operations .demo-progress{color:#526b7b}
+ .operations .flight-report{color:#23364c}.operations .flight-report section{border-color:var(--flight-border)}
+ .operations .op-intro>p:last-child,.operations .op-id,.operations thead th,.operations footer{color:#526b7b}
  .operations .op-overview,.operations .op-badge.op-UNVERIFIED{background:#fff8e8;color:#865d10;border-color:#d6b873}
  .operations .op-overview.op-MISMATCH,.operations .op-badge.op-MISMATCH{background:#fff0f2;color:#a52b40;border-color:#e7a1ad}
  .operations .op-error{background:#fff7e9;color:#8a510c;border-color:#dfbc83}
  .operations .demo-result.op-MISMATCH .demo-verdict,.operations .report-MISMATCH,.operations .report-UNRESOLVED,.operations .report-unresolved{color:#ac2940}
  .operations .demo-result.op-UNVERIFIED .demo-verdict,.operations .op-connection{color:#865d10}
- .operations .report-NORMAL,.operations .report-RESOLVED{color:#086b9c}
- .operations th,.operations td,.operations .op-incidents li,.operations .op-evidence-group,.operations .report-timeline>li{border-color:#cbdff0}
+ .operations .report-NORMAL,.operations .report-RESOLVED{color:#246577}
+ .operations th,.operations td,.operations .op-incidents li,.operations .op-evidence-group,.operations .report-timeline>li{border-color:#c8e4e8}
 }
