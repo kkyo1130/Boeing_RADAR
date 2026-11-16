@@ -1,6 +1,8 @@
 import React, { lazy, Suspense, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './style.css';
+import {readColorMode,applyColorMode} from './color-mode.js';
+applyColorMode(readColorMode());
 import Operations from './Operations.jsx';
 import Pilot from './Pilot.jsx';
 const CockpitVision = lazy(() => import('./CockpitVision.jsx'));

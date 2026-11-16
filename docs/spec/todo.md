@@ -219,3 +219,7 @@ backend701/skip7, frontend82·빌드, 브라우저4 통과. 실제 고정4154이
 | WI | 범위 | 상태 |
 | --- | --- | --- |
 | [SPEC-006-WI-08](006-advisory-interface/workitem/wi-08.md) | RADAR AI Flight Guard 브랜드·파랑/하늘색 화면 테마 | verifying |
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-006-WI-09](006-advisory-interface/workitem/wi-09.md) | 상단 라이트/다크 전환·선택 저장·어두운 배경/패널 | verifying |
