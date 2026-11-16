@@ -119,3 +119,31 @@ test('수동 ROI 좌표 적용과 자동 전환 시 지연 응답 폐기 (모의
  await expect(page.getByText('최근 OCR:',{exact:false})).toHaveCount(0);
  await page.screenshot({path:'/tmp/radar-roi-ui.png',fullPage:true});
 });
+
+test('인식 영역 이동·실패 후 복구와 탭 전환 중 연속 촬영 (모의 카메라)',async({page})=>{
+ await page.route('**/api/demo/status',route=>route.fulfill({json:{camera_ready:true,speech_ready:false}}));
+ let calibrationCount=0,phase='first',frameCount=0;const health=[];
+ const boxes={first:{ALT:[240,50,340,90],HDG:[100,50,160,90]},moved:{ALT:[360,160,460,200],HDG:[240,160,300,200]}};
+ await page.route('**/api/v2/flights/*/health-events',async route=>{health.push(route.request().postDataJSON());await route.continue();});
+ await page.route('**/api/demo/*/auto-calibration',async route=>{
+  calibrationCount++;
+  await route.fulfill({json:calibrationCount===1?{status:'SEARCHING',rois:null,token:null}:{status:'READY',rois:boxes.first,token:'moving-camera'}});
+ });
+ await page.route('**/api/demo/*/frame',async route=>{
+  frameCount++;
+  const lost=phase==='lost';
+  await route.fulfill({json:{rois:lost?null:boxes[phase],tracking_status:lost?'SEARCHING':'TRACKING',fields:{altitude:{value:lost?null:3000,stable_count:lost?0:3},heading:{value:lost?null:270,stable_count:lost?0:3}},captured_at:new Date().toISOString()}});
+ });
+ await page.goto('/operations');await page.getByLabel('등록된 호출부호').fill('RADAR123');await page.getByRole('button',{name:'START FLIGHT',exact:true}).click();
+ await page.getByRole('button',{name:'카메라 연결',exact:true}).click();await page.getByRole('button',{name:'인식 시작',exact:true}).click();
+ const hdg=page.locator('[data-roi-field=HDG]');
+ await expect(hdg).toBeVisible();const first=await hdg.getAttribute('style');
+ phase='moved';await expect.poll(()=>hdg.getAttribute('style')).not.toBe(first);
+ phase='lost';await expect(hdg).toHaveCount(0);await expect(page.getByRole('button',{name:'인식 중지',exact:true})).toBeEnabled();
+ phase='moved';await expect(hdg).toBeVisible();
+ const before=frameCount;
+ await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));});
+ await expect.poll(()=>frameCount).toBeGreaterThan(before);
+ expect(health.filter(event=>event.health?.reason==='camera_capture_stopped')).toHaveLength(0);
+ await page.getByRole('button',{name:'인식 중지',exact:true}).click();
+});

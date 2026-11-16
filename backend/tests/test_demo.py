@@ -192,3 +192,57 @@ def test_roi_method_and_media_frame_deduplication(client,flight,monkeypatch):
         assert result.json()['fields']['heading']['value']==0
         inputs=client.get(f'/api/v2/flights/{flight}/inputs').json()
         assert any(row['payload'].get('roi_method')==method for row in inputs)
+
+
+def test_auto_camera_follows_large_moves_loses_and_reacquires_without_restart(client,flight,monkeypatch):
+    import radar_vision.poc
+    from vision import auto_windows
+    current=[{'hdg':[10,20,50,40],'alt':[80,20,150,40]}]
+    monkeypatch.setattr(auto_windows,'locate_windows',lambda image:current[0])
+    seen=[]
+    def recognize(path,config,*args):
+        seen.append(config)
+        return {'fields':{name:dict(value=value,reason=None,model_score=.9,raw_text=str(value))
+                          for name,value in [('heading',270),('altitude',3000)]}}
+    monkeypatch.setattr(radar_vision.poc,'recognize',recognize)
+    image=Image.new('RGB',(500,300),'gray');buffer=io.BytesIO();image.save(buffer,format='JPEG');encoded=base64.b64encode(buffer.getvalue()).decode()
+    response=client.post(f'/api/demo/{flight}/auto-calibration',json={'image':encoded});token=response.json()['token']
+    seq=[0]
+    def frame():
+        seq[0]+=1
+        r=client.post(f'/api/demo/{flight}/frame',json={'token':token,'image':encoded,'captured_at':intake.stamp(intake.utc_now()),'target_revision':0,'media_time':seq[0]})
+        assert r.status_code==200,r.text
+        return r.json()
+    for _ in range(3):result=frame()
+    assert result['fields']['heading']['value']==270
+    moved={'hdg':[210,150,270,180],'alt':[310,150,410,180]};current[0]=moved
+    result=frame()
+    assert result['rois']=={'HDG':moved['hdg'],'ALT':moved['alt']}
+    assert seen[-1]['heading']['roi']==moved['hdg']
+    assert result['fields']['heading']['stable_count']==1 and result['fields']['heading']['value'] is None
+    current[0]=None;calls=len(seen);result=frame()
+    assert result['tracking_status']=='SEARCHING' and result['rois'] is None
+    assert len(seen)==calls
+    assert all(field['value'] is None for field in result['fields'].values())
+    current[0]=moved
+    for count in (1,2,3):
+        result=frame();assert result['fields']['heading']['stable_count']==count
+        assert result['fields']['heading']['value']==(270 if count==3 else None)
+    demo.CAMERAS[token]['count']=600
+    assert frame()['tracking_status']=='TRACKING'
+    demo.CAMERAS[token]['expired']=True
+    assert frame()['fields']['heading']['stable_count']==1
+
+
+def test_manual_tracking_updates_reference_for_cumulative_motion():
+    import numpy as np
+    from app.services.demo.tracking import reference,follow_regions
+    from radar_vision.stream import Stabilizer
+    pixels=np.random.default_rng(23).integers(0,255,(300,600,3),dtype=np.uint8)
+    rois={'HDG':[100,90,140,120],'ALT':[200,90,270,120]}
+    image=Image.fromarray(pixels)
+    session={'rois':rois,'tracked':reference(image,rois),'size':image.size,'stable':Stabilizer(3),'method':'MANUAL'}
+    for amount in (20,40,60,80,100):
+        result=follow_regions(Image.fromarray(np.roll(pixels,amount,axis=1)),session)
+        assert result['HDG']==[100+amount,90,140+amount,120]
+    assert follow_regions(Image.new('RGB',image.size,'black'),session) is None

@@ -245,37 +245,39 @@ def camera(db, flight, body):
         if media_time is not None and media_time <= session.get('media_time', -1):
             session['stable'].reset(); error('Duplicate camera frame', 409)
         if media_time is not None: session['media_time']=media_time
-        if session['expired']: error('Camera stream timed out; recalibrate', 409)
         if session['last'] and body['captured_at'] <= session['last']: error('Duplicate or out-of-order frame', 409)
-        if session['count'] >= 600: error('Demo frame limit reached; recalibrate for a new run', 409)
         session['last'] = body['captured_at']; session['count'] += 1
         now = intake.utc_now()
         age = (now-intake.parsed(body['captured_at'])).total_seconds()
         if age < -.1 or age > 5:
             session['stable'].reset(); error('Stale camera frame')
         _, image = decode_image(body['image'])
-        if image.size != session['size']:
+        if session['expired']:
+            session['stable'].reset()
+            session['expired'] = False
+        if image.size != session['size'] and session.get('method') != 'AUTO':
             session['stable'].reset(); error('Camera resolution changed; recalibrate')
         state = intake.get_state(db, flight); db.rollback()
         targets = [(k, v['instruction_id'] if v else None) for k,v in state['targets'].items()]
         if targets != session['targets'] or time.monotonic()-session['updated'] > 5:
             session['stable'].reset()
         session['targets'] = targets
-        from .tracking import locate
-        shift = locate(image, session['tracked'])
+        from .tracking import follow_regions
+        rois = follow_regions(image, session)
         config = dict(image_size=list(image.size), minimum_model_score=.5)
-        for name, field in [('altitude','ALT'),('heading','HDG')]:
-            roi=session['rois'][field]
-            if shift is not None: roi=[roi[0]+shift[0],roi[1]+shift[1],roi[2]+shift[0],roi[3]+shift[1]]
-            if not (0 <= roi[0] < roi[2] <= image.width and 0 <= roi[1] < roi[3] <= image.height): shift=None; roi=session['rois'][field]
-            config[name] = dict(roi=roi, unit='feet' if field=='ALT' else 'degrees')
-        with TemporaryDirectory() as temp:
-            path=Path(temp)/'frame.png'; image.save(path)
-            result=recognize(path, config, os.environ['RADAR_OCR_BINARY'], Path(temp)/'ocr', body['captured_at'])
-        if shift is None:
-            for item in result['fields'].values(): item.update(value=None, reason='panel_tracking_lost')
+        if rois:
+            for name, field in [('altitude','ALT'),('heading','HDG')]:
+                config[name] = dict(roi=rois[field], unit='feet' if field=='ALT' else 'degrees')
+            with TemporaryDirectory() as temp:
+                path=Path(temp)/'frame.png'; image.save(path)
+                result=recognize(path, config, os.environ['RADAR_OCR_BINARY'], Path(temp)/'ocr', body['captured_at'])
+        else:
+            result={'fields':{name:dict(value=None,reason='panel_tracking_lost',model_score=None,raw_text=None)
+                              for name in ('altitude','heading')}}
         if (intake.utc_now()-intake.parsed(body['captured_at'])).total_seconds() > 5:
             session['stable'].reset()
+            rois = None
+            session['tracking_lost'] = True
             for item in result['fields'].values(): item.update(value=None, reason='stale_frame')
         ocr_done = time.monotonic()
         session['stable'].apply(result['fields'])
@@ -289,17 +291,19 @@ def camera(db, flight, body):
         evidence_buffer=io.BytesIO();image.save(evidence_buffer,format='JPEG',quality=85)
         evidence=media_v2.upload(db, flight, evidence_buffer.getvalue(), 'image/jpeg')
         payload=base(flight,body['target_revision'],body['captured_at'],[dict(**evidence,kind='FRAME',field=None,roi=None)])
+        if not rois:
+            payload['channel_health'] = dict(status='DEGRADED', reason='panel_tracking_lost')
         payload.update(source='COCKPIT',roi_method=session.get('method'),frame_id='frame-'+uuid4().hex,fields={})
         for name,key in [('altitude','ALT'),('heading','HDG')]:
             item=result['fields'][name]
             payload['fields'][key]=reading(item['value'],key,item['model_score'],item['reason'],item['raw_text'])
         receipt,_=intake.receive(db,flight,ObservationV2.model_validate(payload),'OBSERVATION')
         session['emitted']=time.monotonic()
-        return dict(receipt=receipt,fields=result['fields'],captured_at=body['captured_at'],timings={'ocr_ms':round((ocr_done-started)*1000),'delivery_ms':round((time.monotonic()-ocr_done)*1000),'stabilization_ms':stable_ms})
+        return dict(receipt=receipt,fields=result['fields'],captured_at=body['captured_at'],rois=rois,tracking_status='TRACKING' if rois else 'SEARCHING',timings={'ocr_ms':round((ocr_done-started)*1000),'delivery_ms':round((time.monotonic()-ocr_done)*1000),'stabilization_ms':stable_ms})
 
 
 def expire_camera(db, flight):
-    """Called before UI state reads; a hung/closed tab cannot keep a camera normal."""
+    """Persist loss of fresh camera observations independently of UI state reads."""
     if os.getenv('RADAR_DEMO_ENABLED') != '1': return
     from app.schemas.observation_v2 import HealthEventV2
     for item in list(CAMERAS.values()):

@@ -171,3 +171,11 @@ PR 연결: [UI #36](https://github.com/kkyo1130/Boeing_RADAR/pull/36) → [ROI #
 | [SPEC-009-WI-08](009-evaluation-demo/workitem/wi-08.md) | HDG·ALT/MCP 비율 정리와 동일 실행 모델 paired 비교 | verifying |
 
 화면 캡처 기반 새24화면/48필드 비교: 이전 정답47·보류1·오답0, 변경 정답48·보류0·오답0. 실제 카메라 재촬영/물리 태블릿 인수와 외부 리뷰는 미실행이다.
+
+## 2026-11-16 이동 중 카메라 추적·재탐색
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-003-WI-09](003-cockpit-vision/workitem/wi-09.md) | 매 프레임 자동 영역 갱신·동적 박스·탭 전환/놓침 후 연속 재탐색 | verifying |
+
+backend692/skip7, frontend79·빌드, 모의 카메라 브라우저4, 로컬 렌더 이미지+native OCR+임시 DB API1 검증. 실제 웹캠 이동·장시간 배경 탭 인수와 외부 리뷰·원격 게시는 미실행이다.

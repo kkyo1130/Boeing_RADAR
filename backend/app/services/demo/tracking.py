@@ -1,7 +1,7 @@
-"""Bounded translation tracking around manually selected MCP windows.
+"""Current-frame regions for AUTO and bounded panel translation for MANUAL.
 
-Uses panel pixels outside the digit windows. Does not use expected values.
-No scale/rotation recovery: loss of a sufficiently similar panel means null.
+Automatic localization uses current image evidence only. Manual matching uses
+panel pixels outside the digit windows and does not claim scale/rotation recovery.
 """
 import cv2
 import numpy as np
@@ -29,3 +29,46 @@ def locate(image,ref):
     if value<.8: return None
     dx,dy=point[0]+left-x1,point[1]+top-y1
     return dx,dy
+
+
+def regions_changed(previous, current):
+    """Large geometric jumps must start a fresh three-frame sequence."""
+    if not previous:
+        return True
+    for field in ('ALT', 'HDG'):
+        a, b = previous[field], current[field]
+        aw, ah = a[2]-a[0], a[3]-a[1]
+        bw, bh = b[2]-b[0], b[3]-b[1]
+        if not (.8 <= bw/aw <= 1.25 and .8 <= bh/ah <= 1.25):
+            return True
+        if abs((a[0]+a[2]-b[0]-b[2])/2) > max(10, aw*.5) or abs((a[1]+a[3]-b[1]-b[3])/2) > max(10, ah*.5):
+            return True
+    return False
+
+
+def follow_regions(image, session):
+    """AUTO re-detects from each image; MANUAL follows the last valid panel."""
+    previous = session['rois']
+    if session.get('method') == 'AUTO':
+        from vision.auto_windows import locate_windows
+        found = locate_windows(image)
+        rois = ({'ALT': list(found['alt']), 'HDG': list(found['hdg'])}
+                if found and set(found) == {'alt', 'hdg'} else None)
+    else:
+        shift = locate(image, session['tracked'])
+        rois = ({field: [box[0]+shift[0], box[1]+shift[1], box[2]+shift[0], box[3]+shift[1]]
+                 for field, box in previous.items()} if shift is not None else None)
+    if rois and any(not (0 <= r[0] < r[2] <= image.width and 0 <= r[1] < r[3] <= image.height)
+                    for r in rois.values()):
+        rois = None
+    if not rois:
+        session['stable'].reset()
+        session['tracking_lost'] = True
+        return None
+    if session.pop('tracking_lost', False) or regions_changed(previous, rois):
+        session['stable'].reset()
+    session['rois'] = rois
+    session['size'] = image.size
+    if session.get('method') != 'AUTO':
+        session['tracked'] = reference(image, rois)
+    return rois
