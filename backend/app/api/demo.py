@@ -29,6 +29,7 @@ class Frame(Model):
     token:str=Field(max_length=128)
     captured_at:UtcTimestamp
     target_revision:int=Field(ge=0)
+    media_time:float | None = Field(default=None, ge=0, allow_inf_nan=False)
 
 class Speech(Model):
     input_mode: Literal["file_upload"] | None = None

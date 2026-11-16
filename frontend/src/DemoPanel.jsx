@@ -4,13 +4,14 @@ import {audioFocus} from './audio-focus.js';
 import {microphone,base64} from './demo-audio.js';
 import {decodeAudioFile,fileSpeechBody} from './file-speech.js';
 import './demo.css';
+import {nextCaptureDelay} from './capture-policy.js';
 import {framePoint,selectedBox} from './roi-selection.js';
 import DemoResults from './DemoResults.jsx';
 import {readAtcAttempt,writeAtcAttempt,atcAttemptKey} from './atc-attempt.js';
 
 export default function DemoPanel({snapshot,connected,onSpeech}) {
   const flight=snapshot.flight_id, latest=useRef({snapshot,connected});latest.current={snapshot,connected};
-  const epoch=useRef(0), drag=useRef(null);
+  const epoch=useRef(0), drag=useRef(null), pendingDisplay=useRef(null);
   const [mode,setMode]=useState('auto'),[selectedField,setSelectedField]=useState('ALT'),[diagnostics,setDiagnostics]=useState(null);
   const video=useRef(null), camera=useRef(null), mic=useRef(null), loop=useRef(null), capture=useRef(null), busyRef=useRef(false), alive=useRef(true);
   const [devices,setDevices]=useState([]),[cameraId,setCameraId]=useState(''),[micId,setMicId]=useState(''),[preview,setPreview]=useState(false),[micReady,setMicReady]=useState(false),[level,setLevel]=useState(0);
@@ -55,7 +56,7 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
   async function connectMic(){mic.current?.close();mic.current=await microphone(micId,n=>alive.current&&setLevel(n));setMicReady(true);await list();await health('MICROPHONE','AVAILABLE');
     mic.current.stream.getAudioTracks()[0].onended=()=>{cancelInput();setMicReady(false);health('MICROPHONE','DISCONNECTED','microphone_disconnected').catch(fail);};}
   function frame(){const v=video.current;if(!v||v.readyState<2||!v.videoWidth)throw new Error('새 카메라 프레임이 없습니다.');const c=document.createElement('canvas');const scale=Math.min(1,1920/v.videoWidth,1080/v.videoHeight);c.width=Math.round(v.videoWidth*scale);c.height=Math.round(v.videoHeight*scale);c.getContext('2d').drawImage(v,0,0);return c;}
-  async function stopCamera(){epoch.current++;const active=loop.current;loop.current=null;clearTimeout(active?.timer);if(alive.current){setRunning(false);setResult(null);setMessage('OCR 중지 · 다시 시작하려면 영역을 확인하세요.');}if(active)await health('CAMERA','DISCONNECTED','camera_capture_stopped').catch(fail);}
+  async function stopCamera(){epoch.current++;pendingDisplay.current=null;const active=loop.current;loop.current=null;clearTimeout(active?.timer);if(alive.current){setRunning(false);setResult(null);setMessage('OCR 중지 · 다시 시작하려면 영역을 확인하세요.');}if(active)await health('CAMERA','DISCONNECTED','camera_capture_stopped').catch(fail);}
   async function startCamera(){
     const generation=++epoch.current, started=performance.now();
     if(mode==='auto')setRois({});setResult(null);setMessage('ALT·HDG 창 자동 탐색 중…');
@@ -85,12 +86,19 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
         const v=video.current;if(v.paused||v.currentTime===active.lastMediaTime)throw new Error('카메라에서 새 프레임이 오지 않습니다.');active.lastMediaTime=v.currentTime;
         const sent=performance.now();
         const revision=latest.current.snapshot.revision,c=frame(),captured_at=new Date().toISOString();
-        const data=await api('frame',{token:active.token,target_revision:revision,captured_at,image:c.toDataURL('image/jpeg',.92).split(',')[1]},45000);
+        const data=await api('frame',{token:active.token,target_revision:revision,captured_at,media_time:active.lastMediaTime,image:c.toDataURL('image/jpeg',.92).split(',')[1]},45000);
         if(loop.current!==active||generation!==epoch.current)return;setDiagnostics(previous=>({...previous,request_ms:Math.round(performance.now()-sent),...data.timings}));setResult(data);
-        setMessage('연속 촬영 중 · 동일한 값 3회 후 서버 반영');active.timer=setTimeout(tick,1000);
+        if(Object.values(data.fields).some(field=>field.stable_count===3))pendingDisplay.current={epoch:generation,captured_at,started:sent-Math.max(0,...Object.values(data.timings?.stabilization_ms||{}).filter(Number.isFinite)),values:{ALT:data.fields.altitude.value,HDG:data.fields.heading.value}};
+        setMessage('연속 촬영 중 · 동일한 값 3회 후 서버 반영');active.timer=setTimeout(tick,nextCaptureDelay(sent,performance.now()));
       }catch(e){if(loop.current===active){await stopCamera();fail(e);}}}
     tick();
   }
+  useEffect(()=>{
+    const pending=pendingDisplay.current;
+    if(!pending||pending.epoch!==epoch.current)return;
+    const visible=Object.entries(pending.values).filter(([,value])=>value!==null);
+    if(visible.length&&visible.every(([field,value])=>{const row=snapshot.current?.COCKPIT?.[field];return row?.value===value&&Date.parse(row.observed_at)>=Date.parse(pending.captured_at);})){setDiagnostics(previous=>({...previous,first_candidate_to_display_ms:Math.round(performance.now()-pending.started)}));pendingDisplay.current=null;}
+  },[snapshot]);
   function roiPoint(event){const rect=event.currentTarget.getBoundingClientRect();const c=frame();return framePoint(event.clientX,event.clientY,rect,c.width,c.height);}
   function beginROI(event){if(mode!=='manual'||running||busy||!preview)return;event.currentTarget.setPointerCapture(event.pointerId);drag.current=roiPoint(event);}
   function finishROI(event){if(!drag.current)return;const start=drag.current;drag.current=null;let box;try{box=selectedBox(start,roiPoint(event));}catch(e){setError(e.message);return;}setError('');setRois(previous=>({...previous,[selectedField]:box}));setSelectedField(selectedField==='ALT'?'HDG':'ALT');}

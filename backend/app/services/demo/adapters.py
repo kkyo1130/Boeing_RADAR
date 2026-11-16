@@ -237,9 +237,14 @@ def calibrate(flight, encoded, rois, method='MANUAL'):
 
 def camera(db, flight, body):
     from radar_vision.poc import recognize
+    started = time.monotonic()
     with CAMERA_LOCK:
         session = CAMERAS.get(body['token'])
         if session is None or session['flight'] != flight: error('Recalibrate the camera', 409)
+        media_time=body.get('media_time')
+        if media_time is not None and media_time <= session.get('media_time', -1):
+            session['stable'].reset(); error('Duplicate camera frame', 409)
+        if media_time is not None: session['media_time']=media_time
         if session['expired']: error('Camera stream timed out; recalibrate', 409)
         if session['last'] and body['captured_at'] <= session['last']: error('Duplicate or out-of-order frame', 409)
         if session['count'] >= 600: error('Demo frame limit reached; recalibrate for a new run', 409)
@@ -272,7 +277,14 @@ def camera(db, flight, body):
         if (intake.utc_now()-intake.parsed(body['captured_at'])).total_seconds() > 5:
             session['stable'].reset()
             for item in result['fields'].values(): item.update(value=None, reason='stale_frame')
+        ocr_done = time.monotonic()
         session['stable'].apply(result['fields'])
+        stability = session.setdefault('stability_started', {})
+        stable_ms = {}
+        for name, field in result['fields'].items():
+            count = field.get('stable_count', 0)
+            if count <= 1: stability[name] = ocr_done
+            stable_ms[name] = round((ocr_done-stability.get(name, ocr_done))*1000) if count >= 3 else None
         session['updated']=time.monotonic()
         evidence_buffer=io.BytesIO();image.save(evidence_buffer,format='JPEG',quality=85)
         evidence=media_v2.upload(db, flight, evidence_buffer.getvalue(), 'image/jpeg')
@@ -283,7 +295,7 @@ def camera(db, flight, body):
             payload['fields'][key]=reading(item['value'],key,item['model_score'],item['reason'],item['raw_text'])
         receipt,_=intake.receive(db,flight,ObservationV2.model_validate(payload),'OBSERVATION')
         session['emitted']=time.monotonic()
-        return dict(receipt=receipt,fields=result['fields'],captured_at=body['captured_at'])
+        return dict(receipt=receipt,fields=result['fields'],captured_at=body['captured_at'],timings={'ocr_ms':round((ocr_done-started)*1000),'delivery_ms':round((time.monotonic()-ocr_done)*1000),'stabilization_ms':stable_ms})
 
 
 def expire_camera(db, flight):

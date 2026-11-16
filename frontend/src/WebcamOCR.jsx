@@ -1,4 +1,5 @@
 import React,{useEffect,useRef,useState} from 'react';
+import {nextCaptureDelay} from './capture-policy.js';
 import {advance} from './ocr-stability.js';
 import {drawRecognitionBoxes} from './recognition-boxes.js';
 import TrainingCapture from './TrainingCapture.jsx';
@@ -38,7 +39,7 @@ export default function WebcamOCR(){
      last=now;lastBoxes=data.rois;setResult(next);setObserved(data.observed_at);setError(['hdg','alt'].some(k=>next[k].value===null)?'숫자 창을 찾았습니다 · 판독 보류. MCP 정면 보기로 숫자를 크게 하고 초점·반사를 확인하세요.':'');erase();
      drawRecognitionBoxes(overlay.current,data.rois,[frame.width,frame.height],[v.videoWidth,v.videoHeight]);
     }
-   }catch(e){if(!cancelled){clear();setError(`OCR 연결/입력 확인 필요: ${e.message}`);}}finally{clearTimeout(timeout);if(!cancelled)timer=setTimeout(tick,250);}
+   }catch(e){if(!cancelled){clear();setError(`OCR 연결/입력 확인 필요: ${e.message}`);}}finally{clearTimeout(timeout);if(!cancelled)timer=setTimeout(tick,nextCaptureDelay(sentAt,performance.now()));}
   }
   tick();watchdog=setInterval(()=>{if(last&&performance.now()-last>1500)clear();},250);
   return()=>{cancelled=true;clearTimeout(timer);clearInterval(watchdog);abort.current?.abort();};

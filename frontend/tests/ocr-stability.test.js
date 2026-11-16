@@ -8,3 +8,14 @@ test('three consecutive equal frames including zero stabilize; failures and gaps
  assert.equal(advance(s.history,'000',2000,300).status,'CHECK');
  assert.equal(advance(s.history,'001',400,300).status,'CHECK');
 });
+import {nextCaptureDelay} from '../src/capture-policy.js';
+test('serial capture scheduling removes post-inference delay without building a queue',()=>{
+ assert.equal(nextCaptureDelay(100,140),210);
+ assert.equal(nextCaptureDelay(100,950),0);
+});
+test('changed values require three new equal frames; duplicate time cannot stabilize',()=>{
+ let s=advance(['270','270'],'090',300,200);
+ assert.deepEqual(s.history,['090']);
+ s=advance(s.history,'090',400,300);assert.equal(s.status,'CHECK');
+ s=advance(s.history,'090',400,400);assert.equal(s.status,'CHECK');
+});

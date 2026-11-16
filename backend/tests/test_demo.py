@@ -164,3 +164,27 @@ def test_auto_calibration_uses_vision_regions_and_clears_previous_on_failure(cli
     assert failed.json()['status']=='SEARCHING'
     assert failed.json()['token'] is None and failed.json()['rois'] is None
     assert data['token'] not in demo.CAMERAS
+
+
+def test_roi_method_and_media_frame_deduplication(client,flight,monkeypatch):
+    import radar_vision.poc
+    import app.services.demo.tracking as tracking
+    from vision import auto_windows
+    monkeypatch.setattr(tracking,'locate',lambda *args:(0,0))
+    rois={'ALT':[10,10,40,30],'HDG':[50,10,80,30]}
+    monkeypatch.setattr(auto_windows,'locate_windows',lambda image:{'alt':rois['ALT'],'hdg':rois['HDG']})
+    image=Image.new('RGB',(100,100),'gray');buffer=io.BytesIO();image.save(buffer,format='JPEG');encoded=base64.b64encode(buffer.getvalue()).decode()
+    monkeypatch.setattr(radar_vision.poc,'recognize',lambda *a,**k:{'fields':{name:{'value':v,'reason':None,'model_score':.9,'raw_text':str(v)} for name,v in [('altitude',3000),('heading',0)]}})
+    for route,method in [('calibration','MANUAL'),('auto-calibration','AUTO')]:
+        body={'image':encoded,**({'rois':rois} if method=='MANUAL' else {})}
+        response=client.post(f'/api/demo/{flight}/{route}',json=body);assert response.status_code==200,response.text
+        frame={'token':response.json()['token'],'image':encoded,'captured_at':intake.stamp(intake.utc_now()),'target_revision':0,'media_time':1.0}
+        assert client.post(f'/api/demo/{flight}/frame',json=frame).status_code==200
+        duplicate=client.post(f'/api/demo/{flight}/frame',json={**frame,'captured_at':intake.stamp(intake.utc_now())})
+        assert duplicate.status_code==409
+        for i in range(2,5):
+            result=client.post(f'/api/demo/{flight}/frame',json={**frame,'captured_at':intake.stamp(intake.utc_now()),'media_time':float(i)})
+            assert result.status_code==200,result.text
+        assert result.json()['fields']['heading']['value']==0
+        inputs=client.get(f'/api/v2/flights/{flight}/inputs').json()
+        assert any(row['payload'].get('roi_method')==method for row in inputs)
