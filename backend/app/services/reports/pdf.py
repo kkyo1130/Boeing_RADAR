@@ -1,4 +1,5 @@
 """Paginated English PDF from exactly the same frozen safety report as the UI."""
+import re
 from io import BytesIO
 from pathlib import Path
 from threading import Lock
@@ -77,7 +78,10 @@ def render_pdf(safety,*,raw_events=()):
             [step['state'],step.get('at') or 'Not recorded',str(step['count'])] for step in incident['milestones']]))
     if not safety['correction_trace']:story.append(p('No stored error incidents. Missing inputs are not classified as normal.'))
     ai=safety['ai_summary']
-    story += [p('4. AI Safety Summary','heading'),p('AI-assisted factual summary (English rendering)' if ai['source']=='AI_ASSISTED_FACTS' else 'Rule-based summary (AI unavailable or response not verified)','small'),p(ai.get('text_en') or english_summary(facts,ai.get('fact_ids'))),p('Missing data is not verifiable. Advisory eligibility and completed playback are separate records. This report does not certify safety for actual flight operations.','small'),
+    story += [p('4. AI Safety Summary','heading'),p('AI-assisted factual summary (English rendering)' if ai['source']=='AI_ASSISTED_FACTS' else 'Rule-based summary (AI unavailable or response not verified)','small')]
+    summary_text=ai.get('text_en') or english_summary(facts,ai.get('fact_ids'))
+    story.extend(p(paragraph) for paragraph in re.split(r'(?<=[.!?。])\s+|\n+',summary_text) if paragraph.strip())
+    story += [p('Missing data is not verifiable. Advisory eligibility and completed playback are separate records. This report does not certify safety for actual flight operations.','small'),
         p(f"Ended flight record | Generated: {safety['generated_at']}",'small')]
     def decorate(canvas,document):
         canvas.saveState();canvas.setStrokeColor(NAVY);canvas.circle(45,A4[1]-29,8);canvas.line(33,A4[1]-29,57,A4[1]-29);canvas.line(45,A4[1]-41,45,A4[1]-17)

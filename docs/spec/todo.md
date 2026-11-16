@@ -201,3 +201,7 @@ backend692/skip7, frontend79·빌드, 모의 카메라 브라우저4, 로컬 렌
 | [SPEC-008-WI-08](008-safety-trace-report/workitem/wi-08.md) | 사건당4단계 기본 타임라인·전체기록 접기·PDF/인쇄 요약 | verifying |
 
 backend701/skip7, frontend82·빌드, 브라우저4 통과. 실제 고정4154이벤트/2사건은8단계/PDF2쪽, 원본 JSON 불변. 외부 리뷰·원격 게시·실제 프린터 미실행.
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-008-WI-09](008-safety-trace-report/workitem/wi-09.md) | AI Safety Summary 화면/PDF 문단·줄간격 개선 | verifying |

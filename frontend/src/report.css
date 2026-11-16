@@ -27,3 +27,4 @@
 .report-milestones{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding-left:20px}.report-milestones li>*{display:block}.report-milestones span,.report-milestones small{font-size:.85em;margin-top:6px}.report-full-timeline>summary{cursor:pointer;padding:12px 0}
 @media(max-width:700px){.report-milestones{grid-template-columns:1fr 1fr}}
 @media print{.report-full-timeline{display:none!important}.report-milestones{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.report-summary-text{max-width:76ch}.report-summary-text p{line-height:1.8;margin:0 0 12px}.report-summary-text p:last-child{margin-bottom:16px}

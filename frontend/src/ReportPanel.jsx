@@ -82,7 +82,7 @@ export function SafetyReport({ report, flightId, connected=true }) {
       <nav className="report-pagination" aria-label="리포트 타임라인 페이지"><button disabled={page===0} onClick={()=>setPage(p=>p-1)}>이전</button><span>{page+1} / {pages}</span><button disabled={page>=pages-1} onClick={()=>setPage(p=>p+1)}>다음</button></nav>
       </details>
     </section>
-    <section aria-label="AI Safety Summary"><h3>4. AI Safety Summary</h3><p className="eyebrow">{safety.ai_summary.source==='AI_ASSISTED_FACTS'?'AI 보조 사실 요약':'규칙 기반 요약 · AI 미설정 또는 응답 검증 실패'}</p><p>{safety.ai_summary.text}</p><small>판정은 저장된 검증 엔진 결과입니다. AI가 판정하거나 오류를 해결하지 않습니다.</small></section>
+    <section aria-label="AI Safety Summary"><h3>4. AI Safety Summary</h3><p className="eyebrow">{safety.ai_summary.source==='AI_ASSISTED_FACTS'?'AI 보조 사실 요약':'규칙 기반 요약 · AI 미설정 또는 응답 검증 실패'}</p><div className="report-summary-text">{safety.ai_summary.text.split(/(?<=[.!?。])\s+|\n+/u).filter(text=>text.trim()).map((text,index)=><p key={index}>{text}</p>)}</div><small>판정은 저장된 검증 엔진 결과입니다. AI가 판정하거나 오류를 해결하지 않습니다.</small></section>
     <footer><p>{safety.terminal?'운항 종료 기록':'진행 중 기록'} · 리포트 생성 {safety.generated_at}</p>{button()} <a href={`/api/v2/flights/${encodeURIComponent(flightId)}/report.json`} download>리포트 JSON 저장</a></footer>
   </article>;
 }
