@@ -140,7 +140,7 @@ export default function Operations() {
     finally { actionRef.current = false; setBusy(false); }
   }
   return <main className={`operations ${snapshot && !ended ? 'op-demo-active' : ''}`}>
-    <header className="op-header"><a className="brand" href="/operations">RADAR <span>AI Flight Guard</span></a>
+    <header className="op-header"><a className="brand" href="/operations">AI Flight Guard</a>
       <nav aria-label="화면 선택"><a href="/cockpit" target="_blank" rel="noreferrer">Cockpit 설정 화면 ↗</a> <a href={`/pilot${flightId ? `?flight=${encodeURIComponent(flightId)}` : ''}`} target="_blank" rel="noreferrer">조종사 화면 ↗</a></nav>
       <ThemeToggle />
       </header>

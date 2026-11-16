@@ -12,7 +12,7 @@ const explanations = {
   READBACK_VERTICAL_MISSING_OR_CONFLICT: '고도 값과 별도로 상승·하강 복창을 확인해야 합니다. 관제 지시의 동작을 다시 확인하세요.',
   READBACK_TURN_MISSING_OR_CONFLICT: '관제 지시의 좌회전·우회전 방향이 누락되었거나 다릅니다. 방향을 함께 복창하세요.',
   READBACK_PHRASEOLOGY_CONTEXT_UNAVAILABLE: '이전 지시의 동작 비교 정보가 없습니다. 새 관제 지시부터 다시 진행하세요.',
-  INITIAL_ADJUSTMENT_WAIT: '아이패드 설정 변경 대기 중입니다.',
+  INITIAL_ADJUSTMENT_WAIT: 'COCKPIT 설정 변경 대기 중입니다.',
   STALE_OBSERVATION: '입력이 오래되었습니다. 새 입력으로 다시 확인하세요.',
   CHANNEL_UNAVAILABLE: '입력 장치가 중단되었습니다. 장치 연결과 연속 OCR을 확인하세요.',
   INPUT_QUALITY_UNVERIFIED: '입력을 명확하게 인식하지 못했습니다. 다시 입력하세요.',
@@ -22,7 +22,7 @@ export default function DemoResults({snapshot, connected, transcript = '', pendi
   const check = snapshot.structure_checks?.READBACK;
   const issue = check?.checks?.find(c => c.result !== 'PASS');
   return <section className="op-panel demo-results" aria-label="시연 실시간 결과">
-    <div className="demo-result-grid">{[['readback','1. 복명복창','조종사 복창'],['setting','2. 아이패드 설정','카메라 인식']].map(([key,title,source]) => {
+    <div className="demo-result-grid">{[['readback','1. 복명복창','조종사 복창'],['setting','2. COCKPIT 설정','카메라 인식']].map(([key,title,source]) => {
       const group=snapshot.validation[key];
       const result=live && !pending ? group.result : 'UNVERIFIED';
       const reason=key==='readback' && issue ? issue.reason : group.fields.find(r=>r.result!=='NORMAL')?.reason;
@@ -36,7 +36,7 @@ export default function DemoResults({snapshot, connected, transcript = '', pendi
         </div>)}</div>
         {!group.fields.length && <p>관제 음성을 입력하고, 인식된 지시를 확인한 뒤 복창을 시작하세요.</p>}
         {key==='readback' && <p className="demo-transcript"><b>실제 인식 문장</b><br/>{pending ? '새 음성 입력을 확인하고 있습니다…' : transcript || '아직 이 화면에서 녹음한 문장이 없습니다.'}</p>}
-        {key==='setting' && <p className="op-muted">아이패드 숫자를 바꾸면 카메라 인식값이 갱신됩니다. 동일 값 3회 관측 후 반영됩니다.</p>}
+        {key==='setting' && <p className="op-muted">COCKPIT 숫자를 바꾸면 카메라 인식값이 갱신됩니다. 동일 값 3회 관측 후 반영됩니다.</p>}
 
       </article>;
     })}</div>

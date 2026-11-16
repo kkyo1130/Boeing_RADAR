@@ -226,3 +226,7 @@ backend701/skip7, frontend82·빌드, 브라우저4 통과. 실제 고정4154이
 
 
 2026-11-17 사용자 요청으로 후속 작업별 Draft PR #40–#49 게시 완료. [게시 기록·선행 관계](publication-20261117.md). 실장비 인수가 남은 WI의 verifying 상태는 유지한다.
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-006-WI-10](006-advisory-interface/workitem/wi-10.md) | 현재 브랜드·Cockpit 문구/누락 검증 기록 게시와 checkout 정리 | reviewing |
