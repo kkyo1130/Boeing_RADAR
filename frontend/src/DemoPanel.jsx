@@ -207,7 +207,7 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
     </div>
     {error&&<p className="op-error" role="alert">{error}</p>}
     <p className="demo-progress" role="status">{message}</p>
-    <DemoResults snapshot={snapshot} connected={connected} transcript={transcript} pending={speechPending} />
+
 
   </section>
     <section id="demo-device-setup" className="op-panel demo-panel demo-device-panel" aria-label="장치 설정">
@@ -224,5 +224,6 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
     <details><summary>상세 정보</summary>{diagnostics&&<pre>{JSON.stringify(diagnostics,null,2)}</pre>}{result&&<p>최근 OCR: ALT {result.fields.altitude.value??'판독 보류'} / HDG {result.fields.heading.value??'판독 보류'} · {result.fields.altitude.reason||result.fields.heading.reason||'안정화됨'} · {result.captured_at}</p>}</details>
 
     </section>
+    <DemoResults snapshot={snapshot} connected={connected} transcript={transcript} pending={speechPending} />
   </div>;
 }

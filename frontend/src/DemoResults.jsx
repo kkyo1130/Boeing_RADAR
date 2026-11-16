@@ -21,7 +21,7 @@ export default function DemoResults({snapshot, connected, transcript = '', pendi
   const live = connected && snapshot.status === 'ACTIVE';
   const check = snapshot.structure_checks?.READBACK;
   const issue = check?.checks?.find(c => c.result !== 'PASS');
-  return <section className="demo-results" aria-label="시연 실시간 결과">
+  return <section className="op-panel demo-results" aria-label="시연 실시간 결과">
     <div className="demo-result-grid">{[['readback','1. 복명복창','조종사 복창'],['setting','2. 아이패드 설정','카메라 인식']].map(([key,title,source]) => {
       const group=snapshot.validation[key];
       const result=live && !pending ? group.result : 'UNVERIFIED';

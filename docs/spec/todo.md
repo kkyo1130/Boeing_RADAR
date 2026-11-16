@@ -211,3 +211,7 @@ backend701/skip7, frontend82·빌드, 브라우저4 통과. 실제 고정4154이
 | WI | 범위 | 상태 |
 | --- | --- | --- |
 | [SPEC-006-WI-06](006-advisory-interface/workitem/wi-06.md) | 중복 음성 방식·예비 시나리오·모의 시험·사용법 제거, Cockpit 링크 정리 | verifying |
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-006-WI-07](006-advisory-interface/workitem/wi-07.md) | 음성·장치 설정 하단 독립 결과 섹션과 복명복창/Cockpit 2열 배치 | verifying |
