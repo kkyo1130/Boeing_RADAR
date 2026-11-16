@@ -210,11 +210,12 @@ def auto_calibrate(flight, encoded):
         return dict(status='SEARCHING', token=None, rois=None, reason='WINDOWS_NOT_FOUND_OR_AMBIGUOUS',
                     message='ALT·HDG 창 탐색 중 · 계기판 전체와 주황색 숫자가 선명하게 보이도록 맞추세요.')
     rois = {'ALT': [int(x) for x in found['alt']], 'HDG': [int(x) for x in found['hdg']]}
-    return {**calibrate(flight, encoded, rois), 'status': 'READY', 'rois': rois, 'region_source': 'vision_auto_windows'}
+    return {**calibrate(flight, encoded, rois, method='AUTO'), 'status': 'READY', 'rois': rois, 'region_source': 'vision_auto_windows'}
 
 
-def calibrate(flight, encoded, rois):
+def calibrate(flight, encoded, rois, method='MANUAL'):
     from radar_vision.stream import Stabilizer
+    if set(rois) != {'ALT','HDG'}: error('Select both ALT and HDG')
     _, image = decode_image(encoded)
     for roi in rois.values():
         x1,y1,x2,y2 = roi
@@ -229,7 +230,7 @@ def calibrate(flight, encoded, rois):
             if CAMERAS[key]['flight'] == flight or time.monotonic()-CAMERAS[key]['updated'] > 1800:
                 del CAMERAS[key]
         if len(CAMERAS) >= 4: error('Too many camera sessions', 409)
-        CAMERAS[token] = dict(tracked=tracked, flight=flight, size=image.size, rois=rois, stable=Stabilizer(3),
+        CAMERAS[token] = dict(tracked=tracked, flight=flight, size=image.size, rois=rois, method=method, stable=Stabilizer(3),
                              updated=time.monotonic(), last=None, count=0, targets=None, emitted=None, expired=False)
     return dict(token=token, image_size=image.size)
 
@@ -276,7 +277,7 @@ def camera(db, flight, body):
         evidence_buffer=io.BytesIO();image.save(evidence_buffer,format='JPEG',quality=85)
         evidence=media_v2.upload(db, flight, evidence_buffer.getvalue(), 'image/jpeg')
         payload=base(flight,body['target_revision'],body['captured_at'],[dict(**evidence,kind='FRAME',field=None,roi=None)])
-        payload.update(source='COCKPIT',frame_id='frame-'+uuid4().hex,fields={})
+        payload.update(source='COCKPIT',roi_method=session.get('method'),frame_id='frame-'+uuid4().hex,fields={})
         for name,key in [('altitude','ALT'),('heading','HDG')]:
             item=result['fields'][name]
             payload['fields'][key]=reading(item['value'],key,item['model_score'],item['reason'],item['raw_text'])

@@ -155,3 +155,7 @@ body의 `flight_id`와 URL ID, 관측 시각·수신 시각·현재 목표·시�
 - v1 · 2026-10-10: 사용자 제공 기획·Priority·자문과 현재 코드로 최초 작업 초안 작성. 문서 작성 권한과 기능 구현 권한은 구분한다.
 
 - 2026-10-14: 기존 WI ID·범위·검증 기록을 보존해 각 스펙의 workitem/ 개별 파일로 이동. 요구사항 변경 없이 구조만 분리.
+
+## 2026-11-16 ROI source metadata
+
+User-authorized operations improvements add optional nullable Cockpit `roi_method` (`AUTO` / `MANUAL`). This is provenance, never a value, score, or verdict. Absent metadata is omitted from serialized legacy inputs to preserve prior fingerprints and Trace payloads. Producer, DTO and generated Schema are updated together. Local demo Frame optionally accepts finite nonnegative `media_time`; equal/earlier media timestamps are rejected and stabilization resets. UTC capture-time and freshness checks remain mandatory. No database migration is needed: existing JSON observations retain metadata.

@@ -4,11 +4,14 @@ import {audioFocus} from './audio-focus.js';
 import {microphone,base64} from './demo-audio.js';
 import {decodeAudioFile,fileSpeechBody} from './file-speech.js';
 import './demo.css';
+import {framePoint,selectedBox} from './roi-selection.js';
 import DemoResults from './DemoResults.jsx';
 import {readAtcAttempt,writeAtcAttempt,atcAttemptKey} from './atc-attempt.js';
 
 export default function DemoPanel({snapshot,connected,onSpeech}) {
   const flight=snapshot.flight_id, latest=useRef({snapshot,connected});latest.current={snapshot,connected};
+  const epoch=useRef(0), drag=useRef(null);
+  const [mode,setMode]=useState('auto'),[selectedField,setSelectedField]=useState('ALT'),[diagnostics,setDiagnostics]=useState(null);
   const video=useRef(null), camera=useRef(null), mic=useRef(null), loop=useRef(null), capture=useRef(null), busyRef=useRef(false), alive=useRef(true);
   const [devices,setDevices]=useState([]),[cameraId,setCameraId]=useState(''),[micId,setMicId]=useState(''),[preview,setPreview]=useState(false),[micReady,setMicReady]=useState(false),[level,setLevel]=useState(0);
   const [rois,setRois]=useState({}),[running,setRunning]=useState(false),[result,setResult]=useState(null),[message,setMessage]=useState('장치를 선택하고 미리보기를 연결하세요.'),[error,setError]=useState(''),[busy,setBusy]=useState(false),[recording,setRecording]=useState(false),[transcript,setTranscript]=useState(''),[scenario,setScenario]=useState('baseline'),[status,setStatus]=useState(null);
@@ -36,7 +39,7 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
   async function action(task){if(busyRef.current)return;busyRef.current=true;setBusy(true);setError('');try{await task();}catch(e){fail(e);}finally{busyRef.current=false;if(alive.current)setBusy(false);}}
   async function list(){if(!navigator.mediaDevices?.enumerateDevices){setDevices([]);return;}setDevices(await navigator.mediaDevices.enumerateDevices());}
   useEffect(()=>{alive.current=true;request('/api/demo/status').then(setStatus).catch(fail);list().catch(fail);
-    return()=>{alive.current=false;const active=loop.current;loop.current=null;clearTimeout(active?.timer);camera.current?.getTracks().forEach(t=>t.stop());mic.current?.close();
+    return()=>{alive.current=false;epoch.current++;const active=loop.current;loop.current=null;clearTimeout(active?.timer);camera.current?.getTracks().forEach(t=>t.stop());mic.current?.close();
       if(capture.current){clearTimeout(capture.current.timer);capture.current.abort?.abort();capture.current.audio?.pause();audioFocus.end(capture.current.focus).catch(()=>{});capture.current=null;}
       health('CAMERA','DISCONNECTED','demo_panel_closed').catch(()=>{});
     };},[flight]);
@@ -52,15 +55,18 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
   async function connectMic(){mic.current?.close();mic.current=await microphone(micId,n=>alive.current&&setLevel(n));setMicReady(true);await list();await health('MICROPHONE','AVAILABLE');
     mic.current.stream.getAudioTracks()[0].onended=()=>{cancelInput();setMicReady(false);health('MICROPHONE','DISCONNECTED','microphone_disconnected').catch(fail);};}
   function frame(){const v=video.current;if(!v||v.readyState<2||!v.videoWidth)throw new Error('새 카메라 프레임이 없습니다.');const c=document.createElement('canvas');const scale=Math.min(1,1920/v.videoWidth,1080/v.videoHeight);c.width=Math.round(v.videoWidth*scale);c.height=Math.round(v.videoHeight*scale);c.getContext('2d').drawImage(v,0,0);return c;}
-  async function stopCamera(){const active=loop.current;loop.current=null;clearTimeout(active?.timer);if(alive.current){setRunning(false);setResult(null);setMessage('OCR 중지 · 다시 시작하려면 영역을 확인하세요.');}if(active)await health('CAMERA','DISCONNECTED','camera_capture_stopped').catch(fail);}
+  async function stopCamera(){epoch.current++;const active=loop.current;loop.current=null;clearTimeout(active?.timer);if(alive.current){setRunning(false);setResult(null);setMessage('OCR 중지 · 다시 시작하려면 영역을 확인하세요.');}if(active)await health('CAMERA','DISCONNECTED','camera_capture_stopped').catch(fail);}
   async function startCamera(){
-    setRois({});setResult(null);setMessage('ALT·HDG 창 자동 탐색 중…');
+    const generation=++epoch.current, started=performance.now();
+    if(mode==='auto')setRois({});setResult(null);setMessage('ALT·HDG 창 자동 탐색 중…');
     await health('CAMERA','DEGRADED','automatic_regions_searching');
     let calibration;
-    for(let attempt=0;attempt<8;attempt++){
-      if(!alive.current||!latest.current.connected||latest.current.snapshot.status!=='ACTIVE')return;
+    for(let attempt=0;attempt<(mode==='auto'?8:1);attempt++){
+      if(generation!==epoch.current||!alive.current||!latest.current.connected||latest.current.snapshot.status!=='ACTIVE')return;
       const c=frame();
-      calibration=await api('auto-calibration',{image:c.toDataURL('image/jpeg',.92).split(',')[1]},15000);
+      calibration=await api(mode==='auto'?'auto-calibration':'calibration',{image:c.toDataURL('image/jpeg',.92).split(',')[1],...(mode==='manual'?{rois}: {})},15000);
+      if(generation!==epoch.current)return;
+      if(mode==='manual')calibration={...calibration,status:'READY',rois};
       if(calibration.status==='READY')break;
       setMessage(calibration.message||'ALT·HDG 창 자동 탐색 중…');
       await new Promise(resolve=>setTimeout(resolve,350));
@@ -69,18 +75,26 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
       setMessage('ALT·HDG 창을 찾지 못했습니다. 계기판 전체·주황색 숫자·초점·반사를 확인하고 다시 시작하세요.');
       return;
     }
-    if(!alive.current||!latest.current.connected||latest.current.snapshot.status!=='ACTIVE')return;
+    if(generation!==epoch.current||!alive.current||!latest.current.connected||latest.current.snapshot.status!=='ACTIVE')return;
+    if(generation!==epoch.current)return;setDiagnostics({roi_ms:Math.round(performance.now()-started)});
     setRois(calibration.rois);await health('CAMERA','AVAILABLE');setRunning(true);
+    if(generation!==epoch.current)return;
     const active={token:calibration.token,lastMediaTime:-1,timer:null};loop.current=active;
     async function tick(){if(loop.current!==active)return;
       try{if(!latest.current.connected||latest.current.snapshot.status!=='ACTIVE')throw new Error('서버 연결 또는 비행 상태를 확인하세요.');
         const v=video.current;if(v.paused||v.currentTime===active.lastMediaTime)throw new Error('카메라에서 새 프레임이 오지 않습니다.');active.lastMediaTime=v.currentTime;
+        const sent=performance.now();
         const revision=latest.current.snapshot.revision,c=frame(),captured_at=new Date().toISOString();
         const data=await api('frame',{token:active.token,target_revision:revision,captured_at,image:c.toDataURL('image/jpeg',.92).split(',')[1]},45000);
-        if(loop.current!==active)return;setResult(data);setMessage('연속 촬영 중 · 동일한 값 3회 후 서버 반영');active.timer=setTimeout(tick,1000);
-      }catch(e){await stopCamera();fail(e);}}
+        if(loop.current!==active||generation!==epoch.current)return;setDiagnostics(previous=>({...previous,request_ms:Math.round(performance.now()-sent),...data.timings}));setResult(data);
+        setMessage('연속 촬영 중 · 동일한 값 3회 후 서버 반영');active.timer=setTimeout(tick,1000);
+      }catch(e){if(loop.current===active){await stopCamera();fail(e);}}}
     tick();
   }
+  function roiPoint(event){const rect=event.currentTarget.getBoundingClientRect();const c=frame();return framePoint(event.clientX,event.clientY,rect,c.width,c.height);}
+  function beginROI(event){if(mode!=='manual'||running||busy||!preview)return;event.currentTarget.setPointerCapture(event.pointerId);drag.current=roiPoint(event);}
+  function finishROI(event){if(!drag.current)return;const start=drag.current;drag.current=null;let box;try{box=selectedBox(start,roiPoint(event));}catch(e){setError(e.message);return;}setError('');setRois(previous=>({...previous,[selectedField]:box}));setSelectedField(selectedField==='ALT'?'HDG':'ALT');}
+  async function resetRegions(next=mode){await stopCamera();setMode(next);setRois({});setDiagnostics(null);setSelectedField('ALT');}
   async function cancelInput(){const item=capture.current;if(!item)return;capture.current=null;clearTimeout(item.timer);item.audio?.pause();item.reject?.(new Error('입력 취소'));item.abort?.abort();if(item.microphone)mic.current?.stop();setRecording(false);await audioFocus.end(item.focus);await health('MICROPHONE','DEGRADED','capture_cancelled').catch(fail);}
   async function playScenario(){setAtcAttempt('pending');const focus=await audioFocus.begin('ATC');if(!focus)throw new Error('관제 재생 예약 실패 · 음성 안내 연결을 확인하세요.');
     const audio=new Audio(`/api/demo/scenarios/${scenario}/audio`),item={focus,audio,kind:'ATC'};capture.current=item;
@@ -202,16 +216,17 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
 
   </section>
     <section id="demo-device-setup" className="op-panel demo-panel demo-device-panel" aria-label="장치 설정">
-    <h2>장치 설정</h2><p className="op-muted">카메라 미리보기 / Vision 자동 영역 탐지</p>
-    <div id="demo-camera" className="demo-devices"><label>카메라<select value={cameraId} disabled={running||busy} onChange={e=>setCameraId(e.target.value)}><option value="">기본 카메라</option>{devices.filter(d=>d.kind==='videoinput').map(d=><option key={d.deviceId} value={d.deviceId}>{d.label||'카메라 (권한 허용 후 이름 표시)'}</option>)}</select></label><button disabled={disabled||busy||running} onClick={()=>action(connectCamera)}>카메라 연결</button>
+    <h2>장치 설정</h2><p className="op-muted">자동 탐지 또는 영역 직접 설정</p>
+    <div id="demo-camera" className="demo-devices"><label>카메라<select value={cameraId} disabled={running||busy} onChange={e=>{setCameraId(e.target.value);setPreview(false);camera.current?.getTracks().forEach(t=>t.stop());resetRegions();}}><option value="">기본 카메라</option>{devices.filter(d=>d.kind==='videoinput').map(d=><option key={d.deviceId} value={d.deviceId}>{d.label||'카메라 (권한 허용 후 이름 표시)'}</option>)}</select></label><button disabled={disabled||busy||running} onClick={()=>action(connectCamera)}>카메라 연결</button>
     <label>마이크<select value={micId} disabled={recording||busy} onChange={e=>{setMicId(e.target.value);setMicReady(false);}}><option value="">기본 마이크</option>{devices.filter(d=>d.kind==='audioinput').map(d=><option key={d.deviceId} value={d.deviceId}>{d.label||'마이크'}</option>)}</select></label><button disabled={disabled||busy||recording} onClick={()=>action(connectMic)}>마이크 연결</button><meter min="0" max="1" value={level} aria-label="마이크 입력 크기"/></div>
-    <div className="demo-preview"><video ref={video} autoPlay muted playsInline/></div>
+    <div className="op-row-actions"><button disabled={busy} aria-pressed={mode==='auto'} onClick={()=>resetRegions('auto')}>자동 탐지·인식</button><button disabled={busy} aria-pressed={mode==='manual'} onClick={()=>resetRegions('manual')}>영역 직접 설정</button>{mode==='manual'&&<><label>선택할 영역 <select value={selectedField} disabled={running||busy} onChange={e=>setSelectedField(e.target.value)}><option>ALT</option><option>HDG</option></select></label><button disabled={busy} onClick={()=>resetRegions()}>다시 설정</button></>}</div>
+    <div className="demo-preview" style={{position:'relative',touchAction:'none'}} onPointerDown={beginROI} onPointerUp={finishROI} onPointerCancel={()=>{drag.current=null;}}><video ref={video} autoPlay muted playsInline style={{display:'block',width:'100%'}}/>{Object.entries(rois).map(([field,box])=>{const c=video.current;if(!c?.videoWidth)return null;const scale=Math.min(1,1920/c.videoWidth,1080/c.videoHeight),w=Math.round(c.videoWidth*scale),h=Math.round(c.videoHeight*scale);return <div key={field} style={{position:'absolute',pointerEvents:'none',border:`2px solid ${field==='ALT'?'#ffb347':'#58d9ef'}`,color:field==='ALT'?'#ffb347':'#58d9ef',left:`${box[0]/w*100}%`,top:`${box[1]/h*100}%`,width:`${(box[2]-box[0])/w*100}%`,height:`${(box[3]-box[1])/h*100}%`}}>{field}</div>;})}</div>
     <div className="op-row-actions">
-      <button className="primary" disabled={disabled||busy||running||!preview||!status?.camera_ready} onClick={()=>action(startCamera)}>Vision AI 자동 인식 시작</button><button disabled={!running} onClick={stopCamera}>OCR 중지</button>
-      {rois.ALT&&rois.HDG&&<span>ALT·HDG 영역 자동 탐지됨</span>}
+      <button className="primary" disabled={disabled||busy||running||!preview||!status?.camera_ready||(mode==='manual'&&(!rois.ALT||!rois.HDG))} onClick={()=>action(startCamera)}>{mode==='manual'?'영역 적용·인식':'인식 시작'}</button><button disabled={!running} onClick={stopCamera}>인식 중지</button>
+      {rois.ALT&&rois.HDG&&<span>ALT·HDG 영역 설정됨</span>}
     </div>
-    <p className="op-muted">영역을 드래그할 필요가 없습니다. 카메라·아이패드를 고정하고 주황색 ALT·HDG 숫자 창이 보이게 하세요. 탐지·추적 실패 시 판독을 중지하며, 다시 시작하면 새 영상에서 영역을 찾습니다.</p>
-    {result&&<p>최근 OCR: ALT {result.fields.altitude.value??'판독 보류'} / HDG {result.fields.heading.value??'판독 보류'} · {result.fields.altitude.reason||result.fields.heading.reason||'안정화됨'} · {result.captured_at}</p>}
+    <p className="op-muted">자동 탐지가 어려우면 영역 직접 설정에서 ALT·HDG 숫자 창을 각각 드래그하세요. 카메라·아이패드를 고정하고 주황색 ALT·HDG 숫자 창이 보이게 하세요. 탐지·추적 실패 시 판독을 중지하며, 다시 시작하면 새 영상에서 영역을 찾습니다.</p>
+    <details><summary>상세 정보</summary>{diagnostics&&<pre>{JSON.stringify(diagnostics,null,2)}</pre>}{result&&<p>최근 OCR: ALT {result.fields.altitude.value??'판독 보류'} / HDG {result.fields.heading.value??'판독 보류'} · {result.fields.altitude.reason||result.fields.heading.reason||'안정화됨'} · {result.captured_at}</p>}</details>
 
     </section>
   </div>;

@@ -202,6 +202,7 @@ class ObservationBase(ContractModel):
 class CockpitObservation(ObservationBase):
     source: Literal["COCKPIT"]
     frame_id: Identifier
+    roi_method: Literal["AUTO", "MANUAL"] | None = Field(default=None, exclude_if=lambda value: value is None)
     fields: CockpitFields
 
     @model_validator(mode="after")

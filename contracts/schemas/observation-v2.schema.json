@@ -534,6 +534,22 @@
           "title": "Frame Id",
           "type": "string"
         },
+        "roi_method": {
+          "anyOf": [
+            {
+              "enum": [
+                "AUTO",
+                "MANUAL"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Roi Method"
+        },
         "fields": {
           "$ref": "#/$defs/CockpitFields"
         }
