@@ -174,3 +174,17 @@ def test_legacy_korean_summary_is_rendered_in_english_without_mutation(scenario)
     assert not re.search(r'[가-힣]',text)
     assert 'stored record contains 1 ATC instruction' in text
     assert safety==original
+
+
+def test_pdf_includes_every_event_after_thirty_and_frozen_refresh(scenario):
+    s=scenario
+    atc=s.adopt();match_readback(s,atc);cockpit(s)
+    for _ in range(35):cockpit(s)
+    assert s.client.post(s.url+'/end').status_code==200
+    report=s.client.get(s.url+'/report').json()
+    assert len(report['safety']['timeline'])>30
+    response=s.client.get(s.url+'/report.pdf')
+    text='\n'.join(page.extract_text() for page in PdfReader(BytesIO(response.content)).pages)
+    for event in report['safety']['timeline']:
+        assert f"#{event['sequence']} " in text
+    assert s.client.get(s.url+'/report').json()==report
