@@ -45,7 +45,7 @@ test('v2 운영 화면에서 근거·수정·연결 복구·종료 리포트', a
     await post(base+'/observations',data);
   }
   await camera();
-  await page.getByText('상세 검증 · 관제 이력 · 음성 안내 · 근거와 장치 상태',{exact:true}).click();
+  await page.locator('.op-diagnostics > summary').click();
   await expect(page.getByRole('region',{name:'Cockpit 설정',exact:true}).locator('.op-section-heading .op-badge')).toHaveText('일치');
   await camera(90);
   const setting=page.getByRole('region',{name:'Cockpit 설정',exact:true});
@@ -61,7 +61,7 @@ test('v2 운영 화면에서 근거·수정·연결 복구·종료 리포트', a
   await page.unroute('**/api/v2/flights/**/state');
   await expect(page.getByRole('region',{name:'Cockpit 설정',exact:true}).locator('.op-section-heading .op-badge')).toHaveText('일치');
   page.once('dialog',dialog=>dialog.accept());
-  await page.getByRole('button',{name:'운항 종료 및 리포트 보기',exact:true}).click();
+  await page.getByRole('button',{name:'비행 종료',exact:true}).click();
   await expect(page).toHaveURL(/\/report\?flight=/);
   await expect(page.getByRole('heading',{name:'비행 종료 리포트'})).toBeVisible();
   await expect(page.getByRole('link',{name:'리포트 JSON 저장'})).toBeVisible();

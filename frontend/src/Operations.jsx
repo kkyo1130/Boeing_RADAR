@@ -160,17 +160,17 @@ export default function Operations() {
       </form></details>
     </section> : <>
       <section className="op-panel op-session" aria-label="비행 세션">
-        <div><p className="eyebrow">{ended ? 'ENDED FLIGHT' : 'CURRENT FLIGHT'}</p><h2>{snapshot?.callsign || '세션 확인 중'}</h2><p className="op-id">{flightId}</p></div>
+        <div><p className="eyebrow">{ended ? 'ENDED FLIGHT' : 'CURRENT FLIGHT'}</p><h2>{snapshot?.callsign || '세션 확인 중'}</h2></div>
         <div className="op-session-actions"><span className={`op-connection ${connected ? 'is-connected' : ''}`} role="status">{connected ? '서버 연결됨' : '서버 확인 불가 · 판단 보류'}</span>
           <button onClick={() => setRefresh(value => value + 1)} disabled={busy}>다시 연결</button>
-          {!ended && <button className="op-end" onClick={end} disabled={!connected || busy || !snapshot}>{busy ? '종료 확인 중…' : '운항 종료 및 리포트 보기'}</button>}
+          {!ended && <button className="op-end" onClick={end} disabled={!connected || busy || !snapshot}>{busy ? '종료 확인 중…' : '비행 종료'}</button>}
           {!connected && <button disabled={busy} onClick={() => attach('')}>비행 선택으로</button>}
           {ended && <button onClick={() => attach('')}>새 비행 준비</button>}</div>
       </section>
       {connectionError && <div className="op-error" role="alert"><strong>서버 상태를 확인할 수 없습니다.</strong><p>{connectionError}</p><p>표시된 값은 마지막 수신 기록입니다. 현재 일치 여부는 판단 보류입니다.</p></div>}
       {snapshot ? <>
         {!ended && <DemoPanel key={flightId} snapshot={snapshot} connected={connected} onSpeech={setDemoSpeech} />}
-        <details className="op-diagnostics" open={ended}><summary>상세 검증 · 관제 이력 · 음성 안내 · 근거와 장치 상태</summary>
+        <details className="op-diagnostics" open={ended}><summary>상세 정보</summary>
         <section className={`op-overview op-${connected ? snapshot.result : 'UNVERIFIED'}`} aria-label="전체 서버 판정">
           <div><p className="eyebrow">{ended ? '비행이 종료되었습니다' : 'SERVER VALIDATION'}</p><h2>{connected ? phases[snapshot.validation.phase] || '상태 확인' : '연결 복구 후 재확인 필요'}</h2>
             <p>{connected ? reasons[snapshot.reason] || '서버에서 상태를 확인하고 있습니다' : '이전 일치 상태를 현재 상태로 사용하지 않습니다.'}</p></div>

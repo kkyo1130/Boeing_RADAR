@@ -168,23 +168,23 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
     <div id="demo-speech" className="demo-speech">
       <h2>① 관제사 발화 → ② 파일럿 복창 → ③ 설정 확인</h2>
       <section className="file-speech-panel" aria-label="음성 파일 STT">
-        <h3>마이크 없이 음성 파일로 판정</h3>
-        <p>한 파일에 한 사람의 발화만 넣으세요. WAV·MP3·지원되는 M4A, 최대 30초·10MB. 파일을 직접 STT로 변환하며 스피커로 재생하거나 마이크로 다시 녹음하지 않습니다.</p>
+        <h3>음성 파일 입력</h3>
+        <details><summary>파일 입력 사용법</summary><p>한 파일에 한 사람의 발화만 넣으세요. WAV·MP3·지원되는 M4A, 최대 30초·10MB. 파일을 직접 STT로 변환하며 스피커로 재생하거나 마이크로 다시 녹음하지 않습니다.</p></details>
         <div className="file-speech-grid">
           <div><label>① 관제 음성 파일<input type="file" accept="audio/*,.wav,.mp3,.m4a" disabled={disabled||busy||recording} onChange={e=>setSpeechFiles(f=>({...f,ATC:e.target.files?.[0]||null}))}/></label>
-            <button className="primary" disabled={disabled||busy||recording||!status?.speech_ready||!speechFiles.ATC} onClick={()=>action(()=>uploadSpeechFile('ATC'))}>관제 파일 STT · 지시 등록</button></div>
+            <button className="primary" disabled={disabled||busy||recording||!status?.speech_ready||!speechFiles.ATC} onClick={()=>action(()=>uploadSpeechFile('ATC'))}>관제 파일 인식</button></div>
           <div><label>② 조종사 복창 음성 파일<input type="file" accept="audio/*,.wav,.mp3,.m4a" disabled={disabled||busy||recording} onChange={e=>setSpeechFiles(f=>({...f,PILOT:e.target.files?.[0]||null}))}/></label>
-            <button className="primary" disabled={disabled||busy||recording||!status?.speech_ready||!speechFiles.PILOT||!canReadback} onClick={()=>action(()=>uploadSpeechFile('PILOT'))}>복창 파일 STT · 비교</button>
+            <button className="primary" disabled={disabled||busy||recording||!status?.speech_ready||!speechFiles.PILOT||!canReadback} onClick={()=>action(()=>uploadSpeechFile('PILOT'))}>복창 파일 인식</button>
             {!canReadback&&<small>관제 파일 처리 후 서버가 지시를 채택해야 복창을 비교할 수 있습니다.</small>}</div>
         </div>
-        <p>순서: 관제 파일 선택 → 관제 STT 버튼 → 인식 문장·서버 목표값 확인 → 복창 파일 선택 → 복창 STT 버튼 → 아래 복명복창 판정 확인.</p>
-        <p>호출부호는 현재 비행 <strong>{snapshot.callsign}</strong>와 같아야 합니다. 파일의 원래 녹음 시각은 확인하지 않으며 업로드 접수 시각을 기준으로 처리합니다. 설정 판정에는 별도의 새 카메라 관측이 필요합니다.</p>
+        <details><summary>입력 순서·기록 기준</summary><p>순서: 관제 파일 선택 → 관제 STT 버튼 → 인식 문장·서버 목표값 확인 → 복창 파일 선택 → 복창 STT 버튼 → 아래 복명복창 판정 확인.</p>
+        <p>호출부호는 현재 비행 <strong>{snapshot.callsign}</strong>와 같아야 합니다. 파일의 원래 녹음 시각은 확인하지 않으며 업로드 접수 시각을 기준으로 처리합니다. 설정 판정에는 별도의 새 카메라 관측이 필요합니다.</p></details>
       </section>
       <h3>마이크 녹음 (파일 입력 시 연결 불필요)</h3>
       <label>음성 입력 모드<select value={speechMode} disabled={busy||recording} onChange={e=>setSpeechMode(e.target.value)}><option value="ATC">관제사 지시 (ATC)</option><option value="PILOT">파일럿 복창</option></select></label>
       <p>{speechMode==='ATC'?'관제사 역할과 파일럿 역할이 번갈아 말하는 모의 시연입니다. 역할을 선택한 후 한 사람씩 말하세요.':'확인된 현재 관제 지시에 대해 호출부호와 지시 값을 복창하세요.'}</p>
       {speechMode==='ATC'&&<><label>관제 음성 입력 방식<select value={atcSource} disabled={busy||recording} onChange={e=>setAtcSource(e.target.value)}><option value="microphone_live">관제사 직접 발화</option><option value="microphone_playback">녹음 재생 시험</option></select></label>
-        {atcSource==='microphone_live'&&<p>마이크를 연결하고 ‘관제사 발화 시작’을 누르세요. ‘마이크 켜짐’ 안내 후 호출부호와 고도·방위를 말하고 ‘녹음 종료 · 검증’을 누르세요. 인식된 지시를 확인한 뒤 파일럿 복창으로 전환하세요.</p>}</>}
+        {atcSource==='microphone_live'&&<details><summary>녹음 사용법</summary><p>마이크를 연결하고 ‘관제사 발화 시작’을 누르세요. ‘마이크 켜짐’ 안내 후 호출부호와 고도·방위를 말하고 ‘녹음 종료 · 검증’을 누르세요. 인식된 지시를 확인한 뒤 파일럿 복창으로 전환하세요.</p></details>}</>}
       {speechMode==='ATC'&&atcSource==='microphone_playback'&&<><label>재생할 실제 관제 녹음파일<input type="file" accept="audio/*" disabled={busy||recording} onChange={e=>{const file=e.target.files?.[0];setAtcFile(file?{name:file.name,url:URL.createObjectURL(file)}:null);}}/></label>
         <p>{atcFile?.name||'별도 휴대폰·스피커에서 재생할 때는 파일 선택 없이 ATC 수음을 시작하세요.'}</p></>}
       <div className="op-row-actions">
