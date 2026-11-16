@@ -198,28 +198,31 @@ backend692/skip7, frontend79·빌드, 모의 카메라 브라우저4, 로컬 렌
 
 | WI | 범위 | 상태 |
 | --- | --- | --- |
-| [SPEC-008-WI-08](008-safety-trace-report/workitem/wi-08.md) | 사건당4단계 기본 타임라인·전체기록 접기·PDF/인쇄 요약 | verifying |
+| [SPEC-008-WI-08](008-safety-trace-report/workitem/wi-08.md) | 사건당4단계 기본 타임라인·전체기록 접기·PDF/인쇄 요약 | reviewing |
 
 backend701/skip7, frontend82·빌드, 브라우저4 통과. 실제 고정4154이벤트/2사건은8단계/PDF2쪽, 원본 JSON 불변. 외부 리뷰·원격 게시·실제 프린터 미실행.
 
 | WI | 범위 | 상태 |
 | --- | --- | --- |
-| [SPEC-008-WI-09](008-safety-trace-report/workitem/wi-09.md) | AI Safety Summary 화면/PDF 문단·줄간격 개선 | verifying |
+| [SPEC-008-WI-09](008-safety-trace-report/workitem/wi-09.md) | AI Safety Summary 화면/PDF 문단·줄간격 개선 | reviewing |
 
 ## 2026-11-17 Operation 입력 UI 정리
 
 | WI | 범위 | 상태 |
 | --- | --- | --- |
-| [SPEC-006-WI-06](006-advisory-interface/workitem/wi-06.md) | 중복 음성 방식·예비 시나리오·모의 시험·사용법 제거, Cockpit 링크 정리 | verifying |
+| [SPEC-006-WI-06](006-advisory-interface/workitem/wi-06.md) | 중복 음성 방식·예비 시나리오·모의 시험·사용법 제거, Cockpit 링크 정리 | reviewing |
 
 | WI | 범위 | 상태 |
 | --- | --- | --- |
-| [SPEC-006-WI-07](006-advisory-interface/workitem/wi-07.md) | 음성·장치 설정 하단 독립 결과 섹션과 복명복창/Cockpit 2열 배치 | verifying |
+| [SPEC-006-WI-07](006-advisory-interface/workitem/wi-07.md) | 음성·장치 설정 하단 독립 결과 섹션과 복명복창/Cockpit 2열 배치 | reviewing |
 
 | WI | 범위 | 상태 |
 | --- | --- | --- |
-| [SPEC-006-WI-08](006-advisory-interface/workitem/wi-08.md) | RADAR AI Flight Guard 브랜드·파랑/하늘색 화면 테마 | verifying |
+| [SPEC-006-WI-08](006-advisory-interface/workitem/wi-08.md) | RADAR AI Flight Guard 브랜드·파랑/하늘색 화면 테마 | reviewing |
 
 | WI | 범위 | 상태 |
 | --- | --- | --- |
-| [SPEC-006-WI-09](006-advisory-interface/workitem/wi-09.md) | 상단 라이트/다크 전환·선택 저장·어두운 배경/패널 | verifying |
+| [SPEC-006-WI-09](006-advisory-interface/workitem/wi-09.md) | 상단 라이트/다크 전환·선택 저장·어두운 배경/패널 | reviewing |
+
+
+2026-11-17 사용자 요청으로 후속 작업별 Draft PR #40–#49 게시 완료. [게시 기록·선행 관계](publication-20261117.md). 실장비 인수가 남은 WI의 verifying 상태는 유지한다.
