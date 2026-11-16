@@ -32,7 +32,7 @@ def export_pdf(flight_id: str, request: Request, db: Session = Depends(get_db)):
     if not data['terminal']:
         raise receiving_v2.ReceivingError(409,'INVALID_SEQUENCE','End the flight before downloading a PDF')
     date=data['safety']['ended_at'][:10]
-    return Response(render_pdf(data['safety']),media_type='application/pdf',headers={
+    return Response(render_pdf(data['safety'],raw_events=data.get('timeline',[])),media_type='application/pdf',headers={
         'Content-Disposition':f'attachment; filename="Flight_Safety_Report_{date}.pdf"',
         'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'})
 

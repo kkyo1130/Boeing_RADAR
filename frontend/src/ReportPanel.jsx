@@ -11,14 +11,14 @@ export function SafetyReport({ report, flightId, connected=true }) {
   const [page,setPage]=useState(0),[downloadError,setDownloadError]=useState(''),[downloading,setDownloading]=useState(false);
   useEffect(()=>{
     let opened=[];
-    const prepare=()=>{opened=[...document.querySelectorAll('.flight-report details:not([open])')];opened.forEach(node=>{node.open=true;});};
+    const prepare=()=>{opened=[...document.querySelectorAll('.flight-report details:not(.report-raw-observations):not([open])')];opened.forEach(node=>{node.open=true;});};
     const restore=()=>{opened.forEach(node=>{node.open=false;});opened=[];};
     window.addEventListener('beforeprint',prepare);window.addEventListener('afterprint',restore);
     return()=>{restore();window.removeEventListener('beforeprint',prepare);window.removeEventListener('afterprint',restore);};
   },[]);
   const safety=report.safety;
   if (!safety) return <p role="alert">이 기록에는 상세 리포트 정보가 없습니다.</p>;
-  const groups=groupTimeline(safety.timeline);
+  const groups=groupTimeline(safety.timeline,safety.presentation);
   const facts=safety.summary, size=30, pages=Math.max(1,Math.ceil(groups.length/size));
   async function download() {
     setDownloading(true);setDownloadError('');
@@ -55,20 +55,20 @@ export function SafetyReport({ report, flightId, connected=true }) {
       <h4>{item.stage==='READBACK'?'Readback Error':'Cockpit Setting Error'} · {item.field} · {stateLabel[item.state]||item.state}</h4>
       <p>발생 {value(item.detected_at)} · 해결 소요 {item.resolved_at&&item.detected_at?`${Math.max(0,(Date.parse(item.resolved_at)-Date.parse(item.detected_at))/1000).toFixed(1)}초`:'미해결'}</p><p>목표 {number(item.field,item.expected)} · 최초 관측 {number(item.field,item.initial_actual)} → 마지막 관측 {number(item.field,item.final_actual)}</p>
       <p>발생 당시 복명복창 {number(item.field,item.readback_actual)} · 조종석 인식 {number(item.field,item.cockpit_actual)}</p><p>마지막 검증 {item.verification} · 경고 재생 완료 {item.warning_completed?'기록 있음':'확인 불가'} · 해결 시각 {value(item.resolved_at)}</p>
-      <ol>{item.steps.map((step,index)=><li key={index}>{step.at} · {step.state} ({stateLabel[step.state]}) {step.verification||''}</li>)}</ol>
+      <ol>{(safety.presentation?.correction_groups?.[item.occurrence_id]||item.steps.map(step=>({step,count:1}))).map(({step,count,last_at},index)=><li key={index}>{step.at}{count>1&&` ~ ${last_at} · 동일 상태 ${count}회`} · {step.state} ({stateLabel[step.state]}) {step.verification||''}</li>)}</ol>
       <small>사건 {item.occurrence_id} · 지시 {item.instruction_id} · 원본 상태 {item.stored_status}</small>
     </article>)}</section>
-    <section aria-label="Error Timeline"><h3>3. 상세 타임라인</h3><p>입력·검증·경고 기록을 연결합니다. 숫자 단위: ALT feet / HDG degrees.</p>
-      <ol className="report-timeline">{groups.map((group,index)=>{const event=group.events[0];return <li key={event.sequence} value={index+1} className={Math.floor(index/size)===page?'':'report-print-only'}>
-        {group.events.length>1&&<details><summary>동일 관측 {group.events.length}건 · {event.occurred_at} ~ {group.events.at(-1).occurred_at}</summary><ol>{group.events.map(original=><li key={original.sequence}>#{original.sequence} · {original.occurred_at} · {Object.entries(original.fields).map(([key,row])=>`${key}: ${number(key,row.value)} [${row.validity}]`).join(' / ')}</li>)}</ol></details>}
+    <section aria-label="Error Timeline"><h3>3. 상세 타임라인</h3>{safety.presentation&&<p>원본 {safety.presentation.raw_event_count}건 → 표시 {groups.length}개 구간 · 근거 저장 {safety.presentation.evidence_storage_event_count}건은 원본 JSON에서 확인할 수 있습니다.</p>}<p>입력·검증·경고 기록을 연결합니다. 숫자 단위: ALT feet / HDG degrees.</p>
+      <ol className="report-timeline">{groups.map((group,index)=>{const event=group.event||group.events[0],checks=group.display_checks??event.checks;return <li key={event.sequence} value={index+1} className={Math.floor(index/size)===page?'':'report-print-only'}>
+        {group.events.length>1&&<><p className="report-repeat">동일 상태 {group.events.length}회 · {group.first_at||event.occurred_at} ~ {group.last_at||group.events.at(-1).occurred_at}</p><details className="report-raw-observations"><summary>원본 관측 펼치기</summary><ol>{group.events.map(original=><li key={original.sequence}>#{original.sequence} · {original.occurred_at} · {Object.entries(original.fields).map(([key,row])=>`${key}: ${number(key,row.value)} [${row.validity}]`).join(' / ')}</li>)}</ol></details></>}
         <div><time>{event.occurred_at}</time><strong>{event.event_type}</strong></div>
-        {event.source&&<p>{event.source}: {event.transcript||'음성 전사 기록 없음'}</p>}
+        {event.source&&<p>{event.source==='COCKPIT'?'카메라 관측':`${event.source}: ${event.transcript||'음성 전사 기록 없음'}`}</p>}
         {Object.keys(event.fields).length>0&&<p>인식 입력: {Object.entries(event.fields).map(([field,row])=>`${field} ${number(field,row.value)} [${row.validity}]`).join(' / ')}</p>}
-        {event.checks.length>0&&<div className="op-table-scroll"><table><thead><tr><th>단계·항목</th><th>관제 목표</th><th>인식값</th><th>검증</th></tr></thead><tbody>{event.checks.map((row,i)=><tr key={i}>
+        {checks.length>0&&<div className="op-table-scroll"><table><thead><tr><th>단계·항목</th><th>관제 목표</th><th>인식값</th><th>검증</th></tr></thead><tbody>{checks.map((row,i)=><tr key={i}>
           <td>{row.stage} / {row.field}</td><td>{number(row.field,row.expected)}</td><td>{number(row.field,row.actual)}</td><td className={`report-${row.result}`}>{row.result}<small>{row.reason}</small></td>
         </tr>)}</tbody></table></div>}
         {event.warning_status&&<p>음성 안내 {event.warning_status} · 완료 기록 {event.warning_completed?'있음':'없음'}</p>}
-        {event.related_incidents?.map(item=><p key={item.occurrence_id}>{item.stage==='READBACK'?'Readback Error':'Cockpit Setting Error'} · {item.status} · 경고 완료 {item.warning_completed?'있음':'확인 불가'} · 해결 시각 {value(item.resolved_at)}</p>)}
+        {(group.display_related_incidents??event.related_incidents)?.map(item=><p key={item.occurrence_id}>{item.stage==='READBACK'?'Readback Error':'Cockpit Setting Error'} · {item.status} · 경고 완료 {item.warning_completed?'있음':'확인 불가'} · 해결 시각 {value(item.resolved_at)}</p>)}
         {event.error_status&&<p>저장 오류 상태: {event.error_status}</p>}
         <details><summary>연결된 지시·오류 식별자</summary><p>{event.instruction_ids.join(', ')||'지시 연결 없음'}</p><p>{event.occurrence_ids.join(', ')||'오류 사건 연결 없음'}</p></details>
       </li>;})}</ol>

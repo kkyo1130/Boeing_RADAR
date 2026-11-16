@@ -13,3 +13,10 @@ const render=r=>renderToStaticMarkup(React.createElement(SafetyReport,{report:r,
 test('five sections and unresolved/unknown remain explicit; heading zero preserved',()=>{const html=render(report());for(const label of ['Flight Summary','Error Timeline','Error Classification','Correction Trace','AI Safety Summary'])assert.match(html,new RegExp(label));assert.match(html,/미해결 오류 1건/);assert.match(html,/000°/);assert.match(html,/확인 불가/);assert.match(html,/규칙 기반 요약/);assert.match(html,/SAFETY TRACE/);assert.doesNotMatch(html,/boeing[\s_]+radar/i);});
 test('no-error report does not claim unknown inputs are normal',()=>{const r=report();Object.assign(r.safety.summary,{incident_count:0,resolved_count:0,unresolved_count:0,correction_rate:null});r.safety.correction_trace=[];const html=render(r);assert.match(html,/저장된 오류 사건은 0건/);assert.match(html,/미수집·확인 미완료를 정상으로 간주하지 않습니다/);assert.match(html,/해당 없음/);});
 test('input transcripts are escaped and long history has pagination',()=>{const r=report();r.safety.timeline=Array.from({length:31},(_,i)=>({sequence:i,occurred_at:'now',event_type:'INPUT_RECEIVED',source:'ATC',transcript:'<script>bad</script>',fields:{},checks:[],instruction_ids:[],occurrence_ids:[]}));const html=render(r);assert.match(html,/&lt;script&gt;/);assert.doesNotMatch(html,/<script>/);assert.match(html,/1 \/ 2/);});
+
+test('canonical repeated observations show one interval and keep originals out of print expansion',()=>{
+ const r=report();const fields={HDG:{value:270,validity:'VALID'}};
+ r.safety.timeline=Array.from({length:35},(_,i)=>({sequence:i,occurred_at:`time-${i}`,event_type:'INPUT_RECEIVED',source:'COCKPIT',fields,checks:[],instruction_ids:[],occurrence_ids:[]}));
+ r.safety.presentation={version:'report-presentation/1',raw_event_count:35,evidence_storage_event_count:0,groups:[{event:r.safety.timeline[0],sequences:r.safety.timeline.map(e=>e.sequence),count:35,first_at:'time-0',last_at:'time-34',display_checks:[]}]};
+ const html=render(r);assert.match(html,/동일 상태 35회/);assert.match(html,/표시 1개 구간/);assert.match(html,/report-raw-observations/);assert.match(html,/time-34/);assert.match(html,/원본 관측 펼치기/);
+});

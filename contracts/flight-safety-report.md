@@ -40,3 +40,15 @@ Timeout/형식 오류/누락/지어낸 주장/HTTP 실패는 규칙 요약으로
 - Repeated v2 END returns the existing terminal session when its frozen report exists. Legacy-ended sessions without a frozen v2 report retain 409. Post-end input remains rejected.
 - Correction presentation adds nullable `readback_actual`, `cockpit_actual` (same instruction/field at detection), and `resolution_seconds`. Legacy frozen reports can omit these presentation fields and show unknown; reads do not rewrite frozen records.
 - UI groups only adjacent equivalent camera observations. JSON and server PDF preserve the full timeline. Print expands grouped originals and includes all timeline pages from the same frozen report.
+
+## 2026-11-16 duplicate presentation groups
+
+`/report` and `/report.json` add `safety.presentation` as a deterministic read-only projection. Stored terminal JSON, raw `timeline`, observations and incident totals are not rewritten.
+
+`report-presentation/1` contains `raw_event_count`, `displayed_group_count`, `evidence_storage_event_count`, `groups`, and per-incident `correction_groups`. Each timeline group has a representative `event`, full source `sequences`, `count`, `first_at`, `last_at`, changed-only `display_checks` and `display_related_incidents`.
+
+Equivalent current camera readings (value/unit/validity/quality class/reason), target instruction, verdicts and incident lifecycle may share a group despite model-score jitter, new observation IDs or interleaved evidence-storage bookkeeping. Values, validity, reasons, instruction/incident IDs, warning/lifecycle changes and non-repeatable events break groups. Speech instructions/readbacks are not globally deduplicated. Missing/unverified and normal never merge. Incident reappearance after resolution remains a distinct occurrence.
+
+Routine `EVIDENCE_STORED` entries are counted and retained in raw JSON without standalone presentation rows; deletion and other evidence events remain explicit. Repeated incident bookkeeping can group only when raw stored current-check evidence proves the semantic state unchanged. Consecutive CORRECTING steps group only with matching stored current-check values and verdicts.
+
+Screen, PDF and browser print use these same grouping rules. Raw observation details remain expandable on screen and downloadable in JSON; print excludes raw repeated-detail lists, includes every displayed group beyond pagination, and prints each equivalent state once with its count/time span. Validation tables/incident status repeat only when values or verdicts change. PDF is regenerated from frozen source facts, so already-downloaded PDFs are unchanged and should be downloaded again.

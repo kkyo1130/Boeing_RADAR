@@ -179,3 +179,11 @@ PR 연결: [UI #36](https://github.com/kkyo1130/Boeing_RADAR/pull/36) → [ROI #
 | [SPEC-003-WI-09](003-cockpit-vision/workitem/wi-09.md) | 매 프레임 자동 영역 갱신·동적 박스·탭 전환/놓침 후 연속 재탐색 | verifying |
 
 backend692/skip7, frontend79·빌드, 모의 카메라 브라우저4, 로컬 렌더 이미지+native OCR+임시 DB API1 검증. 실제 웹캠 이동·장시간 배경 탭 인수와 외부 리뷰·원격 게시는 미실행이다.
+
+## 2026-11-16 리포트 중복 표시 제거
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-008-WI-07](008-safety-trace-report/workitem/wi-07.md) | 반복 관측·사건 갱신·검증표 집계와 화면/PDF/인쇄 공통 표시 | verifying |
+
+실제 최신 리포트 원본817개·오류1개를 보존하며 PDF102→11쪽. 원본 고정 JSON 불변 확인, frontend81·빌드·브라우저4 통과. 원격 게시·외부 리뷰·실제 프린터 출력은 미실행.

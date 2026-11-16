@@ -71,7 +71,7 @@ test('v2 운영 화면에서 근거·수정·연결 복구·종료 리포트', a
   expect(report.summary).toMatchObject({incidents:1,resolved:1,open:0});
   expect(report.snapshot.result).toBe('NORMAL');
   expect(report.safety.timeline.length).toBeGreaterThan(30);
-  const groups=groupTimeline(report.safety.timeline);
+  const groups=groupTimeline(report.safety.timeline,report.safety.presentation);
   await expect(page.locator('.report-timeline > li:visible')).toHaveCount(Math.min(30,groups.length));
   await page.emulateMedia({media:'print'});
   await expect(page.locator('.report-timeline > li:visible')).toHaveCount(groups.length);

@@ -22,3 +22,5 @@
  .operations .report-RESOLVED,.operations .report-NORMAL{color:#126045!important}
  .operations .report-incident{border-color:#667!important}
 }
+
+@media print{.report-raw-observations{display:none!important}}

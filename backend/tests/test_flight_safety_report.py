@@ -185,8 +185,14 @@ def test_pdf_includes_every_event_after_thirty_and_frozen_refresh(scenario):
     assert len(report['safety']['timeline'])>30
     response=s.client.get(s.url+'/report.pdf')
     text='\n'.join(page.extract_text() for page in PdfReader(BytesIO(response.content)).pages)
-    for event in report['safety']['timeline']:
-        assert f"#{event['sequence']} " in text
+    presentation=report['safety']['presentation']
+    assert any(group['count']>=35 for group in presentation['groups'])
+    for group in presentation['groups']:
+        assert f"#{group['event']['sequence']} " in text
+    represented={sequence for group in presentation['groups'] for sequence in group['sequences']}
+    auxiliary={event['sequence'] for event in report['safety']['timeline'] if event['event_type']=='EVIDENCE_STORED'}
+    assert represented|auxiliary=={event['sequence'] for event in report['safety']['timeline']}
+    assert 'Repeated ' in text
     assert s.client.get(s.url+'/report').json()==report
 
 
@@ -198,3 +204,31 @@ def test_correction_values_bind_to_original_input_not_later_same_clock(scenario)
     assert incident['readback_actual']==270
     assert incident['cockpit_actual']==90
     assert incident['final_actual']==270
+
+
+def test_repeated_mismatch_is_one_incident_and_recurrence_is_separate(scenario):
+    s=scenario
+    atc=s.adopt();match_readback(s,atc);cockpit(s);cockpit(s,heading=90)
+    for _ in range(8):cockpit(s,heading=90)
+    cockpit(s);cockpit(s,heading=90)
+    data=finish(s);safety=data['safety']
+    assert safety['summary']['incident_count']==2
+    assert safety['summary']['resolved_count']==1
+    assert safety['summary']['unresolved_count']==1
+    assert len({row['occurrence_id'] for row in safety['correction_trace']})==2
+    assert any(group['count']>=8 for group in safety['presentation']['groups'])
+    assert any(group['count']>1 for groups in safety['presentation']['correction_groups'].values() for group in groups)
+
+
+def test_report_presentation_reads_never_rewrite_frozen_record(scenario):
+    from contextlib import contextmanager
+    from app.main import app
+    from app.db import get_db
+    from app.models.operations_v2 import V2Report
+    s=scenario;atc=s.adopt();match_readback(s,atc);cockpit(s);finish(s)
+    sessions=contextmanager(app.dependency_overrides[get_db])
+    with sessions() as db:before=deepcopy(db.get(V2Report,s.flight).data)
+    assert 'presentation' not in before['safety']
+    for suffix in ('/report','/report.json','/report.pdf'):
+        assert s.client.get(s.url+suffix).status_code==200
+    with sessions() as db:assert db.get(V2Report,s.flight).data==before
