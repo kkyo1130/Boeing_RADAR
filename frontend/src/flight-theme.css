@@ -61,3 +61,6 @@
  :root[data-theme="dark"] .operations th,:root[data-theme="dark"] .operations td,:root[data-theme="dark"] .operations .op-incidents li,:root[data-theme="dark"] .operations .op-evidence-group,:root[data-theme="dark"] .operations .report-timeline>li{border-color:#304d66}
  .operations .theme-toggle{white-space:nowrap;min-width:116px}
 }
+
+.operations .op-header .brand{display:inline-flex;align-items:center;gap:12px}.brand-logo{display:block;width:72px;height:48px;object-fit:contain;border-radius:8px;flex-shrink:0}
+@media(max-width:600px){.operations .op-header .brand{gap:8px}.brand-logo{width:54px;height:36px}}

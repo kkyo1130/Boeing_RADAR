@@ -1,0 +1,17 @@
+{
+  "name": "AI Flight Guard",
+  "short_name": "Flight Guard",
+  "start_url": "/operations",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#233ba4",
+  "icons": [
+    {
+      "src": "/branding/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

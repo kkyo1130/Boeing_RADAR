@@ -230,3 +230,7 @@ backend701/skip7, frontend82·빌드, 브라우저4 통과. 실제 고정4154이
 | WI | 범위 | 상태 |
 | --- | --- | --- |
 | [SPEC-006-WI-10](006-advisory-interface/workitem/wi-10.md) | 현재 브랜드·Cockpit 문구/누락 검증 기록 게시와 checkout 정리 | reviewing |
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-006-WI-11](006-advisory-interface/workitem/wi-11.md) | 사용자 B&G 상단 로고·favicon·앱 아이콘 연결 | reviewing |
