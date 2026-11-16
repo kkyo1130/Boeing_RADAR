@@ -153,9 +153,13 @@ WI-02는 이 dev 기준 별도 브랜치에서 수신/문맥/중복/시간/원�
 
 | WI | 범위 | 상태 |
 | --- | --- | --- |
-| [SPEC-006-WI-05](006-advisory-interface/workitem/wi-05.md) | Operation 기본 문구·ID·사용법 정리 | verifying |
-| [SPEC-003-WI-07](003-cockpit-vision/workitem/wi-07.md) | 자동·수동 ROI 공통 OCR·관측 경로 | verifying |
-| [SPEC-003-WI-08](003-cockpit-vision/workitem/wi-08.md) | 새프레임3회·인식일정·상세시간진단 | verifying |
-| [SPEC-008-WI-06](008-safety-trace-report/workitem/wi-06.md) | polling독립기록·확정리포트·전체인쇄 | verifying |
+| [SPEC-006-WI-05](006-advisory-interface/workitem/wi-05.md) | Operation 기본 문구·ID·사용법 정리 | reviewing |
+| [SPEC-003-WI-07](003-cockpit-vision/workitem/wi-07.md) | 자동·수동 ROI 공통 OCR·관측 경로 | reviewing |
+| [SPEC-003-WI-08](003-cockpit-vision/workitem/wi-08.md) | 새프레임3회·인식일정·상세시간진단 | reviewing |
+| [SPEC-008-WI-06](008-safety-trace-report/workitem/wi-06.md) | polling독립기록·확정리포트·전체인쇄 | reviewing |
 
 기존35개WI 및 실장비인수 상태는 유지한다. 각WI의 구현·검증·자체리뷰·인수인계는 링크한기록참조. 실장비지연비교/실제프린터/외부리뷰는미실행.
+
+2026-11-16 사용자 명시 승인으로 새 기준·작업 브랜치 푸시와 Draft PR 제출을 완료했다. 실장비 인수·외부 리뷰·병합은 미실행이다.
+
+PR 연결: [UI #36](https://github.com/kkyo1130/Boeing_RADAR/pull/36) → [ROI #37](https://github.com/kkyo1130/Boeing_RADAR/pull/37) → [인식 일정 #38](https://github.com/kkyo1130/Boeing_RADAR/pull/38) → [리포트 #39](https://github.com/kkyo1130/Boeing_RADAR/pull/39).
