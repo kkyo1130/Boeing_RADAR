@@ -65,3 +65,52 @@ def test_no_parallel_v1_routes(client):
     assert not any(path.startswith('/api/v1') for path in paths)
     assert '/api/v2/flights/{flight_id}/report' in paths
     assert '/api/flights/start' in paths
+
+
+def test_poll_and_revalidation_do_not_duplicate_incident_or_frozen_end(scenario):
+    s=scenario
+    atc=s.adopt();match_readback(s,atc);cockpit(s);cockpit(s,heading=90)
+    initial=s.state()
+    assert len(initial['incidents']) == 1
+    for _ in range(10):
+        assert s.client.post(s.url+'/revalidate').status_code == 200
+        assert len(s.state()['incidents']) == 1
+    assert s.client.post(s.url+'/end').status_code == 200
+    frozen=s.client.get(s.url+'/report').json()
+    assert s.client.post(s.url+'/end').status_code == 200
+    assert s.client.get(s.url+'/report').json() == frozen
+    assert sum(e['event_type']=='FLIGHT_ENDED' for e in frozen['timeline']) == 1
+
+
+def test_unchanged_revalidation_does_not_write_trace(scenario):
+    from sqlalchemy import select
+    from app.models.observation_v2 import V2TraceEvent
+    s=scenario
+    s.client.post(s.url+'/revalidate')
+    from contextlib import contextmanager
+    from app.main import app
+    from app.db import get_db
+    with contextmanager(app.dependency_overrides[get_db])() as db:
+        before=len(list(db.scalars(select(V2TraceEvent))))
+    for _ in range(5):
+        assert s.client.post(s.url+'/revalidate').status_code==200
+    from contextlib import contextmanager
+    from app.main import app
+    from app.db import get_db
+    with contextmanager(app.dependency_overrides[get_db])() as db:
+        assert len(list(db.scalars(select(V2TraceEvent))))==before
+
+
+def test_timer_persists_expiry_without_any_poll(scenario):
+    from contextlib import contextmanager
+    from app.main import app
+    from app.db import get_db
+    from app.services.timer_v2 import tick
+    from app.models.observation_v2 import V2FlightContext
+    s=scenario
+    atc=s.adopt();match_readback(s,atc);cockpit(s)
+    s.tick(200)
+    tick(app.dependency_overrides[get_db])
+    with contextmanager(app.dependency_overrides[get_db])() as db:
+        profile=db.get(V2FlightContext,s.flight)
+        assert profile.state['validation_snapshot']['result']=='UNVERIFIED'

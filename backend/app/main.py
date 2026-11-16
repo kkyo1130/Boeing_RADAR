@@ -10,7 +10,21 @@ async def lifespan(app):
     migrate(engine)
     from app.services.demo.adapters import prepare_runtime
     prepare_runtime()
-    yield
+    import asyncio
+    from app.services.timer_v2 import tick
+    async def deadlines():
+        while True:
+            from app.db import get_db
+            await asyncio.to_thread(tick, app.dependency_overrides.get(get_db, get_db))
+            await asyncio.sleep(.25)
+    task = asyncio.create_task(deadlines())
+    try:
+        yield
+    finally:
+        task.cancel()
+        from contextlib import suppress
+        with suppress(asyncio.CancelledError):
+            await task
 
 app = FastAPI(title="RADAR", version="0.1.0", lifespan=lifespan,
     description="""## RADAR Mock API 명세

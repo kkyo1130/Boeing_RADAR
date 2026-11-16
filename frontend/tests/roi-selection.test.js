@@ -9,3 +9,9 @@ test('ROI conversion follows scaled video, clamps bounds and supports reverse dr
  assert.throws(()=>selectedBox([10,10],[15,15]));
  assert.throws(()=>framePoint(0,0,{...rect,width:0},1920,1080));
 });
+import {groupTimeline} from '../src/report-timeline.js';
+test('equivalent adjacent camera observations group without hiding transitions or other instructions',()=>{
+ const event={event_type:'INPUT_RECEIVED',source:'COCKPIT',instruction_ids:['a'],fields:{ALT:{value:3000,validity:'VALID'}}};
+ const groups=groupTimeline([{...event,sequence:1},{...event,sequence:2},{event_type:'INCIDENT_UPDATED',sequence:3},{...event,sequence:4},{...event,instruction_ids:['b'],sequence:5}]);
+ assert.deepEqual(groups.map(g=>g.events.length),[2,1,1,1]);
+});

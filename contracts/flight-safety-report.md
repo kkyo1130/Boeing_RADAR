@@ -33,3 +33,10 @@ Correction Trace는 저장 이벤트로 DETECTED/WARNED/CORRECTING/RESOLVED/UNRE
 원본 evidence_unavailable_reason에 fixture가 있으면 FIXTURE_PRESENT 표시. 다른 입력은 STORED_INPUTS_UNVERIFIED_ORIGIN이며 실제 카메라 검증 완료라고 주장하지 않는다. 이 기능은 fixture를 새로 생성하거나 실제 세션에 데모 입력을 추가하지 않는다.
 AI 기본은 미설정으로 규칙 기반 요약을 제공한다. 선택적으로 `RADAR_REPORT_AI_URL`, `RADAR_REPORT_AI_TOKEN`을 설정하면 사실 집계, 사전 검증 문장, 최대100개 이벤트 종류/시각과 facts_digest를 JSON POST한다. 제공자는 `{"fact_ids":["instructions","errors","corrections","scope"],"facts_digest":"요청의 digest"}`를 반환해야 한다. 순서는 변경 가능하지만 정확한 전체 ID집합/digest만 허용하며 문장·숫자·판정은 서버가 제공한 사실 문장만 출력한다. 자유 생성 문장은 표시하지 않는다. AI_ASSISTED_FACTS와 RULE_BASED를 구분한다.
 Timeout/형식 오류/누락/지어낸 주장/HTTP 실패는 규칙 요약으로 대체한다. AI 오류 때문에 종료나 PDF가 실패하지 않게 한다. 외부 제공자는 선택사항이며 기본 실행에서 외부 호출하지 않는다.
+
+## 2026-11-16 operations/report refinement
+
+- State GET is read-only, including camera expiry. A server lifespan task evaluates deadlines every 250 ms; repeated unchanged evaluations do not create Trace events or increment revision. Input receipts remain stored independently of incident identity.
+- Repeated v2 END returns the existing terminal session when its frozen report exists. Legacy-ended sessions without a frozen v2 report retain 409. Post-end input remains rejected.
+- Correction presentation adds nullable `readback_actual`, `cockpit_actual` (same instruction/field at detection), and `resolution_seconds`. Legacy frozen reports can omit these presentation fields and show unknown; reads do not rewrite frozen records.
+- UI groups only adjacent equivalent camera observations. JSON and server PDF preserve the full timeline. Print expands grouped originals and includes all timeline pages from the same frozen report.

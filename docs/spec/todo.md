@@ -148,3 +148,14 @@ WI-02는 이 dev 기준 별도 브랜치에서 수신/문맥/중복/시간/원�
 ## 2026-11-12 파일 음성 직접 STT
 
 [SPEC-004-WI-05](004-speech-communication/workitem/wi-05.md): verifying. 사용자 요청으로 관제/조종사 복창 각각 파일 직접 STT 버튼과 사용법 구현. frontend75/backend684·실제Whisper/BERT 합성파일 임시DB 검증 통과, 브라우저 파일 선택은 제어 연결 문제로 미실행. 기존 마이크·카메라·리포트·비행DB 보존.
+
+## 2026-11-16 사용자 첨부 Operation·Vision·기록 개선
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-006-WI-05](006-advisory-interface/workitem/wi-05.md) | Operation 기본 문구·ID·사용법 정리 | verifying |
+| [SPEC-003-WI-07](003-cockpit-vision/workitem/wi-07.md) | 자동·수동 ROI 공통 OCR·관측 경로 | verifying |
+| [SPEC-003-WI-08](003-cockpit-vision/workitem/wi-08.md) | 새프레임3회·인식일정·상세시간진단 | verifying |
+| [SPEC-008-WI-06](008-safety-trace-report/workitem/wi-06.md) | polling독립기록·확정리포트·전체인쇄 | verifying |
+
+기존35개WI 및 실장비인수 상태는 유지한다. 각WI의 구현·검증·자체리뷰·인수인계는 링크한기록참조. 실장비지연비교/실제프린터/외부리뷰는미실행.

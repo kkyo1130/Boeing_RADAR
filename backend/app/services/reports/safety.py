@@ -1,5 +1,6 @@
 """Read-only presentation of stored decisions; no new safety verdicts."""
 from copy import deepcopy
+from datetime import datetime
 from app.services.reports.summary import summarize
 
 STAGES={'READBACK':'Readback Error','SETTING':'Cockpit Setting Error'}
@@ -80,7 +81,16 @@ def build(data,flight,instructions,*,allow_ai=True):
             steps.append(dict(state='WARNED',at=item['voice_completed_at'],event_sequence=None))
         terminal_state='RESOLVED' if occurrence in resolved_ids else 'UNRESOLVED' if data['terminal'] else 'CORRECTING' if item.get('reobserved_at') else 'DETECTED'
         if terminal_state=='UNRESOLVED':steps.append(dict(state='UNRESOLVED',at=flight.ended_at,event_sequence=None))
-        traces.append(dict(occurrence_id=occurrence,instruction_id=item['instruction_id'],stage=item['stage'],
+        linked_checks = [check for event in timeline if item['instruction_id'] in event['instruction_ids']
+            and event['occurred_at'] <= item['detected_at'] for check in event['checks']
+            if check.get('instruction_id') == item['instruction_id'] and check.get('field') == item['field']]
+        observed = {stage: next((check.get('actual') for check in reversed(linked_checks) if check['stage'] == stage), None)
+            for stage in ('READBACK', 'SETTING')}
+        duration = None
+        if occurrence in resolved_ids:
+            duration = max(0, (datetime.fromisoformat(item['resolved_at'].replace('Z','+00:00'))-
+                datetime.fromisoformat(item['detected_at'].replace('Z','+00:00'))).total_seconds())
+        traces.append(dict(readback_actual=observed['READBACK'],cockpit_actual=observed['SETTING'],resolution_seconds=duration,occurrence_id=occurrence,instruction_id=item['instruction_id'],stage=item['stage'],
             field=item['field'],state=terminal_state,stored_status=item['status'],detected_at=item['detected_at'],
             resolved_at=item.get('resolved_at') if occurrence in resolved_ids else None,
             warning_completed=any(s['state']=='WARNED' for s in steps),

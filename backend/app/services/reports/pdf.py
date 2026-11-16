@@ -60,7 +60,17 @@ def render_pdf(safety):
         ['Instructions with incidents / Unverified instructions',f"{facts['error_instruction_count']} / {facts['unverified_instruction_count']}"],
         ['Incidents / Resolved incidents',f"{facts['incident_count']} / {facts['resolved_count']}"],
         ['Unresolved / Including superseded incidents',f"{facts['unresolved_count']} / {facts['superseded_count']}"],['Incident resolution rate',rate]]),Spacer(1,12)]
-    story += [p('2. Error Timeline','heading'),p('Stored input, validation and advisory events are listed in sequence. An advisory candidate or playback attempt is not evidence of completed playback. ALT values are in feet; HDG values are in degrees.','small')]
+    story += [p('Error Classification','heading'),ClassificationBar(safety['classification']),
+        table([['Error type','Count','Share']]+[[i['label'],i['count'],f"{i['ratio']:.1%}"] for i in safety['classification']]),Spacer(1,12),
+        p('2. Correction Trace','heading')]
+    if not safety['correction_trace']:story.append(p('No stored incidents. Missing inputs have not been classified as normal.'))
+    for item in safety['correction_trace']:
+        story.append(p(f"{item['stage']} / {item['field']} · {item['state']}"))
+        story.append(p(f"Incident: {item['occurrence_id']}\nInstruction: {item['instruction_id']}\nTarget: {item['expected']} | First observed: {item['initial_actual']} | Last observed: {item['final_actual']}\nLast validation: {item['verification']} | Resolved at: {item['resolved_at'] or 'Not recorded'}",'small'))
+        story.append(p(f"Readback: {item.get('readback_actual')} | Cockpit: {item.get('cockpit_actual')} | Resolution seconds: {item.get('resolution_seconds')}",'small'))
+        story.append(table([['Status','Recorded time (UTC)','Validation']]+[[step['state'],step['at'],step.get('verification','-')] for step in item['steps']]))
+        story.append(Spacer(1,8))
+    story += [p('3. Error Timeline','heading'),p('Stored input, validation and advisory events are listed in sequence. An advisory candidate or playback attempt is not evidence of completed playback. ALT values are in feet; HDG values are in degrees.','small')]
     if not safety['timeline']:story.append(p('No stored events.'))
     for event in safety['timeline']:
         story.append(p(f"#{event['sequence']} · {event['occurred_at']} · {event['event_type']}",'small'))
@@ -76,17 +86,8 @@ def render_pdf(safety):
         for item in event.get('related_incidents',[]):story.append(p(f"{item['stage']} · {item['status']} · Completed warning playback: {'Yes' if item['warning_completed'] else 'Not recorded'} | Resolved: {item.get('resolved_at') or 'Not recorded'}",'small'))
         if event['error_status']:story.append(p('Stored incident status: '+event['error_status'],'small'))
         story.append(Spacer(1,8))
-    story += [p('3. Error Classification','heading'),ClassificationBar(safety['classification']),
-        table([['Error type','Count','Share']]+[[i['label'],i['count'],f"{i['ratio']:.1%}"] for i in safety['classification']]),Spacer(1,12),
-        p('4. Correction Trace','heading')]
-    if not safety['correction_trace']:story.append(p('No stored incidents. Missing inputs have not been classified as normal.'))
-    for item in safety['correction_trace']:
-        story.append(p(f"{item['stage']} / {item['field']} · {item['state']}"))
-        story.append(p(f"Incident: {item['occurrence_id']}\nInstruction: {item['instruction_id']}\nTarget: {item['expected']} | First observed: {item['initial_actual']} | Last observed: {item['final_actual']}\nLast validation: {item['verification']} | Resolved at: {item['resolved_at'] or 'Not recorded'}",'small'))
-        story.append(table([['Status','Recorded time (UTC)','Validation']]+[[step['state'],step['at'],step.get('verification','-')] for step in item['steps']]))
-        story.append(Spacer(1,8))
     ai=safety['ai_summary']
-    story += [p('5. AI Safety Summary','heading'),p('AI-assisted factual summary (English rendering)' if ai['source']=='AI_ASSISTED_FACTS' else 'Rule-based summary (AI unavailable or response not verified)','small'),p(ai.get('text_en') or english_summary(facts,ai.get('fact_ids'))),p('Missing data is not verifiable. Advisory eligibility and completed playback are separate records. This report does not certify safety for actual flight operations.','small'),
+    story += [p('4. AI Safety Summary','heading'),p('AI-assisted factual summary (English rendering)' if ai['source']=='AI_ASSISTED_FACTS' else 'Rule-based summary (AI unavailable or response not verified)','small'),p(ai.get('text_en') or english_summary(facts,ai.get('fact_ids'))),p('Missing data is not verifiable. Advisory eligibility and completed playback are separate records. This report does not certify safety for actual flight operations.','small'),
         p(f"Ended flight record | Generated: {safety['generated_at']}",'small')]
     def decorate(canvas,document):
         canvas.saveState();canvas.setStrokeColor(NAVY);canvas.circle(45,A4[1]-29,8);canvas.line(33,A4[1]-29,57,A4[1]-29);canvas.line(45,A4[1]-41,45,A4[1]-17)

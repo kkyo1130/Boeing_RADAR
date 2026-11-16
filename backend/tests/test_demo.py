@@ -79,6 +79,10 @@ def test_tracking_translation_ignores_changed_digits():
 
 def test_camera_watchdog_clears_channel(client,flight):
     demo.CAMERAS['expired']={'flight':flight,'expired':False,'emitted':demo.time.monotonic()-8}
+    from app.main import app
+    from app.db import get_db
+    from app.services.timer_v2 import tick
+    tick(app.dependency_overrides[get_db])
     state=client.get(f'/api/v2/flights/{flight}/state').json()
     assert state['channels']['CAMERA']['status']=='DISCONNECTED'
     assert state['result']!='NORMAL'

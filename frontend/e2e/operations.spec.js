@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import {groupTimeline} from '../src/report-timeline.js';
 import { randomUUID } from 'node:crypto';
 const example = name => JSON.parse(readFileSync(new URL(`../../contracts/examples/v2/${name}.json`, import.meta.url)));
 const quality = { model_score: .9, input_quality: 'SUFFICIENT', reason: null, score_calibrated: false, calibration_ref: null };
@@ -60,6 +61,7 @@ test('v2 운영 화면에서 근거·수정·연결 복구·종료 리포트', a
   await expect(page.getByRole('region',{name:'Cockpit 설정',exact:true}).locator('.op-section-heading .op-badge')).toHaveText('판단 보류');
   await page.unroute('**/api/v2/flights/**/state');
   await expect(page.getByRole('region',{name:'Cockpit 설정',exact:true}).locator('.op-section-heading .op-badge')).toHaveText('일치');
+  for(let i=0;i<35;i++)await camera();
   page.once('dialog',dialog=>dialog.accept());
   await page.getByRole('button',{name:'비행 종료',exact:true}).click();
   await expect(page).toHaveURL(/\/report\?flight=/);
@@ -68,16 +70,49 @@ test('v2 운영 화면에서 근거·수정·연결 복구·종료 리포트', a
   const report=await (await page.request.get(base+'/report.json')).json();
   expect(report.summary).toMatchObject({incidents:1,resolved:1,open:0});
   expect(report.snapshot.result).toBe('NORMAL');
+  expect(report.safety.timeline.length).toBeGreaterThan(30);
+  const groups=groupTimeline(report.safety.timeline);
+  await expect(page.locator('.report-timeline > li:visible')).toHaveCount(Math.min(30,groups.length));
+  await page.emulateMedia({media:'print'});
+  await expect(page.locator('.report-timeline > li:visible')).toHaveCount(groups.length);
+  await page.pdf({path:'/tmp/radar-report-print.pdf',format:'A4',printBackground:true});
+  await page.emulateMedia({media:'screen'});
   await page.screenshot({path:testInfo.outputPath('flight-report.png'),fullPage:true});
   const downloadPromise=page.waitForEvent('download');
   await page.getByRole('button',{name:'PDF 다운로드',exact:true}).first().click();
   const download=await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/^Flight_Safety_Report_.*\.pdf$/);
   const stream=await download.createReadStream();const chunks=[];for await(const chunk of stream)chunks.push(chunk);
+  await download.saveAs('/tmp/radar-report-server.pdf');
   expect(Buffer.concat(chunks).subarray(0,5).toString()).toBe('%PDF-');
   expect(errors).toEqual([]);
 });
 
 test('태블릿 MCP 유지',async({page})=>{
   await page.goto('/'); await expect(page.getByText('ALTITUDE',{exact:true})).toBeVisible();
+});
+
+test('수동 ROI 좌표 적용과 자동 전환 시 지연 응답 폐기 (모의 카메라)',async({page})=>{
+ await page.route('**/api/demo/status',route=>route.fulfill({json:{camera_ready:true,speech_ready:false}}));
+ let calibration,release;const frames=[];
+ await page.route('**/api/demo/*/calibration',async route=>{calibration=route.request().postDataJSON();await route.fulfill({json:{token:'manual-fixture',image_size:[640,480]}});});
+ await page.route('**/api/demo/*/frame',async route=>{frames.push(route.request().postDataJSON());await new Promise(resolve=>{release=resolve;});await route.fulfill({json:{fields:{altitude:{value:12345},heading:{value:123}},captured_at:'fixture'}}).catch(()=>{});});
+ await page.goto('/operations');await page.getByLabel('등록된 호출부호').fill('RADAR123');await page.getByRole('button',{name:'START FLIGHT',exact:true}).click();
+ await page.getByRole('button',{name:'카메라 연결',exact:true}).click();
+ await page.getByRole('button',{name:'영역 직접 설정',exact:true}).click();
+ const preview=page.locator('.demo-preview');await expect(preview.locator('video')).toHaveJSProperty('readyState',4);
+ const box=await preview.boundingBox();
+ for(const [field,x] of [['ALT',.15],['HDG',.55]]){
+  await page.getByLabel('선택할 영역').selectOption(field);
+  await page.mouse.move(box.x+box.width*x,box.y+box.height*.2);await page.mouse.down();await page.mouse.move(box.x+box.width*(x+.2),box.y+box.height*.4);await page.mouse.up();
+ }
+ await page.getByRole('button',{name:'영역 적용·인식',exact:true}).click();
+ await expect.poll(()=>frames.length).toBe(1);
+ expect(calibration.rois.ALT[2]-calibration.rois.ALT[0]).toBeGreaterThan(10);
+ expect(calibration.rois.HDG[0]).toBeGreaterThan(calibration.rois.ALT[2]);
+ expect(frames[0].media_time).toBeGreaterThanOrEqual(0);
+ await page.getByRole('button',{name:'자동 탐지·인식',exact:true}).click();release();
+ await expect(page.getByRole('button',{name:'인식 시작',exact:true})).toBeVisible();
+ await expect(page.getByText('최근 OCR:',{exact:false})).toHaveCount(0);
+ await page.screenshot({path:'/tmp/radar-roi-ui.png',fullPage:true});
 });

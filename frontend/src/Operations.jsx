@@ -1,6 +1,6 @@
 import ReportPanel from './ReportPanel.jsx';
 import React, { useEffect, useRef, useState } from 'react';
-import { request, SnapshotGate, dueRevalidations, POLL_MS, statusLabel, numberLabel, restartFlightState, readingFor, reconciledActionError } from './flight-client.js';
+import { request, SnapshotGate, POLL_MS, statusLabel, numberLabel, restartFlightState, readingFor, reconciledActionError } from './flight-client.js';
 import './operations.css';
 import VoicePanel from './VoicePanel.jsx';
 import DemoPanel from './DemoPanel.jsx';
@@ -30,21 +30,15 @@ export function useFlight(flightId, refresh) {
     setState(previous => restartFlightState(previous, flightId));
     if (!flightId) { sessionRef.current = null; return; }
     const abort = new AbortController();
-    if (sessionRef.current?.gate.flightId !== flightId) sessionRef.current = { gate: new SnapshotGate(flightId), completed: new Set() };
-    const { gate, completed } = sessionRef.current;
+    if (sessionRef.current?.gate.flightId !== flightId) sessionRef.current = { gate: new SnapshotGate(flightId) };
+    const { gate } = sessionRef.current;
     let stopped = false, timer, serial = gate.serial;
     async function poll() {
       try {
         let data = await request(`/api/v2/flights/${encodeURIComponent(flightId)}/state`, { signal: abort.signal });
         if (stopped) return;
         if (!gate.accept(data, ++serial)) throw new Error('이전 버전의 응답입니다. 최신 상태를 다시 확인합니다.');
-        const due = dueRevalidations(data, completed);
-        if (due.length) {
-          data = await request(`/api/v2/flights/${encodeURIComponent(flightId)}/revalidate`, { method: 'POST', signal: abort.signal });
-          if (stopped) return;
-          if (!gate.accept(data, ++serial)) throw new Error('재검증 응답의 버전을 확인할 수 없습니다.');
-          due.forEach(key => completed.add(key));
-        }
+
         setState({ snapshot: data, connected: true, error: '', receivedAt: new Date().toISOString() });
       } catch (error) {
         if (stopped) return;

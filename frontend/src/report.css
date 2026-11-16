@@ -1,3 +1,24 @@
 .flight-report{color:#19344b;line-height:1.6}.report-heading{display:flex;align-items:center;justify-content:space-between;gap:20px}.flight-report section{padding:20px 0;border-top:1px solid #d6e0e7;margin-top:20px}.report-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px}.report-cards>div{padding:16px;background:#edf3f7;border-radius:8px}.report-cards span,.report-cards strong{display:block}.report-cards strong{font-size:1.6rem}.report-timeline{padding-left:24px;max-height:950px;overflow:auto}.report-timeline>li{padding:15px 12px;border-left:3px solid #b8cad7;margin-bottom:12px;overflow-wrap:anywhere}.report-timeline li>div:first-child{display:flex;gap:14px;flex-wrap:wrap}.report-timeline table{width:100%;border-collapse:collapse}.report-timeline td,.report-timeline th{border-bottom:1px solid #dce4ea;padding:8px;text-align:left}.report-timeline small{display:block}.report-pagination{display:flex;justify-content:center;align-items:center;gap:15px}.report-classification{display:grid;grid-template-columns:210px 1fr 120px;align-items:center;gap:12px;margin:12px 0}.report-classification meter{width:100%;height:22px}.report-incident{border:1px solid #ccd8df;border-left-width:4px;border-radius:6px;padding:16px;margin:15px 0;overflow-wrap:anywhere}.report-UNRESOLVED,.report-MISMATCH,.report-unresolved{color:#a52c39;border-color:#b83d49}.report-RESOLVED,.report-NORMAL{color:#15724e;border-color:#15724e}.flight-report footer{padding:20px 0}.flight-report button{cursor:pointer}.flight-report button:disabled{opacity:.5;cursor:default}@media(max-width:650px){.report-heading{align-items:flex-start;flex-direction:column}.report-classification{grid-template-columns:1fr}.report-cards{grid-template-columns:1fr 1fr}}@media print{.report-pagination,button{display:none}.report-timeline{max-height:none;overflow:visible}}
 /* Match the existing dark operations palette and keep readable status contrast. */
 .flight-report{color:#e0e7ec;overflow-wrap:anywhere}.flight-report section{border-color:#3d4b57}.report-cards>div{background:#253540;color:#eef4f7}.report-timeline>li{border-color:#526b7c}.report-timeline td,.report-timeline th{border-color:#3b4c59}.report-UNRESOLVED,.report-MISMATCH,.report-unresolved{color:#ffb3bc;border-color:#d98791}.report-RESOLVED,.report-NORMAL{color:#a0e7be;border-color:#63b68a}.report-classification meter{accent-color:#d98791}.report-classification meter::-webkit-meter-optimum-value{background:#d98791}.report-classification meter::-moz-meter-bar{background:#d98791}
+
+.report-print-only{display:none}
+@media print{
+ @page{size:A4;margin:15mm}
+ .op-header,.report-pagination,.flight-report button,.flight-report footer a,.operations>details{display:none!important}
+ .report-print-only{display:list-item!important}
+ .report-timeline{max-height:none;overflow:visible}
+ .flight-report section{break-inside:auto}.report-incident,.report-cards>div,tr{break-inside:avoid}
+ thead{display:table-header-group}.flight-report{font-size:10pt;color:#111}
+ .op-panel{box-shadow:none;border:0;padding:0}.report-timeline details{display:block}
+}
+@media print{
+ html,body,.operations,.operations .op-panel{background:#fff!important;color:#111!important}
+ .operations *{color:#111!important;background:transparent!important;box-shadow:none!important;text-shadow:none!important}
+ .operations{padding:0!important;max-width:none!important;min-height:0!important}
+ .operations .report-cards>div{background:#f1f4f6!important;border:1px solid #ccd8df}
+ .operations table{width:100%;table-layout:fixed}.operations td,.operations th{overflow-wrap:anywhere;border-color:#ccd8df!important}
+ .operations .report-UNRESOLVED,.operations .report-MISMATCH,.operations .report-unresolved{color:#9b2431!important}
+ .operations .report-RESOLVED,.operations .report-NORMAL{color:#126045!important}
+ .operations .report-incident{border-color:#667!important}
+}
