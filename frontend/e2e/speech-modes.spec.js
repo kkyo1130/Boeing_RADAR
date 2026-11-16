@@ -6,7 +6,7 @@ import {wav} from '../src/demo-audio.js';
 test.use({launchOptions:{...(process.env.RADAR_CHROMIUM_PATH?{executablePath:process.env.RADAR_CHROMIUM_PATH}:{}),args:['--use-fake-ui-for-media-stream','--use-fake-device-for-media-stream']}});
 const example=name=>JSON.parse(readFileSync(new URL(`../../contracts/examples/v2/${name}.json`,import.meta.url)));
 
-for (const inputMode of ['microphone_live','microphone_playback']) {
+for (const inputMode of ['microphone_live']) {
 test(`${inputMode}: ATC and pilot freeze role during capture; cancellation cannot reuse old ATC`,async({page,request})=>{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/api/demo/status',r=>r.fulfill({json:{speech_ready:true,scenarios:{}}}));
@@ -21,9 +21,8 @@ test(`${inputMode}: ATC and pilot freeze role during capture; cancellation canno
   await expect(page.getByRole('button',{name:'파일럿 복창 시작',exact:true})).toBeDisabled();
   await mode.selectOption('ATC');
   await page.getByRole('button',{name:'마이크 연결',exact:true}).click();
-  const sourceMode=page.getByLabel('관제 음성 입력 방식');
-  await expect(sourceMode).toHaveValue('microphone_live');
-  await sourceMode.selectOption(inputMode);
+  await expect(page.getByLabel('관제 음성 입력 방식')).toHaveCount(0);
+  for(const label of ['파일 입력 사용법','입력 순서·기록 기준','녹음 사용법','입력 우선순위 모의 시험','예비: 사전 등록 시나리오 (ATC STT 사용 안 함)'])await expect(page.getByText(label,{exact:true})).toHaveCount(0);
   const start=page.getByRole('button',{name:inputMode==='microphone_live'?'관제사 발화 시작':'ATC 수음 시작',exact:true});
   await expect(start).toBeEnabled();
   let atcBody,pilotBody;
@@ -39,19 +38,12 @@ test(`${inputMode}: ATC and pilot freeze role during capture; cancellation canno
     await route.fulfill({json:{role:'ATC',atc_input_id:seg.atc_input_id,transcript:'ATC fixture transcript',quality_reason:null}});
   });
   const source=Buffer.from(wav(Float32Array.from({length:32000},(_,i)=>.1*Math.sin(i/10)),16000));
-  if(inputMode==='microphone_playback'){
-  await page.getByLabel('재생할 실제 관제 녹음파일').setInputFiles({name:'synthetic-ui-test.wav',mimeType:'audio/wav',buffer:source});
-  await page.getByRole('button',{name:'선택 파일 재생 + 마이크 수음',exact:true}).click();
-  await expect(mode).toBeDisabled();
-  await expect(page.getByRole('button',{name:'선택 파일 재생 + 마이크 수음',exact:true})).toBeDisabled();
-  }else{
     await expect(page.getByLabel('재생할 실제 관제 녹음파일')).toHaveCount(0);
     await start.click();
     await expect(page.getByText('마이크 켜짐 · 관제사 역할 문장을 말한 뒤 녹음 종료를 누르세요.',{exact:true})).toBeVisible();
-    await expect(mode).toBeDisabled();await expect(sourceMode).toBeDisabled();
+    await expect(mode).toBeDisabled();
     await page.getByRole('button',{name:'녹음 종료 · 검증',exact:true}).click();
-  }
-  // Playback completion stops the microphone after the capture tail.
+  // Direct microphone capture completes before pilot readback.
   await expect(page.getByText('ATC fixture transcript',{exact:false})).toBeVisible();
   expect(atcBody.input_mode).toBe(inputMode);
   expect(Buffer.from(atcBody.audio,'base64').equals(source)).toBe(false); // actual capture bytes, not selected file upload
@@ -67,7 +59,7 @@ test(`${inputMode}: ATC and pilot freeze role during capture; cancellation canno
   await page.getByRole('button',{name:'녹음 종료 · 검증',exact:true}).click();
   await expect(page.getByText('PILOT fixture transcript',{exact:false})).toBeVisible();
   expect(pilotBody.atc_input_id).toBeTruthy();expect(pilotBody.input_mode).toBeUndefined();
-  await mode.selectOption('ATC');await sourceMode.selectOption(inputMode);await start.click();
+  await mode.selectOption('ATC');await start.click();
   await page.getByRole('button',{name:'녹음 취소',exact:true}).click();
   await expect(mode).toBeEnabled();await mode.selectOption('PILOT');
   await expect(pilot).toBeDisabled();
@@ -75,7 +67,7 @@ test(`${inputMode}: ATC and pilot freeze role during capture; cancellation canno
   // Real cancellation state must survive reload without spoofing server state.
   await page.reload();await page.getByRole('button',{name:'마이크 연결',exact:true}).click();
   await mode.selectOption('PILOT');await expect(pilot).toBeDisabled();
-  await mode.selectOption('ATC');await sourceMode.selectOption(inputMode);await start.click();
+  await mode.selectOption('ATC');await start.click();
   await page.getByRole('button',{name:'녹음 종료 · 검증',exact:true}).click();
   await expect(page.getByText('ATC fixture transcript',{exact:false})).toBeVisible();
   await mode.selectOption('PILOT');await expect(pilot).toBeEnabled();

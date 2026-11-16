@@ -205,3 +205,9 @@ backend701/skip7, frontend82·빌드, 브라우저4 통과. 실제 고정4154이
 | WI | 범위 | 상태 |
 | --- | --- | --- |
 | [SPEC-008-WI-09](008-safety-trace-report/workitem/wi-09.md) | AI Safety Summary 화면/PDF 문단·줄간격 개선 | verifying |
+
+## 2026-11-17 Operation 입력 UI 정리
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-006-WI-06](006-advisory-interface/workitem/wi-06.md) | 중복 음성 방식·예비 시나리오·모의 시험·사용법 제거, Cockpit 링크 정리 | verifying |

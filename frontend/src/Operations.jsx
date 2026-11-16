@@ -139,8 +139,8 @@ export default function Operations() {
   }
   return <main className={`operations ${snapshot && !ended ? 'op-demo-active' : ''}`}>
     <header className="op-header"><a className="brand" href="/operations">RADAR<span> / FLIGHT MONITOR</span></a>
-      <nav aria-label="화면 선택"><a href="/cockpit" target="_blank" rel="noreferrer">Vision AI 화면 ↗</a> <a href={`/pilot${flightId ? `?flight=${encodeURIComponent(flightId)}` : ''}`} target="_blank" rel="noreferrer">조종사 화면 ↗</a> <a href="/" target="_blank" rel="noreferrer">모의 MCP 열기 ↗</a></nav>
-      <span className="op-muted">모의 환경 · 설정은 직접 조작</span></header>
+      <nav aria-label="화면 선택"><a href="/cockpit" target="_blank" rel="noreferrer">Cockpit 설정 화면 ↗</a> <a href={`/pilot${flightId ? `?flight=${encodeURIComponent(flightId)}` : ''}`} target="_blank" rel="noreferrer">조종사 화면 ↗</a></nav>
+      </header>
     <div className="op-intro"><p className="eyebrow">FLIGHT OPERATIONS</p><h1>비행 상태 확인</h1><p>관제 지시와 복명복창, 카메라가 읽은 설정값을 함께 확인하세요.</p></div>
     {ackMessage && <p className="op-notice" role="status">{ackMessage}</p>}
     {error && <p className="op-error" role="alert">{error}</p>}
