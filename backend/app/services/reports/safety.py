@@ -81,8 +81,13 @@ def build(data,flight,instructions,*,allow_ai=True):
             steps.append(dict(state='WARNED',at=item['voice_completed_at'],event_sequence=None))
         terminal_state='RESOLVED' if occurrence in resolved_ids else 'UNRESOLVED' if data['terminal'] else 'CORRECTING' if item.get('reobserved_at') else 'DETECTED'
         if terminal_state=='UNRESOLVED':steps.append(dict(state='UNRESOLVED',at=flight.ended_at,event_sequence=None))
-        linked_checks = [check for event in timeline if item['instruction_id'] in event['instruction_ids']
-            and event['occurred_at'] <= item['detected_at'] for check in event['checks']
+        # Bind to the triggering input, not wall-clock ordering: distinct
+        # requests can share one timestamp (replays, coarse device clocks).
+        first_input = next((event['snapshot'] for event in events
+            if event['snapshot'].get('input_id') == item['first_evidence'].get('observation_id')), {})
+        first_validation = first_input.get('validation', {})
+        linked_checks = [check for group in ('readback', 'setting')
+            for check in first_validation.get(group, {}).get('fields', [])
             if check.get('instruction_id') == item['instruction_id'] and check.get('field') == item['field']]
         observed = {stage: next((check.get('actual') for check in reversed(linked_checks) if check['stage'] == stage), None)
             for stage in ('READBACK', 'SETTING')}

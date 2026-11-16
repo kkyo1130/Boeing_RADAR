@@ -188,3 +188,13 @@ def test_pdf_includes_every_event_after_thirty_and_frozen_refresh(scenario):
     for event in report['safety']['timeline']:
         assert f"#{event['sequence']} " in text
     assert s.client.get(s.url+'/report').json()==report
+
+
+def test_correction_values_bind_to_original_input_not_later_same_clock(scenario):
+    s=scenario
+    atc=s.adopt();match_readback(s,atc);cockpit(s);cockpit(s,heading=90);cockpit(s)
+    data=finish(s)
+    incident=next(item for item in data['safety']['correction_trace'] if item['field']=='HDG')
+    assert incident['readback_actual']==270
+    assert incident['cockpit_actual']==90
+    assert incident['final_actual']==270

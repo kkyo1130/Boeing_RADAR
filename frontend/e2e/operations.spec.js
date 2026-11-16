@@ -94,7 +94,8 @@ test('태블릿 MCP 유지',async({page})=>{
 
 test('수동 ROI 좌표 적용과 자동 전환 시 지연 응답 폐기 (모의 카메라)',async({page})=>{
  await page.route('**/api/demo/status',route=>route.fulfill({json:{camera_ready:true,speech_ready:false}}));
- let calibration,release;const frames=[];
+ let calibration,release,releaseHealth;const frames=[];
+ await page.route('**/api/v2/flights/*/health-events',async route=>{if(route.request().postDataJSON().health?.reason==='camera_capture_stopped')await new Promise(resolve=>{releaseHealth=resolve;});await route.continue();});
  await page.route('**/api/demo/*/calibration',async route=>{calibration=route.request().postDataJSON();await route.fulfill({json:{token:'manual-fixture',image_size:[640,480]}});});
  await page.route('**/api/demo/*/frame',async route=>{frames.push(route.request().postDataJSON());await new Promise(resolve=>{release=resolve;});await route.fulfill({json:{fields:{altitude:{value:12345},heading:{value:123}},captured_at:'fixture'}}).catch(()=>{});});
  await page.goto('/operations');await page.getByLabel('등록된 호출부호').fill('RADAR123');await page.getByRole('button',{name:'START FLIGHT',exact:true}).click();
@@ -111,7 +112,9 @@ test('수동 ROI 좌표 적용과 자동 전환 시 지연 응답 폐기 (모의
  expect(calibration.rois.ALT[2]-calibration.rois.ALT[0]).toBeGreaterThan(10);
  expect(calibration.rois.HDG[0]).toBeGreaterThan(calibration.rois.ALT[2]);
  expect(frames[0].media_time).toBeGreaterThanOrEqual(0);
- await page.getByRole('button',{name:'자동 탐지·인식',exact:true}).click();release();
+ await page.getByRole('button',{name:'자동 탐지·인식',exact:true}).click();
+ await expect(page.getByRole('button',{name:'인식 시작',exact:true})).toBeVisible();
+ await expect.poll(()=>typeof releaseHealth).toBe('function');releaseHealth();release();
  await expect(page.getByRole('button',{name:'인식 시작',exact:true})).toBeVisible();
  await expect(page.getByText('최근 OCR:',{exact:false})).toHaveCount(0);
  await page.screenshot({path:'/tmp/radar-roi-ui.png',fullPage:true});
