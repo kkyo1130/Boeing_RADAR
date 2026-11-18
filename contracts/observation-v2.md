@@ -95,7 +95,7 @@ ATC/READBACK은 `segment_id`, `atc_input_id`, `attempt_id`, `transcript`, `trans
 
 새 수정 관측은 새 observation/frame/segment ID와 원본 시각을 갖는다. `atc_input_id`는 처리 완료 순서가 아닌 수음 시점의 ATC 입력을 연결하고 `attempt_id`는 재입력을 구분한다. ID만 새로 만든 오래된 프레임, 다른 ATC의 Pilot 결과, 종료·취소된 시도의 늦은 응답은 WI-02가 서버 상태와 대조해 배제한다. 이 DTO만으로 RESOLVED 상태를 만들지 않는다.
 
-SpeechSegmentV2는 ATC→ATC_PLAYBACK(재생/파일) 또는 ATC_DEMO_MICROPHONE(관제사 역할 직접 발화), PILOT→PILOT_PTT를 강제한다. 종료 시각은 시작보다 뒤여야 한다. 불완전 녹음은 중단 사유가 필수이며 이력으로만 보존한다. 실제 음성 처리는 complete=true와 audio_ref가 있는 구간에서만 시작한다. 장치/파일 접근 가능 여부는 음성 수음 WI에서 검증한다.
+SpeechSegmentV2는 ATC→ATC_PLAYBACK(재생)·ATC_DEMO_MICROPHONE(관제사 역할 직접 발화)·ATC_FILE_UPLOAD(파일 직접 STT), PILOT→PILOT_PTT·PILOT_FILE_UPLOAD를 강제한다. 기존 ATC_PLAYBACK 파일 소비자는 계속 허용한다. 파일 입력은 원본 녹음 시각을 추정하지 않고 HOST_RECEIVE 기준 접수 구간 시각을 사용한다. MICROPHONE 채널은 기존 계약상 파일을 포함한 논리 음성 입력 상태이며 물리 마이크 연결 검증을 의미하지 않는다. 종료 시각은 시작보다 뒤여야 한다. 불완전 녹음은 중단 사유가 필수이며 이력으로만 보존한다. 실제 음성 처리는 complete=true와 audio_ref가 있는 구간에서만 시작한다. 장치/파일 접근 가능 여부는 음성 수음 WI에서 검증한다.
 
 ## 접수·오류와 후속 수신 구현
 

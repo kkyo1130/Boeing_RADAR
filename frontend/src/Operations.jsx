@@ -1,10 +1,12 @@
 import ReportPanel from './ReportPanel.jsx';
 import React, { useEffect, useRef, useState } from 'react';
-import { request, SnapshotGate, dueRevalidations, POLL_MS, statusLabel, numberLabel, restartFlightState, readingFor, reconciledActionError } from './flight-client.js';
+import { request, SnapshotGate, POLL_MS, statusLabel, numberLabel, restartFlightState, readingFor, reconciledActionError } from './flight-client.js';
 import './operations.css';
 import VoicePanel from './VoicePanel.jsx';
 import DemoPanel from './DemoPanel.jsx';
 import EvidencePanel, { selectionFor, recordInteraction } from './EvidencePanel.jsx';
+import './flight-theme.css';
+import ThemeToggle from './ThemeToggle.jsx';
 
 const STORAGE_KEY = 'radar.v2.flight-id';
 const readFlight = () => { if (typeof window === 'undefined') return ''; try { return window.localStorage.getItem(STORAGE_KEY) || ''; } catch { return ''; } };
@@ -30,21 +32,15 @@ export function useFlight(flightId, refresh) {
     setState(previous => restartFlightState(previous, flightId));
     if (!flightId) { sessionRef.current = null; return; }
     const abort = new AbortController();
-    if (sessionRef.current?.gate.flightId !== flightId) sessionRef.current = { gate: new SnapshotGate(flightId), completed: new Set() };
-    const { gate, completed } = sessionRef.current;
+    if (sessionRef.current?.gate.flightId !== flightId) sessionRef.current = { gate: new SnapshotGate(flightId) };
+    const { gate } = sessionRef.current;
     let stopped = false, timer, serial = gate.serial;
     async function poll() {
       try {
         let data = await request(`/api/v2/flights/${encodeURIComponent(flightId)}/state`, { signal: abort.signal });
         if (stopped) return;
         if (!gate.accept(data, ++serial)) throw new Error('이전 버전의 응답입니다. 최신 상태를 다시 확인합니다.');
-        const due = dueRevalidations(data, completed);
-        if (due.length) {
-          data = await request(`/api/v2/flights/${encodeURIComponent(flightId)}/revalidate`, { method: 'POST', signal: abort.signal });
-          if (stopped) return;
-          if (!gate.accept(data, ++serial)) throw new Error('재검증 응답의 버전을 확인할 수 없습니다.');
-          due.forEach(key => completed.add(key));
-        }
+
         setState({ snapshot: data, connected: true, error: '', receivedAt: new Date().toISOString() });
       } catch (error) {
         if (stopped) return;
@@ -135,17 +131,19 @@ export default function Operations() {
   }
   async function end() {
     if (actionRef.current || !connected || ended) return;
+    if (!window.confirm('운항을 종료하고 리포트를 생성할까요? 미해결 오류도 종료 기록에 남습니다.')) return;
     actionRef.current = true; setBusy(true); setError('');
     try {
       await request(`/api/v2/flights/${encodeURIComponent(flightId)}/end`, { method: 'POST' });
-      setRefresh(value => value + 1);
+      window.location.assign(`/report?flight=${encodeURIComponent(flightId)}`);
     } catch (e) { setError(e.message); setRefresh(value => value + 1); }
     finally { actionRef.current = false; setBusy(false); }
   }
   return <main className={`operations ${snapshot && !ended ? 'op-demo-active' : ''}`}>
-    <header className="op-header"><a className="brand" href="/operations">RADAR<span> / FLIGHT MONITOR</span></a>
-      <nav aria-label="화면 선택"><a href={`/pilot${flightId ? `?flight=${encodeURIComponent(flightId)}` : ''}`} target="_blank" rel="noreferrer">조종사 화면 ↗</a> <a href="/" target="_blank" rel="noreferrer">모의 MCP 열기 ↗</a></nav>
-      <span className="op-muted">모의 환경 · 설정은 직접 조작</span></header>
+    <header className="op-header"><a className="brand" href="/operations"><img className="brand-logo" src="/branding/bg-logo.png" alt="B&amp;G 로고" width="72" height="48"/><span>AI Flight Guard</span></a>
+      <nav aria-label="화면 선택"><a href="/cockpit" target="_blank" rel="noreferrer">Cockpit 설정 화면 ↗</a> <a href={`/pilot${flightId ? `?flight=${encodeURIComponent(flightId)}` : ''}`} target="_blank" rel="noreferrer">조종사 화면 ↗</a></nav>
+      <ThemeToggle />
+      </header>
     <div className="op-intro"><p className="eyebrow">FLIGHT OPERATIONS</p><h1>비행 상태 확인</h1><p>관제 지시와 복명복창, 카메라가 읽은 설정값을 함께 확인하세요.</p></div>
     {ackMessage && <p className="op-notice" role="status">{ackMessage}</p>}
     {error && <p className="op-error" role="alert">{error}</p>}
@@ -159,17 +157,17 @@ export default function Operations() {
       </form></details>
     </section> : <>
       <section className="op-panel op-session" aria-label="비행 세션">
-        <div><p className="eyebrow">{ended ? 'ENDED FLIGHT' : 'CURRENT FLIGHT'}</p><h2>{snapshot?.callsign || '세션 확인 중'}</h2><p className="op-id">{flightId}</p></div>
+        <div><p className="eyebrow">{ended ? 'ENDED FLIGHT' : 'CURRENT FLIGHT'}</p><h2>{snapshot?.callsign || '세션 확인 중'}</h2></div>
         <div className="op-session-actions"><span className={`op-connection ${connected ? 'is-connected' : ''}`} role="status">{connected ? '서버 연결됨' : '서버 확인 불가 · 판단 보류'}</span>
           <button onClick={() => setRefresh(value => value + 1)} disabled={busy}>다시 연결</button>
-          {!ended && <button className="op-end" onClick={end} disabled={!connected || busy || !snapshot}>{busy ? '종료 확인 중…' : 'END FLIGHT'}</button>}
+          {!ended && <button className="op-end" onClick={end} disabled={!connected || busy || !snapshot}>{busy ? '종료 확인 중…' : '비행 종료'}</button>}
           {!connected && <button disabled={busy} onClick={() => attach('')}>비행 선택으로</button>}
           {ended && <button onClick={() => attach('')}>새 비행 준비</button>}</div>
       </section>
       {connectionError && <div className="op-error" role="alert"><strong>서버 상태를 확인할 수 없습니다.</strong><p>{connectionError}</p><p>표시된 값은 마지막 수신 기록입니다. 현재 일치 여부는 판단 보류입니다.</p></div>}
       {snapshot ? <>
         {!ended && <DemoPanel key={flightId} snapshot={snapshot} connected={connected} onSpeech={setDemoSpeech} />}
-        <details className="op-diagnostics" open={ended}><summary>상세 검증 · 관제 이력 · 음성 안내 · 근거와 장치 상태</summary>
+        <details className="op-diagnostics" open={ended}><summary>상세 정보</summary>
         <section className={`op-overview op-${connected ? snapshot.result : 'UNVERIFIED'}`} aria-label="전체 서버 판정">
           <div><p className="eyebrow">{ended ? '비행이 종료되었습니다' : 'SERVER VALIDATION'}</p><h2>{connected ? phases[snapshot.validation.phase] || '상태 확인' : '연결 복구 후 재확인 필요'}</h2>
             <p>{connected ? reasons[snapshot.reason] || '서버에서 상태를 확인하고 있습니다' : '이전 일치 상태를 현재 상태로 사용하지 않습니다.'}</p></div>

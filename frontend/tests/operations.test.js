@@ -18,10 +18,11 @@ function render(rows, connected = true, source = 'COCKPIT', ended = false) {
   return renderToStaticMarkup(React.createElement(Verdicts, { title: '설정',
     group: { result: 'MISMATCH', fields: rows }, source, snapshot, connected, ended }));
 }
-test('start requires callsign and provides independent MCP link', () => {
+test('start requires callsign and links to Cockpit settings without mock MCP', () => {
   const html = renderToStaticMarkup(React.createElement(Operations));
   assert.match(html, /id="callsign"/); assert.match(html, /disabled="">START FLIGHT/);
-  assert.match(html, /href="\/" target="_blank"/);
+  assert.match(html, /Cockpit 설정 화면/);
+  assert.doesNotMatch(html, /모의 MCP|Vision AI 화면|모의 환경 · 설정은 직접 조작/);
 });
 test('server mismatch and another unreadable field stay distinct', () => {
   const html = render([row('ALT', 3000, 2000, 'MISMATCH', 'ADJUSTMENT_DEADLINE_MISMATCH'),

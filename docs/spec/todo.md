@@ -1,6 +1,6 @@
 # RADAR 전체 작업 목록
 
-기준일: 2026-10-18. PR #13 리뷰3건 수정 후 squash merge한 dev(`ba2dc65`) 기준이다. WI-02 done, SPEC-006-WI-03 음성·억제 정책을 전용 PR reviewing으로 제출한다. 다른 WI 상태는 유지한다.
+기준일: 2026-10-18. PR #14 리뷰2건 수정 후 squash merge한 dev(`75e74ac`) 기준이다. SPEC-006-WI-03 done, WI-04는 합성 통합 검증을 마치고 실장비 선행 결과를 기다리는 verifying이다.
 
 담당은 기획상 역할 제안이며 세션 배정은 아직 없다. 이 목록은 Git 작업 잠금이 아니다. 착수 전 팀 담당과 공유 상태를 확인한다. 선행 ID의 산출물이 현재 체크아웃에 있어야 한다.
 
@@ -33,8 +33,8 @@
 | [SPEC-005-WI-03](005-safe-validation.md#wi-03) | 판정 전체 회귀·거짓 정상 확인 | P0 | 노남경 | SPEC-005-WI-02 | done |
 | [SPEC-006-WI-01](006-advisory-interface.md#wi-01) | React 비행 화면·운영 화면과 서버 연결 | P0 | 노남경 | SPEC-002-WI-02 | done |
 | [SPEC-006-WI-02](006-advisory-interface.md#wi-02) | 근거 패널·사용자 확인과 시각 안내 | P0 | 노남경 | SPEC-006-WI-01, SPEC-005-WI-02 | done |
-| [SPEC-006-WI-03](006-advisory-interface.md#wi-03) | 보조 음성·억제 정책과 선택 경고 단계 | P0/P1 | 노남경 | SPEC-006-WI-02 | reviewing |
-| [SPEC-006-WI-04](006-advisory-interface.md#wi-04) | 알림·근거 화면 전체 검증 | P0 | 노남경 | SPEC-006-WI-03, SPEC-003-WI-05, SPEC-004-WI-04 | pending |
+| [SPEC-006-WI-03](006-advisory-interface.md#wi-03) | 보조 음성·억제 정책과 선택 경고 단계 | P0/P1 | 노남경 | SPEC-006-WI-02 | done |
+| [SPEC-006-WI-04](006-advisory-interface.md#wi-04) | 알림·근거 화면 전체 검증 | P0 | 노남경 | SPEC-006-WI-03, SPEC-003-WI-05, SPEC-004-WI-04 | verifying |
 | [SPEC-007-WI-01](007-closed-loop.md#wi-01) | Incident·재검증·freshness 정책 | P0 | 노남경 | SPEC-005-WI-03, SPEC-002-WI-02 | done |
 | [SPEC-007-WI-02](007-closed-loop.md#wi-02) | Vision·수정 Readback 재수신 연결 | P0 | 김세현·노남경·이예찬 | SPEC-007-WI-01, SPEC-003-WI-04, SPEC-004-WI-04 | pending |
 | [SPEC-007-WI-03](007-closed-loop.md#wi-03) | Closed-loop 전체 시연 검증 | P0 | 공통 | SPEC-007-WI-02, SPEC-006-WI-04 | pending |
@@ -51,15 +51,17 @@
 
 ## 기존 구현과 이번 계획의 구분
 
-[구현 현황](../IMPLEMENTATION_STATUS.md)에 SPEC별 기존 기반과 남은 범위를 정리했다. 비교·재검증·기본 Trace 등 Mock 서버 기반이 이미 있지만 자문 반영 확장 WI의 전체 완료 조건은 미충족이라 pending을 유지한다. 10/35 done을 제품 완성률로 해석하지 않는다.
+[구현 현황](../IMPLEMENTATION_STATUS.md)에 SPEC별 기존 기반과 남은 범위를 정리했다. 비교·재검증·기본 Trace 등 Mock 서버 기반이 이미 있지만 자문 반영 확장 WI의 전체 완료 조건은 미충족이라 pending을 유지한다. 11/35 done을 제품 완성률로 해석하지 않는다.
 
 ## 다음 작업
 
-- UI: SPEC-006-WI-03 PR 리뷰 후 실제 PTT/ATC·카메라 생산자와 연결해 WI-04 전체 인수를 진행한다. SPEC-007-WI-02 실제 수정 입력 연결은 SPEC-003-WI-04·SPEC-004-WI-04가 더 필요하다.
+- UI: WI-04 합성 HTTP/React 통합 검증을 완료했다. SPEC-003-WI-05·SPEC-004-WI-04 실제 입력 증거 연결 후 최종 인수한다. SPEC-007-WI-02 실제 수정 입력 연결은 SPEC-003-WI-04·SPEC-004-WI-04가 더 필요하다.
 - 세현님: 태블릿용 MCP 화면과 Vision 영상/웹캠·상태 감시·안정화 구현. 다음은 태블릿 실제 프레임 저장→ROI 설정→정답 데이터→가림/끊김/재연결 검증. SPEC-003-WI-01~03은 실제 촬영/공통 계약 AC 미충족으로 implementing 유지. 서버 전송 WI-04는 pending.
 - 다른 파트의 작업은 역할 담당과 실제 별도 저장소/미공유 코드 존재 여부를 확인한다.
 
 ## 상태 변경 기록
+
+- 2026-10-18 PR #14 리뷰2건 수정850dd17·backend455/frontend39/HTTP47/빌드·계약 재검증 후75e74ac로 squash merge, WI-03 done. WI-04 HTTP50/실제 서버 응답→React5/브라우저 카메라 장애·음성·새 영상 복구 인수. 실장비 선행 결과 미완료로 verifying·커밋7e24960·[초안 PR #15](https://github.com/kkyo1130/Boeing_RADAR/pull/15) 제출. done11/verifying1/implementing3/pending20. [WI-04 상세 기록](006-advisory-interface/workitem/wi-04.md).
 
 - 2026-10-18 PR #13 지적3건을 b09cf19에서 수정·재검증 후 ba2dc65로 squash merge, WI-02 done. WI-03 서버 단일 큐·브라우저 음성·교신/모의 구간 억제·발생 건별 완료 구현·backend454/frontend36/HTTP47/빌드 검증 후 cd1f895·[PR #14](https://github.com/kkyo1130/Boeing_RADAR/pull/14) reviewing. done10/reviewing1/implementing3/pending21. [WI-03 상세 기록](006-advisory-interface/workitem/wi-03.md).
 
@@ -121,6 +123,119 @@ WI-02는 이 dev 기준 별도 브랜치에서 수신/문맥/중복/시간/원�
 
 | [SPEC-009-WI-06](009-evaluation-demo/workitem/wi-06.md) | GLB 전체 조종석 메시·MCP 수동 조작·시점 전환 | 기존 MCP UI | reviewing |
 
+## 2026-11-12 Flight Safety Report·PDF
+
+사용자 첨부 요청 추가 범위 [SPEC-008-WI-05](008-safety-trace-report/workitem/wi-05.md): verifying. 기존 입력/Trace/Incident/고정 리포트를 확장해 5개 섹션, 사건 중복 방지·미해결 분리, 브라우저 접근 권한, 규칙/선택적 AI 요약, 한글 PDF와 실제 다운로드를 구현했다. 기존 WI의 실제 장치 인수를 자동 완료로 바꾸지 않는다. 변경·검증·리뷰·실행·제한은 해당 WI 문서에 기록한다.
+
+2026-11-12 리포트 브랜드 제거 후속: PDF머리글/제목/작성자, 리포트UI상단, 서버·브라우저다운로드명 정리. 새 파일명 Flight_Safety_Report_<UTC 종료일>.pdf. 관련backend17/frontend49/다운로드E2E1 및빌드통과, fixture PDF4쪽재생성·렌더검토. 저장된데이터·폴더/저장소URL·기종출처이름은유지. [수정위치·검증기록](008-safety-trace-report/workitem/wi-05.md#2026-11-12-리포트-브랜드-문구-제거-후속). 기존WI검증상태유지, 미커밋.
+
+## 2026-11-12 ZIP AI 연결
+
+[SPEC-009-WI-07](009-evaluation-demo/workitem/wi-07.md): verifying. 사용자 요청으로 ZIP Whisper·BERT·OCR을 기존 프로젝트에 연결. 모델은 ZIP 경로 참조, 별도 로컬 DB/포트 사용. 13개 테스트 통과; 실제 마이크·카메라 검증과 PR 제출은 미실행.
+
+2026-11-12 WI-07 후속 verifying: 사용자 요청으로 ZIP 음성·운영·Pilot 기능을 병합하고 기존 Report/PDF와 Vision 소스·모델 참조·LAB 화면을 보존했다. backend680/HTTP50/Vision API57/frontend69 및 빌드 통과. 실장비·브라우저 조작·전용 PR은 미실행. [상세 기록](009-evaluation-demo/workitem/wi-07.md#2026-11-12-음성운영-zip-통합-및-vision리포트-보존-후속).
+
+## 2026-11-12 사진 증강·추가 학습
+
+[SPEC-003-WI-06](003-cockpit-vision/workitem/wi-06.md): verifying. 사용자 승인으로 원본과 해시 일치하는 학습용 복사본 약1GB 정리, 사진 숫자/각도 코드 합성600쌍 생성, 별도 OCR 후보 학습. 기존 모델/원본/평가 기록 보존. 실제 실행 모델 교체와 독립 실카메라 인수는 포함하지 않는다.
+
+2026-11-12 WI-06 결과: 사진 합성600쌍 및 원본 train 혼합으로 HDG/ALT16epochs 후보 학습 종료. 소비된 개발40장씩에서 HDG20/40·ALT24/40으로 부족해 실행 모델 교체하지 않음. Vision 회귀62개 통과. [상세 결과](003-cockpit-vision/workitem/wi-06.md#학습-결과). 독립 실카메라 평가와 PR 미실행, verifying 유지.
+
+2026-11-12 WI-06 빛번짐 후속 verifying: 빛번짐 합성300쌍, render ACK 기반 실제20조합60프레임 train 촬영 완료·270/03000 복원. 단계별 CNN 단독 진단 및 회귀64개 통과. 두 번째 실제 각도/거리 조건 변경 확인 대기이며 새 후보 학습·새 독립 최종 평가는 미실행. [진행 기록](003-cockpit-vision/workitem/wi-06.md#빛번짐실촬영단계-분리-평가-후속-진행-중).
+
+2026-11-12 WI-06 후속 verifying: train실촬영122장·개발24장·동결 후 새최종36장 수집, 빛번짐300쌍 합성 및character 후보 학습. 최종 동일ROI에서 새결합 HDG36정답/0오답/0보류, ALT35정답/0오답/1보류로 로컬 적용. 기존결합 ALT오답1건을 보류로 전환. 상관된12설정그룹의 제한된 측정이며 독립 반복/브라우저 안정화 인수는 남음. Vision71개·무정보 live API 검증 통과. [상세](003-cockpit-vision/workitem/wi-06.md#실제-각도-추가개발-분리동결-최종-평가-결과).
+
+2026-11-12 SPEC-003-WI-06 reviewing: [Draft PR #35](https://github.com/kkyo1130/Boeing_RADAR/pull/35), 전용브랜치 codex/glare-capture-training-20261112→feat/vision-ai. 구현69732bd 격리worktree에서도Vision71개통과. 실제새36장범위에서새결합 HDG36정답·ALT35정답/1보류/출력오답0, 로컬적용·원본보존. 기존사용자브랜치/미커밋변경보존. 외부리뷰/병합·독립반복인수미실행.
+
+## 2026-11-12 파일 음성 직접 STT
+
+[SPEC-004-WI-05](004-speech-communication/workitem/wi-05.md): verifying. 사용자 요청으로 관제/조종사 복창 각각 파일 직접 STT 버튼과 사용법 구현. frontend75/backend684·실제Whisper/BERT 합성파일 임시DB 검증 통과, 브라우저 파일 선택은 제어 연결 문제로 미실행. 기존 마이크·카메라·리포트·비행DB 보존.
+
+## 2026-11-16 사용자 첨부 Operation·Vision·기록 개선
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-006-WI-05](006-advisory-interface/workitem/wi-05.md) | Operation 기본 문구·ID·사용법 정리 | reviewing |
+| [SPEC-003-WI-07](003-cockpit-vision/workitem/wi-07.md) | 자동·수동 ROI 공통 OCR·관측 경로 | reviewing |
+| [SPEC-003-WI-08](003-cockpit-vision/workitem/wi-08.md) | 새프레임3회·인식일정·상세시간진단 | reviewing |
+| [SPEC-008-WI-06](008-safety-trace-report/workitem/wi-06.md) | polling독립기록·확정리포트·전체인쇄 | reviewing |
+
+기존35개WI 및 실장비인수 상태는 유지한다. 각WI의 구현·검증·자체리뷰·인수인계는 링크한기록참조. 실장비지연비교/실제프린터/외부리뷰는미실행.
+
+2026-11-16 사용자 명시 승인으로 새 기준·작업 브랜치 푸시와 Draft PR 제출을 완료했다. 실장비 인수·외부 리뷰·병합은 미실행이다.
+
+PR 연결: [UI #36](https://github.com/kkyo1130/Boeing_RADAR/pull/36) → [ROI #37](https://github.com/kkyo1130/Boeing_RADAR/pull/37) → [인식 일정 #38](https://github.com/kkyo1130/Boeing_RADAR/pull/38) → [리포트 #39](https://github.com/kkyo1130/Boeing_RADAR/pull/39).
+
+## 2026-11-16 사진 기준 Cockpit 비율 조정
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-009-WI-08](009-evaluation-demo/workitem/wi-08.md) | HDG·ALT/MCP 비율 정리와 동일 실행 모델 paired 비교 | verifying |
+
+화면 캡처 기반 새24화면/48필드 비교: 이전 정답47·보류1·오답0, 변경 정답48·보류0·오답0. 실제 카메라 재촬영/물리 태블릿 인수와 외부 리뷰는 미실행이다.
+
+## 2026-11-16 이동 중 카메라 추적·재탐색
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-003-WI-09](003-cockpit-vision/workitem/wi-09.md) | 매 프레임 자동 영역 갱신·동적 박스·탭 전환/놓침 후 연속 재탐색 | verifying |
+
+backend692/skip7, frontend79·빌드, 모의 카메라 브라우저4, 로컬 렌더 이미지+native OCR+임시 DB API1 검증. 실제 웹캠 이동·장시간 배경 탭 인수와 외부 리뷰·원격 게시는 미실행이다.
+
+## 2026-11-16 리포트 중복 표시 제거
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-008-WI-07](008-safety-trace-report/workitem/wi-07.md) | 반복 관측·사건 갱신·검증표 집계와 화면/PDF/인쇄 공통 표시 | verifying |
+
+실제 최신 리포트 원본817개·오류1개를 보존하며 PDF102→11쪽. 원본 고정 JSON 불변 확인, frontend81·빌드·브라우저4 통과. 원격 게시·외부 리뷰·실제 프린터 출력은 미실행.
+
+## 2026-11-17 YOLO + CNN 복구와 실제 웹캠 검증
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-003-WI-10](003-cockpit-vision/workitem/wi-10.md) | YOLO 자동 영역·추적 + 공통 CNN, Apple Vision 대체 제거, 실제 촬영 검증 | verifying |
+
+## 2026-11-17 오류 사건 중심 보고서
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-008-WI-08](008-safety-trace-report/workitem/wi-08.md) | 사건당4단계 기본 타임라인·전체기록 접기·PDF/인쇄 요약 | reviewing |
+
+backend701/skip7, frontend82·빌드, 브라우저4 통과. 실제 고정4154이벤트/2사건은8단계/PDF2쪽, 원본 JSON 불변. 외부 리뷰·원격 게시·실제 프린터 미실행.
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-008-WI-09](008-safety-trace-report/workitem/wi-09.md) | AI Safety Summary 화면/PDF 문단·줄간격 개선 | reviewing |
+
+## 2026-11-17 Operation 입력 UI 정리
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-006-WI-06](006-advisory-interface/workitem/wi-06.md) | 중복 음성 방식·예비 시나리오·모의 시험·사용법 제거, Cockpit 링크 정리 | reviewing |
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-006-WI-07](006-advisory-interface/workitem/wi-07.md) | 음성·장치 설정 하단 독립 결과 섹션과 복명복창/Cockpit 2열 배치 | reviewing |
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-006-WI-08](006-advisory-interface/workitem/wi-08.md) | RADAR AI Flight Guard 브랜드·파랑/하늘색 화면 테마 | reviewing |
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-006-WI-09](006-advisory-interface/workitem/wi-09.md) | 상단 라이트/다크 전환·선택 저장·어두운 배경/패널 | reviewing |
+
+
+2026-11-17 사용자 요청으로 후속 작업별 Draft PR #40–#49 게시 완료. [게시 기록·선행 관계](publication-20261117.md). 실장비 인수가 남은 WI의 verifying 상태는 유지한다.
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-006-WI-10](006-advisory-interface/workitem/wi-10.md) | 현재 브랜드·Cockpit 문구/누락 검증 기록 게시와 checkout 정리 | reviewing |
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-006-WI-11](006-advisory-interface/workitem/wi-11.md) | 사용자 B&G 상단 로고·favicon·앱 아이콘 연결 | reviewing |
 ## 2026-11-09 소형 조종사 화면 추가
 
 | WI | 작업 | 담당 | 선행 | 상태 |
@@ -185,3 +300,7 @@ SPEC-004-WI-02의 요청 범위를 `codex/atc-numeric-rules`에서 reviewing. �
 2026-11-11 SPEC-004-WI-02 뒤쪽 호출부호 수정: `codex/readback-callsign-suffix`에서 PILOT 경계 호출부호·복창 문형·동작 비교 및 실제 DELTA 원음 재시험을 완료하고 reviewing. 후보 DELTA123/3000ft/270° 추출, 동작 생략/카메라 부재 보류를 유지한다. 전체 backend665/별도 최종42·계약22·빌드 검증. [상세 근거](../readback-callsign-suffix.md), 다른 WI 상태는 변경하지 않는다.
 
 제출 커밋 `7416738`, [PR #34](https://github.com/kkyo1130/Boeing_RADAR/pull/34). 로컬 데모 적용 완료, 외부 리뷰·병합 대기.
+
+## 2026-11-18 열린 PR의 dev 통합
+
+사용자의 전체 반영 요청으로 #36–#51 및 #15를 `codex/dev-pr-integration-20261118`에서 통합 검증했다. Backend/HTTP754(7 skipped)·Vision80·frontend83·HTTP→React5·브라우저14·계약6/22·빌드 통과. 충돌 해결, 음성/터치 보호와 시나리오 잔여 UI 수정 및 CI 의존성 보완은 [통합 기록](../development/pr-stack-integration-20261118.md)에 있다. 코드 병합과 실장비 전체 인수 완료는 구분하며 기존 미완료 AC 상태를 유지한다. 원격 CI/최종 병합 여부는 통합 PR을 따른다.

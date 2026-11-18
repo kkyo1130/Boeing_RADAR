@@ -1,0 +1,130 @@
+{
+  "date": "2026-11-12",
+  "scope": "One final physical capture condition, 12 correlated setting groups x 3 frames; not operational accuracy",
+  "scheduled": 36,
+  "recorded": 36,
+  "models": {
+    "final_v3": {
+      "hdg": {
+        "scheduled": 36,
+        "recorded": 36,
+        "detected": 36,
+        "preprocessed": 36,
+        "accepted": 5,
+        "correct": 0,
+        "wrong": 5,
+        "missing": 0,
+        "held_or_missing": 31,
+        "correct_per_scheduled": 0.0,
+        "wrong_per_accepted": 1.0
+      },
+      "alt": {
+        "scheduled": 36,
+        "recorded": 36,
+        "detected": 36,
+        "preprocessed": 36,
+        "accepted": 0,
+        "correct": 0,
+        "wrong": 0,
+        "missing": 0,
+        "held_or_missing": 36,
+        "correct_per_scheduled": 0.0,
+        "wrong_per_accepted": null
+      }
+    },
+    "final_candidate": {
+      "hdg": {
+        "scheduled": 36,
+        "recorded": 36,
+        "detected": 36,
+        "preprocessed": 36,
+        "accepted": 36,
+        "correct": 36,
+        "wrong": 0,
+        "missing": 0,
+        "held_or_missing": 0,
+        "correct_per_scheduled": 1.0,
+        "wrong_per_accepted": 0.0
+      },
+      "alt": {
+        "scheduled": 36,
+        "recorded": 36,
+        "detected": 36,
+        "preprocessed": 36,
+        "accepted": 29,
+        "correct": 29,
+        "wrong": 0,
+        "missing": 0,
+        "held_or_missing": 7,
+        "correct_per_scheduled": 0.8055555555555556,
+        "wrong_per_accepted": 0.0
+      }
+    },
+    "final_current_combined": {
+      "hdg": {
+        "scheduled": 36,
+        "recorded": 36,
+        "detected": 36,
+        "preprocessed": 36,
+        "accepted": 31,
+        "correct": 31,
+        "wrong": 0,
+        "missing": 0,
+        "held_or_missing": 5,
+        "correct_per_scheduled": 0.8611111111111112,
+        "wrong_per_accepted": 0.0
+      },
+      "alt": {
+        "scheduled": 36,
+        "recorded": 36,
+        "detected": 36,
+        "preprocessed": 36,
+        "accepted": 36,
+        "correct": 35,
+        "wrong": 1,
+        "missing": 0,
+        "held_or_missing": 0,
+        "correct_per_scheduled": 0.9722222222222222,
+        "wrong_per_accepted": 0.027777777777777776
+      }
+    },
+    "final_candidate_combined": {
+      "hdg": {
+        "scheduled": 36,
+        "recorded": 36,
+        "detected": 36,
+        "preprocessed": 36,
+        "accepted": 36,
+        "correct": 36,
+        "wrong": 0,
+        "missing": 0,
+        "held_or_missing": 0,
+        "correct_per_scheduled": 1.0,
+        "wrong_per_accepted": 0.0
+      },
+      "alt": {
+        "scheduled": 36,
+        "recorded": 36,
+        "detected": 36,
+        "preprocessed": 36,
+        "accepted": 35,
+        "correct": 35,
+        "wrong": 0,
+        "missing": 0,
+        "held_or_missing": 1,
+        "correct_per_scheduled": 0.9722222222222222,
+        "wrong_per_accepted": 0.0
+      }
+    }
+  },
+  "decision": "Activate frozen candidate with existing Apple Vision fallback; disagreement remains unverified",
+  "training": {
+    "synthetic_glare_pairs": 300,
+    "raw_train_frames": 122,
+    "train_crops": 798,
+    "development_frames": 24,
+    "glyphs": 1520,
+    "skipped_segmentation_crops": 428
+  },
+  "checks": "71 Vision tests passed; no browser visual/stability acceptance claimed"
+}

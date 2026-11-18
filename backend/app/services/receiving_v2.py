@@ -91,7 +91,7 @@ def refresh_validation(db, profile, state, now, ended=False):
             'active_attempt': next((a for a in voice['attempts'].values() if a['status'] == 'PLAYING'), None)}, now)
 
 
-def start(db, callsign):
+def start(db, callsign, *, report_owner_hash=None):
     try:
         path = os.environ["RADAR_V2_CONFIG"]
         config = ReceiverConfig.model_validate_json(Path(path).read_text())
@@ -111,6 +111,9 @@ def start(db, callsign):
                 "structure_policy": config.structure_rules.model_dump() if config.structure_rules else None,
                 "structure_checks": {}})
         db.add(profile)
+        if report_owner_hash:
+            from app.models.operations_v2 import V2ReportOwner
+            db.add(V2ReportOwner(flight_id=flight.flight_id,owner_hash=report_owner_hash))
         initial = deepcopy(profile.state)
         refresh_validation(db, profile, initial, now)
         profile.state = initial
@@ -127,7 +130,12 @@ def session_response(flight, profile):
 def end(db, flight_id):
     now = utc_now()
     with atomic(db):
-        flight, profile = context(db, flight_id, active=True, lock=True)
+        flight, profile = context(db, flight_id, lock=True)
+        if flight.status == FlightStatus.ENDED:
+            from app.models.operations_v2 import V2Report
+            if not db.get(V2Report, flight_id):
+                raise ReceivingError(409, 'FLIGHT_ENDED', 'Flight ended without a v2 frozen report')
+            return session_response(flight, profile)
         # Persist timer-driven incidents before freezing the last live verdict.
         live = deepcopy(profile.state)
         refresh_validation(db, profile, live, now)
@@ -527,6 +535,9 @@ def revalidate(db, flight_id):
         state = deepcopy(profile.state)
         profile.revision += 1
         refresh_validation(db, profile, state, now)
-        profile.state = state
-        trace(db, profile, "REVALIDATED", {"validation": state["validation_snapshot"]}, now)
+        if state != profile.state:
+            profile.state = state
+            trace(db, profile, "REVALIDATED", {"validation": state["validation_snapshot"]}, now)
+        else:
+            profile.revision -= 1
     return get_state(db, flight_id)

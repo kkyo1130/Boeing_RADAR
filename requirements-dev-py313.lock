@@ -6,6 +6,7 @@ annotated-doc==0.0.5
 annotated-types==0.8.0
 anyio==4.15.1
 certifi==2026.7.22
+charset-normalizer==3.5.2
 click==8.5.0
 fastapi==0.143.2
 h11==0.16.0
@@ -21,7 +22,9 @@ pillow==12.3.0
 pluggy==1.7.0
 pydantic==2.14.1
 pydantic_core==2.50.1
+pypdf==6.21.4
 pytest==9.1.1
+reportlab==4.5.1
 starlette==1.8.0
 typing-inspection==0.4.4
 typing_extensions==4.16.0

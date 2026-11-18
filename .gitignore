@@ -24,3 +24,17 @@ htmlcov/
 .demo/
 
 /frontend/node_modules
+
+# Generated flight report QA and exports
+/output/pdf/
+/tmp/pdfs/
+
+# Preserved Vision workspace: local models, captures and generated evaluations
+/vision/data/
+/vision/checkpoints/
+/vision/reports/
+/vision/roi.local.json
+/yolo11n.pt
+
+# Generated model training outputs
+/runs/

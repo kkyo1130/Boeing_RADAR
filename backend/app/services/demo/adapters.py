@@ -85,9 +85,11 @@ def speech_payload(flight, revision, segment, transcript, score, registry, audio
 
 
 def register(db, flight, body, audio, role, atc_mode=None):
+    file_upload = atc_mode == 'file_upload' if role == 'ATC' else body.get('input_mode') == 'file_upload'
+    role_basis = ('PILOT_FILE_UPLOAD' if file_upload else 'PILOT_PTT') if role == 'PILOT' else ('ATC_FILE_UPLOAD' if file_upload else 'ATC_DEMO_MICROPHONE' if atc_mode == 'microphone_live' else 'ATC_PLAYBACK')
     segment = dict(schema_version='2', flight_id=flight, segment_id='seg-'+uuid4().hex,
                    attempt_id='try-'+uuid4().hex, atc_input_id=body['atc_input_id'] if role == 'PILOT' else 'atc-'+uuid4().hex,
-                   role=role, role_basis='PILOT_PTT' if role == 'PILOT' else ('ATC_DEMO_MICROPHONE' if atc_mode == 'microphone_live' else 'ATC_PLAYBACK'),
+                   role=role, role_basis=role_basis,
                    started_at=body['started_at'], ended_at=body['ended_at'], complete=True,
                    interruption_reason=None, audio_ref=audio['ref'], audio_unavailable_reason=None)
     receipt = intake.register_segment(db, flight, SpeechSegmentV2.model_validate(segment))
@@ -173,7 +175,7 @@ def _receive_speech(db, flight, body, data, *, scenario=None, atc_mode=None):
     receipt, _ = intake.receive(db, flight, ObservationV2.model_validate(payload), 'OBSERVATION')
     return dict(receipt=receipt, transcript=transcript, model_score=score, quality_reason=reason, ner=ner_result,
                 stt_context=stt_context,
-                input_mode='registered_scenario' if scenario else atc_mode or 'uploaded_wav_local_whisper',
+                input_mode='registered_scenario' if scenario else atc_mode or body.get('input_mode') or 'uploaded_wav_local_whisper',
                 role=segment['role'], atc_input_id=segment['atc_input_id'],
                 instruction_id=segment['instruction_id'])
 
@@ -189,8 +191,31 @@ def decode_image(encoded):
         error('Invalid camera image')
 
 
-def calibrate(flight, encoded, rois):
+def auto_calibrate(flight, encoded):
+    # Image-only localization: no instruction values or saved manual ROI.
+    from vision.yolo_cnn_runtime import locate_windows
+    _, image = decode_image(encoded)
+    found = locate_windows(image)
+    debug_path = os.getenv('RADAR_VISION_DEBUG_FRAME')
+    if debug_path:
+        destination = Path(debug_path)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        image.save(destination, format='JPEG', quality=95)
+    if not found or set(found) != {'hdg', 'alt'}:
+        # Invalidate any previous calibration instead of reusing stale regions.
+        with CAMERA_LOCK:
+            for key in list(CAMERAS):
+                if CAMERAS[key]['flight'] == flight:
+                    del CAMERAS[key]
+        return dict(status='SEARCHING', token=None, rois=None, reason='WINDOWS_NOT_FOUND_OR_AMBIGUOUS',
+                    message='ALT·HDG 창 탐색 중 · 계기판 전체와 주황색 숫자가 선명하게 보이도록 맞추세요.')
+    rois = {'ALT': [int(x) for x in found['alt']], 'HDG': [int(x) for x in found['hdg']]}
+    return {**calibrate(flight, encoded, rois, method='AUTO'), 'status': 'READY', 'rois': rois, 'region_source': 'yolo11n'}
+
+
+def calibrate(flight, encoded, rois, method='MANUAL'):
     from radar_vision.stream import Stabilizer
+    if set(rois) != {'ALT','HDG'}: error('Select both ALT and HDG')
     _, image = decode_image(encoded)
     for roi in rois.values():
         x1,y1,x2,y2 = roi
@@ -205,64 +230,75 @@ def calibrate(flight, encoded, rois):
             if CAMERAS[key]['flight'] == flight or time.monotonic()-CAMERAS[key]['updated'] > 1800:
                 del CAMERAS[key]
         if len(CAMERAS) >= 4: error('Too many camera sessions', 409)
-        CAMERAS[token] = dict(tracked=tracked, flight=flight, size=image.size, rois=rois, stable=Stabilizer(3),
+        CAMERAS[token] = dict(tracked=tracked, flight=flight, size=image.size, rois=rois, method=method, stable=Stabilizer(3),
                              updated=time.monotonic(), last=None, count=0, targets=None, emitted=None, expired=False)
     return dict(token=token, image_size=image.size)
 
 
 def camera(db, flight, body):
-    from radar_vision.poc import recognize
+    from vision.yolo_cnn_runtime import read_fields
+    started = time.monotonic()
     with CAMERA_LOCK:
         session = CAMERAS.get(body['token'])
         if session is None or session['flight'] != flight: error('Recalibrate the camera', 409)
-        if session['expired']: error('Camera stream timed out; recalibrate', 409)
+        media_time=body.get('media_time')
+        if media_time is not None and media_time <= session.get('media_time', -1):
+            session['stable'].reset(); error('Duplicate camera frame', 409)
+        if media_time is not None: session['media_time']=media_time
         if session['last'] and body['captured_at'] <= session['last']: error('Duplicate or out-of-order frame', 409)
-        if session['count'] >= 600: error('Demo frame limit reached; recalibrate for a new run', 409)
         session['last'] = body['captured_at']; session['count'] += 1
         now = intake.utc_now()
         age = (now-intake.parsed(body['captured_at'])).total_seconds()
         if age < -.1 or age > 5:
             session['stable'].reset(); error('Stale camera frame')
         _, image = decode_image(body['image'])
-        if image.size != session['size']:
+        if session['expired']:
+            session['stable'].reset()
+            session['expired'] = False
+        if image.size != session['size'] and session.get('method') != 'AUTO':
             session['stable'].reset(); error('Camera resolution changed; recalibrate')
         state = intake.get_state(db, flight); db.rollback()
         targets = [(k, v['instruction_id'] if v else None) for k,v in state['targets'].items()]
         if targets != session['targets'] or time.monotonic()-session['updated'] > 5:
             session['stable'].reset()
         session['targets'] = targets
-        from .tracking import locate
-        shift = locate(image, session['tracked'])
-        config = dict(image_size=list(image.size), minimum_model_score=.5)
-        for name, field in [('altitude','ALT'),('heading','HDG')]:
-            roi=session['rois'][field]
-            if shift is not None: roi=[roi[0]+shift[0],roi[1]+shift[1],roi[2]+shift[0],roi[3]+shift[1]]
-            if not (0 <= roi[0] < roi[2] <= image.width and 0 <= roi[1] < roi[3] <= image.height): shift=None; roi=session['rois'][field]
-            config[name] = dict(roi=roi, unit='feet' if field=='ALT' else 'degrees')
-        with TemporaryDirectory() as temp:
-            path=Path(temp)/'frame.png'; image.save(path)
-            result=recognize(path, config, os.environ['RADAR_OCR_BINARY'], Path(temp)/'ocr', body['captured_at'])
-        if shift is None:
-            for item in result['fields'].values(): item.update(value=None, reason='panel_tracking_lost')
+        from .tracking import follow_regions
+        rois = follow_regions(image, session)
+        if rois:
+            result=read_fields(image,rois)
+        else:
+            result={'fields':{name:dict(value=None,reason='panel_tracking_lost',model_score=None,raw_text=None)
+                              for name in ('altitude','heading')}}
         if (intake.utc_now()-intake.parsed(body['captured_at'])).total_seconds() > 5:
             session['stable'].reset()
+            rois = None
+            session['tracking_lost'] = True
             for item in result['fields'].values(): item.update(value=None, reason='stale_frame')
+        ocr_done = time.monotonic()
         session['stable'].apply(result['fields'])
+        stability = session.setdefault('stability_started', {})
+        stable_ms = {}
+        for name, field in result['fields'].items():
+            count = field.get('stable_count', 0)
+            if count <= 1: stability[name] = ocr_done
+            stable_ms[name] = round((ocr_done-stability.get(name, ocr_done))*1000) if count >= 3 else None
         session['updated']=time.monotonic()
         evidence_buffer=io.BytesIO();image.save(evidence_buffer,format='JPEG',quality=85)
         evidence=media_v2.upload(db, flight, evidence_buffer.getvalue(), 'image/jpeg')
         payload=base(flight,body['target_revision'],body['captured_at'],[dict(**evidence,kind='FRAME',field=None,roi=None)])
-        payload.update(source='COCKPIT',frame_id='frame-'+uuid4().hex,fields={})
+        if not rois:
+            payload['channel_health'] = dict(status='DEGRADED', reason='panel_tracking_lost')
+        payload.update(source='COCKPIT',roi_method=session.get('method'),frame_id='frame-'+uuid4().hex,fields={})
         for name,key in [('altitude','ALT'),('heading','HDG')]:
             item=result['fields'][name]
             payload['fields'][key]=reading(item['value'],key,item['model_score'],item['reason'],item['raw_text'])
         receipt,_=intake.receive(db,flight,ObservationV2.model_validate(payload),'OBSERVATION')
         session['emitted']=time.monotonic()
-        return dict(receipt=receipt,fields=result['fields'],captured_at=body['captured_at'])
+        return dict(receipt=receipt,fields=result['fields'],captured_at=body['captured_at'],rois=rois,tracking_status='TRACKING' if rois else 'SEARCHING',pipeline='yolo11n_character_cnn',apple_vision_enabled=False,timings={'ocr_ms':round((ocr_done-started)*1000),'delivery_ms':round((time.monotonic()-ocr_done)*1000),'stabilization_ms':stable_ms})
 
 
 def expire_camera(db, flight):
-    """Called before UI state reads; a hung/closed tab cannot keep a camera normal."""
+    """Persist loss of fresh camera observations independently of UI state reads."""
     if os.getenv('RADAR_DEMO_ENABLED') != '1': return
     from app.schemas.observation_v2 import HealthEventV2
     for item in list(CAMERAS.values()):
@@ -276,3 +312,19 @@ def expire_camera(db, flight):
             intake.receive(db,flight,event,'HEALTH')
         except intake.ReceivingError:
             db.rollback()
+
+
+def prepare_runtime():
+    """Load optional demo engines before accepting camera or speech requests."""
+    if os.getenv('RADAR_DEMO_ENABLED') != '1':
+        return
+    import cv2
+    from radar_vision.stream import Stabilizer
+    from vision.yolo_cnn_runtime import get_runtime
+    get_runtime()
+    from app.services.speech.local import LocalWhisper
+    cv2.setNumThreads(1)
+    global MODEL
+    with STT_LOCK:
+        if MODEL is None:
+            MODEL = LocalWhisper(os.environ.get('RADAR_WHISPER_MODEL', ''))

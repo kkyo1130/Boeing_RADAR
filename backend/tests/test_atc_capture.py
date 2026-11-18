@@ -50,7 +50,7 @@ def test_atc_asr_then_bound_pilot(client, flight, monkeypatch, mode):
     state = client.get(f'/api/v2/flights/{flight}/state').json()
     assert state['validation']['readback']['result'] == 'NORMAL'
     assert len(calls) == 2
-    assert [s.role_basis for s in segments] == [('ATC_DEMO_MICROPHONE' if mode == 'microphone_live' else 'ATC_PLAYBACK'), 'PILOT_PTT']
+    assert [s.role_basis for s in segments] == [('ATC_DEMO_MICROPHONE' if mode == 'microphone_live' else 'ATC_FILE_UPLOAD' if mode == 'file_upload' else 'ATC_PLAYBACK'), 'PILOT_PTT']
 
 @pytest.mark.parametrize('text,raises', [('unintelligible',False), (TEXT+' if able',False), ('',True)])
 def test_failed_atc_blocks_old_pilot(client, flight, monkeypatch, text, raises):
@@ -92,3 +92,35 @@ def test_bad_audio_no_atc(client, flight, monkeypatch):
     assert response.status_code == 422, response.text
     assert not calls
     assert client.get(f'/api/v2/flights/{flight}/state').json()['readback_required'] is None
+
+
+@pytest.mark.parametrize('pilot_text,result',[(TEXT,'NORMAL'),('Radar one two three climb and maintain three thousand five hundred feet heading two seven zero','MISMATCH')])
+def test_file_atc_then_pilot_uses_asr_and_records_file_roles(client,flight,monkeypatch,pilot_text,result):
+    calls=asr(monkeypatch)
+    segments=[];original=intake.register_segment
+    def capture(db,flight,segment):
+        segments.append(segment)
+        return original(db,flight,segment)
+    monkeypatch.setattr(intake,'register_segment',capture)
+    atc=client.post(f'/api/demo/{flight}/atc',json=body(input_mode='file_upload'))
+    assert atc.status_code==200,atc.text
+    asr(monkeypatch,pilot_text)
+    now=intake.utc_now()
+    pilot_body=body(input_mode='file_upload',atc_input_id=atc.json()['atc_input_id'])
+    pilot_body.update(started_at=intake.stamp(now-timedelta(seconds=.03)),ended_at=intake.stamp(now-timedelta(seconds=.01)))
+    pilot=client.post(f'/api/demo/{flight}/readback',json=pilot_body)
+    assert pilot.status_code==200,pilot.text
+    assert pilot.json()['input_mode']=='file_upload' and pilot.json()['role']=='PILOT'
+    assert [s.role_basis for s in segments]==['ATC_FILE_UPLOAD','PILOT_FILE_UPLOAD']
+    state=client.get(f'/api/v2/flights/{flight}/state').json()
+    assert state['validation']['readback']['result']==result
+    assert calls==[wav_bytes()]
+
+
+def test_file_role_mismatch_rejected_by_contract():
+    from app.schemas.observation_v2 import SpeechSegmentV2
+    from pydantic import ValidationError
+    from uuid import uuid4
+    now=intake.utc_now()
+    data=dict(schema_version='2',flight_id='f',segment_id='s',attempt_id='a',atc_input_id='i',role='ATC',role_basis='PILOT_FILE_UPLOAD',started_at=intake.stamp(now-timedelta(seconds=2)),ended_at=intake.stamp(now-timedelta(seconds=1)),complete=True,interruption_reason=None,audio_ref='stored:x',audio_unavailable_reason=None)
+    with pytest.raises(ValidationError):SpeechSegmentV2.model_validate(data)

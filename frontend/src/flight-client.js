@@ -13,8 +13,18 @@ export async function request(path, { method = 'GET', body, signal, timeout = TI
     const response = await fetch(path, { method, signal: controller.signal, cache: 'no-store',
       headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body) });
-    const data = await response.json();
-    if (!response.ok) throw Object.assign(new Error(data.message || `요청 실패 (${response.status})`), { status: response.status, code: data.code });
+    let data;
+    try { data = await response.json(); }
+    catch {
+      throw Object.assign(new Error(response.ok
+        ? '서버 응답 형식을 확인할 수 없습니다.'
+        : `서버 요청 실패 (${response.status}) · 서버 연결과 실행 로그를 확인하세요.`), { status: response.status });
+    }
+    if (!response.ok) {
+      const detail = typeof data.detail === 'string' ? data.detail : Array.isArray(data.detail)
+        ? data.detail.map(item => `${(item.loc || []).join('.')}: ${item.msg || '잘못된 입력'}`).join(' · ') : '';
+      throw Object.assign(new Error(data.message || detail || `요청 실패 (${response.status})`), { status: response.status, code: data.code });
+    }
     return data;
   } catch (error) {
     if (controller.signal.aborted) throw new Error('서버 응답을 확인할 수 없습니다. 연결을 확인하세요.');

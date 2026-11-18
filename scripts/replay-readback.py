@@ -27,7 +27,7 @@ def main():
     with httpx.Client(base_url=args.server, timeout=180) as client:
         def request(method, url, **kwargs):
             response = client.request(method, url, **kwargs)
-            
+
             if response.is_error:
                 raise RuntimeError(f"{response.status_code}: {response.text}")
             return response.json()

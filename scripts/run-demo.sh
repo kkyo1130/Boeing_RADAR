@@ -2,6 +2,8 @@
 set -eu
 cd "$(dirname "$0")/.."
 DEMO_ROOT="$PWD"
+export PYTHONPATH="$DEMO_ROOT/vision/src${PYTHONPATH:+:$PYTHONPATH}"
+"$DEMO_ROOT/.venv/bin/python" -c 'import cv2, numpy, faster_whisper; from radar_vision.stream import Stabilizer; from radar_vision.poc import recognize'
 export RADAR_DEMO_ENABLED=1
 export RADAR_V2_CONFIG="$DEMO_ROOT/.demo/config.json"
 export RADAR_DATABASE_URL="sqlite:///$DEMO_ROOT/.demo/radar.db"

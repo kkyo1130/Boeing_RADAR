@@ -119,3 +119,7 @@
 ## 변경 기록
 
 - v1 · 2026-10-10: 사용자 제공 기획·Priority·자문과 현재 코드로 최초 작업 초안 작성. 문서 작성 권한과 기능 구현 권한은 구분한다.
+
+## 2026-11-12 사용자 추가 구현
+
+기존 입력/Trace/Incident/V2Report를 재사용한 Flight Safety Report 5개 섹션·한글 PDF·브라우저 소유권·AI 실패 대체를 [WI-05](008-safety-trace-report/workitem/wi-05.md)에 구현/검증 기록했다. 위 계획의 과거 미착수 표기를 전체 실장비 완료로 바꾸지 않는다. 공개 추가 계약은 [Flight Safety Report](../../contracts/flight-safety-report.md).

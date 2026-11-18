@@ -156,6 +156,9 @@ body의 `flight_id`와 URL ID, 관측 시각·수신 시각·현재 목표·시�
 
 - 2026-10-14: 기존 WI ID·범위·검증 기록을 보존해 각 스펙의 workitem/ 개별 파일로 이동. 요구사항 변경 없이 구조만 분리.
 
+## 2026-11-16 ROI source metadata
+
+User-authorized operations improvements add optional nullable Cockpit `roi_method` (`AUTO` / `MANUAL`). This is provenance, never a value, score, or verdict. Absent metadata is omitted from serialized legacy inputs to preserve prior fingerprints and Trace payloads. Producer, DTO and generated Schema are updated together. Local demo Frame optionally accepts finite nonnegative `media_time`; equal/earlier media timestamps are rejected and stabilization resets. UTC capture-time and freshness checks remain mandatory. No database migration is needed: existing JSON observations retain metadata.
 ### 2026-11-10 모의 관제사 직접 발화 역할 근거 확장
 
 사용자 요청 SPEC-004-WI-02의 사람 관제사 시연을 위해 SpeechSegmentV2의 ATC role_basis에 ATC_DEMO_MICROPHONE을 추가한다. 수동으로 선택한 모의 역할이며 실제 RF 수신이나 화자 인증을 뜻하지 않는다. ATC_PLAYBACK과 PILOT_PTT는 유지한다. DTO/JSON Schema/fixture/생산자·소비자를 함께 갱신하며 기존 소비자는 새 enum 지원 후 사용한다. 상세 실행·검증 근거는 SPEC-004-WI-02와 contracts/observation-v2.md에 기록한다.

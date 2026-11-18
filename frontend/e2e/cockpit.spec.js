@@ -20,7 +20,7 @@ test('GLB loads and supports 3D picking, controls and capture without photo togg
  // Browser touch input: one finger stays on the heading display while another moves.
  const touchBox=await page.locator('.cockpit-3d canvas').boundingBox();
  const touchScale=touchBox.height/(2*16*Math.tan(16*Math.PI/180));
- const x=touchBox.x+touchBox.width/2,y=touchBox.y+touchBox.height/2-.58*.52*touchScale;
+ const x=touchBox.x+touchBox.width/2,y=touchBox.y+touchBox.height/2-.58*1.5*touchScale;
  const cdp=await page.context().newCDPSession(page);
  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{id:1,x:x-80,y},{id:2,x,y}]});
  await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{id:1,x:x-120,y},{id:2,x,y}]});

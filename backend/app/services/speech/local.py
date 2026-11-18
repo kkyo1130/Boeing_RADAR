@@ -8,7 +8,7 @@ class LocalWhisper:
         if not Path(model_path).is_dir():
             raise ValueError("Supply an existing local faster-whisper model directory")
         from faster_whisper import WhisperModel
-        self.model = WhisperModel(model_path, device=device, compute_type="int8",
+        self.model = WhisperModel(model_path, device=device, compute_type="int8", cpu_threads=2, num_workers=1,
                                   local_files_only=True)
 
     def transcribe(self, path, *, callsign_context=None):

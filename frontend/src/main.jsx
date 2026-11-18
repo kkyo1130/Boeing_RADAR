@@ -1,10 +1,13 @@
 import React, { lazy, Suspense, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './style.css';
+import {readColorMode,applyColorMode} from './color-mode.js';
+applyColorMode(readColorMode());
 import Operations from './Operations.jsx';
-const Cockpit3D = lazy(() => import('./Cockpit3D.jsx'));
-
 import Pilot from './Pilot.jsx';
+const CockpitVision = lazy(() => import('./CockpitVision.jsx'));
+import { ReportPage } from './ReportPanel.jsx';
+const Cockpit3D = lazy(() => import('./Cockpit3D.jsx'));
 
 const initial = { speed: 250, heading: 270, altitude: 3000 };
 const instruments = [
@@ -132,4 +135,4 @@ function App() {
   </main>;
 }
 
-createRoot(document.getElementById('root')).render(window.location.pathname === '/pilot' ? <Pilot /> : window.location.pathname === '/operations' ? <Operations /> : <App />);
+createRoot(document.getElementById('root')).render(window.location.pathname === '/cockpit' ? <Suspense fallback={<p>Loading Vision…</p>}><CockpitVision /></Suspense> : window.location.pathname === '/pilot' ? <Pilot /> : window.location.pathname === '/report' ? <ReportPage /> : window.location.pathname === '/operations' ? <Operations /> : <App />);
