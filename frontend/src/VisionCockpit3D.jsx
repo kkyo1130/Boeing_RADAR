@@ -3,6 +3,7 @@ import * as T from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import './cockpit3d.css';
+import {clickGesture} from './click-gesture.js';
 
 // Compact MCP proportions from the cockpit reference. Keep the 4x digit
 // textures, un-tonemapped contrast and existing OCR semantics.
@@ -71,14 +72,16 @@ export default function Cockpit3D({values,hidden,onEdit,onChange,capture,onRende
   },undefined,()=>!disposed&&setStatus('error'));
   function update(){painted={...latest.current.values};renderer.shadowMap.needsUpdate=true;for(const [name,,,digits] of slots){displays[name]?.userData.paint(latest.current.hidden[name]?'':String(latest.current.values[name]).padStart(digits,'0'));if(knobs[name])knobs[name].rotation.z=-latest.current.values[name]*(name==='altitude'?.0008:.025);}}
   runtime.current.update=update;
-  const raycaster=new T.Raycaster(),pointer=new T.Vector2();let down=null;
+  const raycaster=new T.Raycaster(),pointer=new T.Vector2(),gesture=clickGesture();
   function hit(e){const rect=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);for(const h of raycaster.intersectObjects(scene.children,true)){let object=h.object;while(object){if(object.userData.field)return {object,point:h.point};object=object.parent;}const material=h.object.material;if(material&&!material.transparent)return null;}return null;}
-  const pointerDown=e=>{down=[e.clientX,e.clientY];};
-  const pointerUp=e=>{if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>5)return;down=null;const h=hit(e);if(!h)return;const {field,edit}=h.object.userData;if(edit)latest.current.onEdit(field);else latest.current.onChange(field,h.point.x<h.object.position.x?-1:1);};
-  const move=e=>{renderer.domElement.style.cursor=hit(e)?'pointer':'grab';};
-  renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointerup',pointerUp);renderer.domElement.addEventListener('pointermove',move);
+  const pointerDown=e=>gesture.down(e);
+  const pointerUp=e=>{if(!gesture.up(e))return;const h=hit(e);if(!h)return;const {field,edit}=h.object.userData;if(edit)latest.current.onEdit(field);else latest.current.onChange(field,h.point.x<h.object.position.x?-1:1);};
+  const cancel=e=>gesture.cancel(e);
+  const blur=()=>gesture.clear();
+  const move=e=>{gesture.move(e);renderer.domElement.style.cursor=hit(e)?'pointer':'grab';};
+  renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointerup',pointerUp);renderer.domElement.addEventListener('pointermove',move);renderer.domElement.addEventListener('pointercancel',cancel);renderer.domElement.addEventListener('lostpointercapture',cancel);window.addEventListener('blur',blur);
   renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera);if(displays.heading&&displays.altitude&&!renderer.getContext().isContextLost()&&element.clientWidth&&element.clientHeight){if(painted)latest.current.onRendered?.(painted);}});
-  return()=>{disposed=true;observer.disconnect();renderer.setAnimationLoop(null);controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointermove',move);disposeScene(scene);renderer.dispose();renderer.domElement.remove();runtime.current=null;};
+  return()=>{disposed=true;observer.disconnect();renderer.setAnimationLoop(null);controls.dispose();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointermove',move);renderer.domElement.removeEventListener('pointercancel',cancel);renderer.domElement.removeEventListener('lostpointercapture',cancel);window.removeEventListener('blur',blur);disposeScene(scene);renderer.dispose();renderer.domElement.remove();runtime.current=null;};
  },[]);
  useEffect(()=>{runtime.current?.update?.();},[values,hidden]);
  useEffect(()=>{const r=runtime.current;if(!r)return;r.controls.enabled=!capture;if(capture){r.front();setView('mcp');}},[capture,status]);

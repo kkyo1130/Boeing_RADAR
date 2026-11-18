@@ -204,6 +204,7 @@ export default function DemoPanel({snapshot,connected,onSpeech}) {
       </div>
       <p><b>관제 음성 인식 문장</b><br/>{atcTranscript||'아직 수음한 관제 문장이 없습니다.'}</p>
       {!status?.speech_ready&&<p>로컬 음성 모델 준비가 필요합니다.</p>}
+      <details><summary>예비: 사전 등록 시나리오 (ATC STT 사용 안 함)</summary><label>사전 등록 관제<select value={scenario} disabled={busy||recording} onChange={e=>setScenario(e.target.value)}><option value="baseline">ALT 3000 / HDG 270</option><option value="altitude">ALT 3500 / HDG 270</option><option value="heading">ALT 3000 / HDG 290</option></select></label><p lang="en">{status?.scenarios?.[scenario]}</p><button disabled={disabled||busy||recording} onClick={()=>action(playScenario)}>관제 재생 및 지시 등록</button></details>
     </div>
     {error&&<p className="op-error" role="alert">{error}</p>}
     <p className="demo-progress" role="status">{message}</p>
