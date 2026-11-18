@@ -4,7 +4,7 @@ import { join, resolve } from 'node:path';
 
 export default defineConfig({
   testDir: './e2e', workers: 1, timeout: 30000,
-  use: { launchOptions: process.env.RADAR_CHROMIUM_PATH ? { executablePath: process.env.RADAR_CHROMIUM_PATH } : {}, baseURL: 'http://127.0.0.1:5173', trace: 'retain-on-failure' },
+  use: { launchOptions: { args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'], ...(process.env.RADAR_CHROMIUM_PATH ? { executablePath: process.env.RADAR_CHROMIUM_PATH } : {}) }, baseURL: 'http://127.0.0.1:5173', trace: 'retain-on-failure' },
   webServer: [
     { command: `${process.env.RADAR_TEST_PYTHON || '../.venv/bin/python'} -m uvicorn app.main:app --host 127.0.0.1 --port 18080`,
       cwd: '../backend', url: 'http://127.0.0.1:18080/openapi.json',

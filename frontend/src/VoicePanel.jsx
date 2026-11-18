@@ -12,7 +12,7 @@ export default function VoicePanel({ snapshot, connected }) {
     const timer = setInterval(() => { p.update(latest.current.snapshot, latest.current.connected); p.tick(); }, 250);
     return () => { clearInterval(timer); unregister(); p.close(); player.current = null; };
   }, [snapshot.flight_id]);
-  useEffect(() => { player.current?.update(snapshot, connected); }, [snapshot, connected]);
+  useEffect(() => { audioFocus.syncInputs(snapshot.voice?.inputs); player.current?.update(snapshot, connected); }, [snapshot, connected]);
   const inputs = new Map((snapshot.voice?.inputs || []).map(i => [i.token, i]));
   view.inputs.forEach(i => inputs.set(i.token, i));
   const ended = snapshot.status !== 'ACTIVE';
