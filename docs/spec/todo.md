@@ -300,3 +300,7 @@ SPEC-004-WI-02의 요청 범위를 `codex/atc-numeric-rules`에서 reviewing. �
 2026-11-11 SPEC-004-WI-02 뒤쪽 호출부호 수정: `codex/readback-callsign-suffix`에서 PILOT 경계 호출부호·복창 문형·동작 비교 및 실제 DELTA 원음 재시험을 완료하고 reviewing. 후보 DELTA123/3000ft/270° 추출, 동작 생략/카메라 부재 보류를 유지한다. 전체 backend665/별도 최종42·계약22·빌드 검증. [상세 근거](../readback-callsign-suffix.md), 다른 WI 상태는 변경하지 않는다.
 
 제출 커밋 `7416738`, [PR #34](https://github.com/kkyo1130/Boeing_RADAR/pull/34). 로컬 데모 적용 완료, 외부 리뷰·병합 대기.
+
+## 2026-11-18 열린 PR의 dev 통합
+
+사용자의 전체 반영 요청으로 #36–#51 및 #15를 `codex/dev-pr-integration-20261118`에서 통합 검증했다. Backend/HTTP754(7 skipped)·Vision80·frontend83·HTTP→React5·브라우저14·계약6/22·빌드 통과. 충돌 해결, 음성/터치 보호와 시나리오 잔여 UI 수정 및 CI 의존성 보완은 [통합 기록](../development/pr-stack-integration-20261118.md)에 있다. 코드 병합과 실장비 전체 인수 완료는 구분하며 기존 미완료 AC 상태를 유지한다. 원격 CI/최종 병합 여부는 통합 PR을 따른다.
