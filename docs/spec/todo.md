@@ -304,3 +304,9 @@ SPEC-004-WI-02의 요청 범위를 `codex/atc-numeric-rules`에서 reviewing. �
 ## 2026-11-18 열린 PR의 dev 통합
 
 사용자의 전체 반영 요청으로 #36–#51 및 #15를 `codex/dev-pr-integration-20261118`에서 통합 검증했다. Backend/HTTP754(7 skipped)·Vision80·frontend83·HTTP→React5·브라우저14·계약6/22·빌드 통과. 충돌 해결, 음성/터치 보호와 시나리오 잔여 UI 수정 및 CI 의존성 보완은 [통합 기록](../development/pr-stack-integration-20261118.md)에 있다. 코드 병합과 실장비 전체 인수 완료는 구분하며 기존 미완료 AC 상태를 유지한다. 원격 CI/최종 병합 여부는 통합 PR을 따른다.
+
+## 2026-11-18 PDF 요약 + 지시 로그
+
+| WI | 범위 | 상태 |
+| --- | --- | --- |
+| [SPEC-008-WI-10](008-safety-trace-report/workitem/wi-10.md) | 브랜드 없는 요약 1쪽과 전체 지시별 ALT/HDG 로그 PDF | reviewing |
