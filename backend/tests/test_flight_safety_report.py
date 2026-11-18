@@ -40,7 +40,7 @@ def test_a_normal_flight_counts_and_english_pdf(scenario):
     assert pdf.headers['content-type']=='application/pdf' and 'Flight_Safety_Report_' in pdf.headers['content-disposition']
     assert 'Boeing' not in pdf.headers['content-disposition']
     reader=PdfReader(BytesIO(pdf.content));text='\n'.join(p.extract_text() for p in reader.pages)
-    assert 'Flight Summary' in text and 'AI Safety Summary' in text and 'Total ATC instructions' in text and s.flight in text
+    assert 'OVERALL FLIGHT SUMMARY' in text and 'Complete instruction register' in text and 'ATC INSTRUCTIONS' in text and s.flight in text
     import re
     assert not re.search(r'boeing[\s_]+radar',text,re.IGNORECASE)
     assert reader.metadata.title=='Flight Safety Report'
@@ -149,7 +149,7 @@ def test_long_transcript_stays_in_original_without_expanding_pdf(scenario):
     safety['timeline'][0]['source']='ATC'
     pdf=render_pdf(safety);reader=PdfReader(BytesIO(pdf))
     text=''.join(p.extract_text() for p in reader.pages)
-    assert len(reader.pages)<=3 and '한글 긴 관제 기록' not in text and 'AI Safety Summary' in text
+    assert len(reader.pages)<=3 and '한글 긴 관제 기록' not in text and 'Complete instruction register' in text
     assert safety['timeline'][0]['transcript'].count('한글 긴 관제 기록')==700
 
 
@@ -188,7 +188,7 @@ def test_pdf_summarizes_incidents_and_full_events_stay_in_json(scenario):
     text='\n'.join(page.extract_text() for page in PdfReader(BytesIO(response.content)).pages)
     presentation=report['safety']['presentation']
     assert any(group['count']>=35 for group in presentation['groups'])
-    assert 'One incident per timeline' in text
+    assert 'Complete instruction register' in text
     assert 'Cockpit observation' not in text
     represented={sequence for group in presentation['groups'] for sequence in group['sequences']}
     auxiliary={event['sequence'] for event in report['safety']['timeline'] if event['event_type']=='EVIDENCE_STORED'}
